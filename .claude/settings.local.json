@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m ensurepip --upgrade)",
+      "Bash(python -m pip install reportlab)",
+      "Bash(python generate_summary_pdf.py)"
+    ]
+  }
+}

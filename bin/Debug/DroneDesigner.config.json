@@ -1,0 +1,9 @@
+﻿{
+  "componentsDatabasePath": "Resources\\components.json",
+  "solidWorksInstallPath": "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS",
+  "templatePartsDirectory": "Templates",
+  "outputDirectory": "Output",
+  "solidWorksTargetVersion": "2024",
+  "logFilePath": "Logs\\DroneDesigner.log",
+  "logLevel": "Info"
+}

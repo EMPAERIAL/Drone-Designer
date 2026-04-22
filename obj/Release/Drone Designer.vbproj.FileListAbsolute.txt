@@ -1,0 +1,14 @@
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Drone Designer.exe.config
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Drone Designer.exe
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Drone Designer.pdb
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Drone Designer.xml
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Newtonsoft.Json.dll
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Newtonsoft.Json.xml
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.vbproj.AssemblyReference.cache
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone_Designer.Resources.resources
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.vbproj.GenerateResource.cache
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.vbproj.CoreCompileInputs.cache
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone De.5C2C6CBA.Up2Date
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.exe
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.xml
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.pdb
