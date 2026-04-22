@@ -1,0 +1,37 @@
+﻿=================================================================
+ DRONE DESIGNER — Component & CAD Generation Manifest
+ Generated: 2026-04-22 17:06:34
+=================================================================
+
+MISSION PARAMETERS
+------------------
+  Endurance:          60 min
+  Range:              5 km
+  Cruise speed:       16,6666666666667 m/s
+  Max altitude:       400 m
+  Payload mass:       0 g
+  Mission profile:    Mapping
+  Frame type:         Quadcopter
+
+SELECTED COMPONENTS
+-------------------
+  [Motor               ] T-Motor Antigravity MN8014 KV120
+  [Battery             ] Grepow Industrial 90000mAh 4S
+  [ESC                 ] T-Motor Alpha 60A HV
+  [ESC                 ] Hobbywing Tekko32 F4 Metal 65A 4-in-1
+  [ESC                 ] Hobbywing XRotor Pro 80A
+  [FlightController    ] Holybro Kakute H7 V1.3
+  [FlightController    ] Matek Systems Matek H743-WLITE
+  [FlightController    ] CubePilot Cube Orange+
+  [GPSModule           ] CubePilot Here+ RTK GPS v2
+  [GPSModule           ] Holybro Pixhawk M10 GPS
+  [GPSModule           ] Holybro M9N GPS Module
+  [Propeller           ] T-Motor T18x6.1 Carbon Fiber
+  [Propeller           ] T-Motor P16x5.4 CF Folding
+  [Propeller           ] Tarot Tarot 1555 Folding CF
+
+GENERATED CAD FILES
+-------------------
+  [FAIL] Motor Mount (T-Motor Antigravity MN8014 KV120): — Macro returned failure status (see SolidWorks log).
+
+=================================================================

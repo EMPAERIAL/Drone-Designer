@@ -2415,11 +2415,889 @@ Drone Designer
  The message string is designed to be shown directly in a WinForms MessageBox or label.
  </summary>
 </member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Models.PipelineStage">
+ <summary>
+ Named stages that the pipeline reports as it progresses.
+ Used by <see cref="T:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport"/> so the UI can display
+ a meaningful status string, not just a percentage.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.Validating">
+ <summary>Initial validation of inputs before any real work begins.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.SelectingComponents">
+ <summary>Running the component selection engine (Module 1).</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.ConnectingToSolidWorks">
+ <summary>Connecting to or launching SolidWorks via COM interop.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.GeneratingPart">
+ <summary>Generating a single CAD part from a macro template.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.SavingFile">
+ <summary>Saving the generated part file to disk.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.WritingManifest">
+ <summary>Writing the component manifest alongside the CAD output.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.Finalising">
+ <summary>All work is complete; releasing SolidWorks resources.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.Failed">
+ <summary>
+ Terminal failure state. Check <see cref="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.ErrorMessage"/>
+ for details.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport">
+ <summary>
+ Immutable snapshot of pipeline progress reported via
+ <see cref="T:System.IProgress`1"/>.
+ One instance is fired for each meaningful state change.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.Stage">
+ <summary>Current named stage of the pipeline.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.PercentComplete">
+ <summary>
+ 0–100 overall completion percentage.
+ Not necessarily linear — stages have different weights.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.StatusMessage">
+ <summary>Human-readable description of the current operation.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.DetailMessage">
+ <summary>
+ Optional detail line shown below the main status message.
+ Useful for "Generating motor mount for T-Motor U8 II (3 of 4)" style messages.
+ Nothing when there is no detail to show.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.ErrorMessage">
+ <summary>
+ Non-Nothing when <see cref="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.Stage"/> is <see cref="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.Failed"/>.
+ Contains the exception message (not the full stack trace — use logging for that).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.IsTerminal">
+ <summary>True when the pipeline has ended (either success or failure).</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.#ctor(Drone_Designer.Drone_Designer.Core.Models.PipelineStage,System.Int32,System.String,System.String)">
+ <summary>Initialises a progress report for a normal in-progress stage.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.Failure(System.String,System.Int32)">
+ <summary>Factory — creates a terminal failure report.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.ToString">
+ <summary>Returns a single-line summary suitable for status-bar display.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord">
+ <summary>
+ Describes a single CAD file produced during a pipeline run.
+ Collected into <see cref="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.GeneratedParts"/>.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.ComponentId">
+ <summary>Component ID from the database that drove this part.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.ComponentName">
+ <summary>Human-readable component name, e.g. "T-Motor U8 II".</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.PartType">
+ <summary>Category of part generated, e.g. "Motor Mount".</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.FilePath">
+ <summary>Absolute path of the saved SolidWorks part (.SLDPRT) file.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.SavedAtUtc">
+ <summary>UTC timestamp when the file was saved.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.Success">
+ <summary>True if this part was generated successfully.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.ErrorDetail">
+ <summary>Error message if <see cref="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.Success"/> is False; Nothing otherwise.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.#ctor(System.String,System.String,System.String,System.String)">
+ <summary>Initialises a successful part record.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.Failure(System.String,System.String,System.String,System.String)">
+ <summary>Factory — creates a failed part record (no file path).</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.#ctor(System.String,System.String,System.String,System.String,System.String)">
+ <summary>Internal constructor for failure records.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Models.PipelineResult">
+ <summary>
+ Final result of a complete pipeline run.
+ Returned by <c>PipelineOrchestrator.RunAsync()</c> when the pipeline
+ finishes (regardless of success or failure).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.Success">
+ <summary>True if the pipeline completed without a fatal error.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.ErrorMessage">
+ <summary>
+ Top-level error message when <see cref="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.Success"/> is False.
+ Nothing on success.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.GeneratedParts">
+ <summary>
+ Individual records for each CAD part that was attempted.
+ Always populated (even on partial failure) so the UI can report
+ which parts succeeded and which failed.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.OutputDirectory">
+ <summary>
+ Directory where all generated files were saved.
+ Nothing if the pipeline failed before any files were written.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.ManifestPath">
+ <summary>
+ Absolute path of the component manifest (.txt) written alongside
+ the CAD files. Nothing if manifest was not written.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.StartedAtUtc">
+ <summary>UTC time the pipeline run started.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.FinishedAtUtc">
+ <summary>UTC time the pipeline run ended.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.Duration">
+ <summary>Total wall-clock duration of the run.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.SuccessfulPartCount">
+ <summary>Count of parts generated successfully.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.FailedPartCount">
+ <summary>Count of parts that failed during generation.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.#ctor(System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord},System.String,System.String,System.DateTime)">
+ <summary>Initialises a successful pipeline result.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.#ctor(System.String,System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord},System.DateTime)">
+ <summary>
+ Initialises a failed pipeline result.
+ <paramref name="partsSoFar"/> can be empty or partially populated.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.ToSummaryString">
+ <summary>
+ Returns a multi-line summary suitable for display in a MessageBox
+ or log file.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator">
+ <summary>
+ Orchestrates the full UAV design pipeline from mission specs through
+ to generated SolidWorks parts.
+ <para>
+ Instantiate once per application session and call
+ <see cref="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunAsync(Drone_Designer.Core.Models.MissionSpecs,System.String,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken)"/> for each design run.
+ </para>
+ </summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator._motorMountMacroPath">
+ <summary>Path to the motor mount macro file (.swb).</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.#ctor(Drone_Designer.Core.Interfaces.IComponentSelector,Drone_Designer.SolidWorks.SolidWorksAutomation,Drone_Designer.Drone_Designer.SolidWorks.MacroRunner,System.Action{System.String})">
+ <summary>
+ Initialises the orchestrator with all required services.
+ </summary>
+ <param name="selector">Component selection engine instance.</param>
+ <param name="swAutomation">SolidWorks connection manager (Task 12/14).</param>
+ <param name="macroRunner">Macro execution runner (Task 13).</param>
+ <param name="logger">
+ Optional delegate for log messages. Pass <c>AddressOf Debug.WriteLine</c>
+ during development, or wire to a real logger later.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunAsync(Drone_Designer.Core.Models.MissionSpecs,System.String,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken)">
+ <summary>
+ Runs the full pipeline asynchronously:
+ <list type="number">
+   <item>Validates inputs.</item>
+   <item>Runs component selection on the given specs.</item>
+   <item>Connects to SolidWorks.</item>
+   <item>Generates a motor-mount part for each selected motor.</item>
+   <item>Saves parts and writes a component manifest.</item>
+ </list>
+ </summary>
+ <param name="specs">Mission specifications from the UI input form.</param>
+ <param name="outputDirectory">
+ Folder where CAD parts and the manifest will be saved.
+ Created if it does not exist.
+ </param>
+ <param name="progress">
+ Receiver for incremental progress updates.  All callbacks are marshalled
+ to whichever thread owns this <see cref="T:System.IProgress`1"/> — normally
+ the UI thread if constructed with <c>New Progress(Of ...)(callback)</c>
+ on the UI thread.
+ </param>
+ <param name="cancellationToken">
+ Token connected to a Cancel button on the progress form.
+ The pipeline checks this before each major step and after each part.
+ </param>
+ <returns>
+ A <see cref="T:Drone_Designer.Drone_Designer.Core.Models.PipelineResult"/> describing what was generated.
+ Never throws — errors are captured into the result object.
+ </returns>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunFromSelectionAsync(Drone_Designer.Core.Services.SelectionResult,Drone_Designer.Core.Models.MissionSpecs,System.String,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken)">
+ <summary>
+ Overload that accepts an already-computed <see cref="T:Drone_Designer.Core.Services.SelectionResult"/>
+ (i.e. the user already ran Module 1 via the UI and this is a re-run
+ of Module 2 only, skipping component selection).
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.Report(System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},Drone_Designer.Drone_Designer.Core.Models.PipelineStage,System.Int32,System.String,System.String)">
+ <summary>
+ Reports a progress update.  Safe to call from any thread — IProgress
+ handles marshalling to the capture thread (usually the UI thread).
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.ValidateInputs(Drone_Designer.Core.Models.MissionSpecs,System.String)">
+ <summary>Validates inputs before any real work begins.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.GetMotorDisplayName(Drone_Designer.Core.Models.ComponentSpecs)">
+ <summary>
+ Returns a display-safe name for a motor component for use in filenames
+ and progress messages.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.SanitiseFilename(System.String)">
+ <summary>
+ Strips characters that are illegal in Windows file names.
+ Replaces spaces with underscores for cleaner filenames.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.WriteManifest(System.String,Drone_Designer.Core.Models.MissionSpecs,Drone_Designer.Core.Services.SelectionResult,System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord})">
+ <summary>
+ Writes a plain-text manifest listing all selected components and
+ which CAD files were generated.  Saved to the output directory so
+ the CAD folder is self-documenting.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.Values">
+ <summary>Flat key→value store passed to the macro.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.SourceDescription">
+ <summary>
+ Optional: path to the source component spec file that
+ generated these parameters, for traceability in logs.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.Add(System.String,System.String)">
+ <summary>Add or overwrite a parameter.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.Add(System.String,System.Double)">
+ <summary>Add a numeric value, formatted invariant-culture.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.FromComponentSpec(Drone_Designer.Core.Models.ComponentSpecs)">
+ <summary>
+ Build parameters from a generic ComponentSpec.
+ Keys mirror property names in ComponentSpec so VBA
+ macros can use consistent, predictable names.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.FromMotorSpec(Drone_Designer.Core.Models.MotorSpec)">
+ <summary>
+ Build parameters for a motor-specific spec, adding
+ motor fields on top of the generic ones.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.FromBatterySpec(Drone_Designer.Core.Models.BatterySpec)">
+ <summary>
+ Build parameters for a battery spec.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.FromPropellerSpec(Drone_Designer.Core.Models.PropellerSpec)">
+ <summary>
+ Build parameters for a propeller spec.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.ToParameterFileContent">
+ <summary>
+ Serialise all parameters to key=value lines for the
+ temp file. VBA macros read this with Open/Line Input.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.CloseDocumentAfterRun">
+ <summary>
+ Close the opened template document after saving the
+ output. Set False to leave it open for inspection.
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.OpenTemplateAsCopy">
+ <summary>
+ Open the template as a copy so the original is never
+ modified. Internally uses OpenDocOptions_e.swOpenDocOptions_Silent
+ + copies the file to a temp location first.
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.SilentMode">
+ <summary>
+ If True, suppress all SolidWorks dialog boxes during
+ the run (recommended for automation).
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.TimeoutMs">
+ <summary>
+ Maximum time in milliseconds to wait for a macro to
+ complete before treating it as hung. 0 = no timeout.
+ Default: 60 000 (1 minute).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.TempDirectory">
+ <summary>
+ Directory for the temp parameter file.
+ Defaults to System.IO.Path.GetTempPath().
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.InjectAsCustomProperties">
+ <summary>
+ If True, write parameters as custom document properties
+ on the open document before the macro runs.
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.InjectAsTempFile">
+ <summary>
+ If True, write parameters to a key=value temp file.
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.TempParameterFileName">
+ <summary>
+ Well-known file name for the temp parameter file.
+ The VBA macro should open exactly this path.
+ Default: "DroneDesigner_MacroParams.txt"
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.SaveAsVersion">
+ <summary>
+ SolidWorks save format for the output file.
+ Uses the swSaveAsVersion_e value. 0 = same version.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner">
+ <summary>
+ Executes SolidWorks VBA macros against template documents,
+ injecting ComponentSpec parameters before the macro runs
+ and saving the result to a specified output path.
+ </summary>
+ <remarks>
+ Requires an active SolidWorks COM instance. Obtain one from
+ SolidWorksAutomation.vb before constructing this class.
+ Thread-affinity: call from the UI thread or a dedicated STA
+ thread — SolidWorks COM is apartment-threaded.
+ </remarks>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner._swApp">
+ <summary>Live SolidWorks application COM object.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner._options">
+ <summary>Options governing runtime behaviour.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner._log">
+ <summary>Accumulated log entries for this session.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.#ctor(System.Object,Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions)">
+ <summary>
+ Initialise MacroRunner with an existing SolidWorks instance.
+ </summary>
+ <param name="swApp">
+ A live SldWorks.SldWorks COM object. Typically obtained
+ from SolidWorksAutomation.Connect().
+ </param>
+ <param name="options">
+ Optional runtime options. Null → defaults are used.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.GetLog">
+ <summary>
+ Returns a copy of the log entries accumulated since
+ this MacroRunner was constructed. Useful for surfacing
+ run details in the UI or writing to a log file.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.ClearLog">
+ <summary>Clears the internal log buffer.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacroOnTemplate(System.String,System.String,System.String,System.String,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters,System.String)">
+ <summary>
+ Full pipeline: open template → inject parameters →
+ run macro → save output → clean up.
+ </summary>
+ <param name="templatePath">
+ Absolute path to the .SLDPRT or .SLDASM template file.
+ </param>
+ <param name="macroPath">
+ Absolute path to the .swp VBA macro file.
+ </param>
+ <param name="macroModule">
+ VBA module name inside the macro (e.g. "MacroModule1").
+ </param>
+ <param name="macroProcedure">
+ VBA Sub name to call (e.g. "BuildMotorMount").
+ </param>
+ <param name="parameters">
+ Parameters derived from ComponentSpec. Pass Nothing
+ to run the macro without parameter injection.
+ </param>
+ <param name="outputPath">
+ Where to save the finished document. If the directory
+ does not exist it will be created.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacroOnTemplate(System.String,System.String,System.String,System.String,Drone_Designer.Core.Models.ComponentSpecs,System.String)">
+ <summary>
+ Convenience overload: builds MacroParameters from any
+ ComponentSpec automatically before calling the full pipeline.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacroOnActiveDocument(System.String,System.String,System.String,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters,System.String)">
+ <summary>
+ Run a macro against the document that is currently
+ active in SolidWorks (no template open/close). Useful
+ when SolidWorksAutomation.vb has already opened a doc.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacroSequenceOnTemplate(System.String,System.Collections.Generic.IList{System.ValueTuple{System.String,System.String,System.String}},Drone_Designer.Drone_Designer.SolidWorks.MacroParameters,System.String)">
+ <summary>
+ Run multiple macros in sequence on a single template
+ document (e.g. BuildFrame → AddMountHoles → AddCutouts).
+ Each macro sees the state left by the previous one.
+ </summary>
+ <param name="macroSteps">
+ Ordered list of (macroPath, module, procedure) tuples.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.OpenDocument(System.String)">
+ <summary>Opens a SolidWorks document, returning IModelDoc2.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.InferDocumentType(System.String)">
+ <summary>
+ Infer swDocumentTypes_e from file extension.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacro(System.String,System.String,System.String,System.Int64@)">
+ <summary>
+ Calls SldWorks.RunMacro2. Returns True on success.
+ swErr receives the SolidWorks error code on failure.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.InjectCustomProperties(System.Object,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters)">
+ <summary>
+ Writes parameter key=value pairs as Custom Properties
+ on the SolidWorks document's root configuration.
+ VBA reads them with: ActiveDoc.CustomInfo2("", "KEY")
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RemoveInjectedProperties(System.Object,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters)">
+ <summary>
+ Removes all injected parameter properties from the
+ document to avoid polluting the saved output file.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.WriteTempParameterFile(Drone_Designer.Drone_Designer.SolidWorks.MacroParameters)">
+ <summary>
+ Writes the parameter file to the temp directory.
+ Returns the full path of the written file, or Nothing
+ if the write fails.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.SaveDocumentAs(System.Object,System.String)">
+ <summary>
+ Saves the active document as a new file at outputPath.
+ Preserves the SolidWorks file type (part/assembly).
+ Returns True on success.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.CloseDocument(System.Object,System.Boolean)">
+ <summary>
+ Closes a SolidWorks document. saveFirst=True performs
+ a save before close (use False when output already saved).
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.BuildWorkingCopyPath(System.String)">
+ <summary>
+ Builds a temp path for the working copy of a template.
+ Placed next to the original with a _work suffix.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.CleanupWorkingCopy(System.String,System.String)">
+ <summary>
+ Deletes the working copy if it differs from the original
+ (i.e., we actually made a copy and should clean it up).
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.CleanupTempFile(System.String)">
+ <summary>Deletes the temp parameter file if it exists.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.ValidateInputs(System.String,System.String,System.String)">
+ <summary>Validates that required files exist and paths are absolute.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.TranslateSwError(System.Int64)">
+ <summary>Human-readable label for common SW error codes.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.Log(System.String)">
+ <summary>Appends a timestamped entry to the internal log.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchJob">
+ <summary>
+ Describes a single job in a batch run.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchJob.Label">
+ <summary>Friendly label used in logs and result reporting.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchResult">
+ <summary>
+ Result of running a MacroBatchJob.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchRunner">
+ <summary>
+ Orchestrates multiple macro jobs against a single SolidWorks
+ instance, processing all selected components from Module 1.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchRunner.RunBatch(System.Collections.Generic.IList{Drone_Designer.Drone_Designer.SolidWorks.MacroBatchJob},System.Boolean,System.IProgress{System.ValueTuple{System.Int32,System.Int32,System.String}})">
+ <summary>
+ Execute a list of batch jobs sequentially.
+ Continues on individual failures unless stopOnFirstFailure=True.
+ </summary>
+ <returns>
+ List of results — one per job, in submission order.
+ </returns>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchRunner.GetLog">
+ <summary>Returns the combined log from all runs in this batch session.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm">
+ <summary>
+ Modal progress window for the CAD generation pipeline.
+ Owned by MainForm; created fresh for each pipeline run.
+ </summary>
+</member>
+<member name="E:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.PipelineCompleted">
+ <summary>
+ Raised on the UI thread when the pipeline has finished
+ (either success, failure, or cancel) and the user dismisses
+ the dialog.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.Progress">
+ <summary>
+ The <see cref="T:System.IProgress`1"/> to pass to
+ <c>PipelineOrchestrator.RunAsync()</c>.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.#ctor(System.Threading.CancellationTokenSource)">
+ <summary>
+ Creates the progress form.  Must be called on the UI thread so the
+ <see cref="T:System.Progress`1"/> captures the correct
+ synchronisation context.
+ </summary>
+ <param name="cts">
+ The <see cref="T:System.Threading.CancellationTokenSource"/> shared with the pipeline.
+ Clicking Cancel calls <c>cts.Cancel()</c>.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.AppendLog(System.String)">
+ <summary>
+ Appends a line to the log text box and auto-scrolls to the bottom.
+ Thread-safe.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.MarkComplete(Drone_Designer.Drone_Designer.Core.Models.PipelineResult)">
+ <summary>
+ Called by MainForm after <c>RunAsync</c> returns to update the
+ form into its completed state (success or failure).
+ Thread-safe.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.OnFormClosing(System.Windows.Forms.FormClosingEventArgs)">
+ <summary>Prevent accidental close via the X button while running.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.UI.Forms.PipelineCompletedEventArgs">
+ <summary>Event arguments carrying the final pipeline result.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.UI.Forms.PipelineCompletedEventArgs.Result">
+ <summary>The final result of the pipeline run.</summary>
+</member>
+<member name="T:Drone_Designer.SolidWorks.SolidWorksAutomation">
+ <summary>
+ Manages the lifecycle of a SolidWorks COM connection.
+ Provides <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Connect(System.String@)"/>, <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Disconnect"/>,
+ <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.IsConnected"/>, and <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.GetVersion"/> as the
+ public surface used by the rest of Module 2.
+ </summary>
+ <remarks>
+ Design notes:
+ • Late binding is used so the project compiles on any machine, even
+   without SolidWorks installed (useful for CI or Module-1-only work).
+ • <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Connect(System.String@)"/> tries GetActiveObject first (attach to a
+   running SolidWorks window) before falling back to CreateObject
+   (launch a new invisible instance). This mirrors the behaviour of the
+   built-in SolidWorks macro recorder.
+ • The class implements IDisposable so a Using block can guarantee
+   cleanup even if an unhandled exception occurs mid-macro.
+ </remarks>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation.SW_PROG_ID">
+ <summary>COM ProgID registered by the SolidWorks installer.</summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation.MIN_API_VERSION">
+ <summary>
+ Minimum API version we are willing to work with.
+ SolidWorks 2021 = API 29.0.  Adjust if targeting an older release.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation.SW_REGISTRY_KEY">
+ <summary>
+ Registry key written by the SolidWorks installer (64-bit hive).
+ Used to confirm installation before attempting COM activation.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation._swApp">
+ <summary>
+ The live COM object.  Typed as Object for late-binding portability.
+ Cast to ISldWorks if you add the early-binding interop reference.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation._isConnected">
+ <summary>True once <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Connect(System.String@)"/> succeeds.</summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation._weOwnTheProcess">
+ <summary>
+ True when *we* launched SolidWorks (as opposed to attaching to an
+ already-running instance).  Used in <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Disconnect"/> to
+ decide whether to call ExitApp.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation._disposed">
+ <summary>IDisposable bookkeeping.</summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Connect(System.String@)">
+ <summary>
+ Establishes a COM connection to SolidWorks.
+ Tries to attach to an already-running instance first; if none is
+ found, launches a new (initially invisible) instance.
+ </summary>
+ <returns>
+ <c>True</c> on success; <c>False</c> if connection could not be
+ established.  Detailed failure information is surfaced through
+ <paramref name="errorMessage"/>.
+ </returns>
+ <param name="errorMessage">
+ Human-readable error description when the method returns False.
+ Empty string on success.
+ </param>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Disconnect">
+ <summary>
+ Releases the COM connection.
+ If we launched SolidWorks ourselves and no documents are open,
+ the application is closed.  If the user had SolidWorks open before
+ we connected, it is left running.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.IsConnected">
+ <summary>
+ Returns <c>True</c> if the COM object is held and SolidWorks
+ is still responding.
+ </summary>
+ <remarks>
+ A quick liveness ping is performed (reading the Visible property)
+ rather than relying solely on the cached flag, so the caller gets
+ an accurate answer even if SolidWorks crashed after Connect().
+ </remarks>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.GetVersion">
+ <summary>
+ Returns a human-readable version string, e.g. "SOLIDWORKS 2023 SP2".
+ Returns an empty string if not connected.
+ </summary>
+</member>
+<member name="P:Drone_Designer.SolidWorks.SolidWorksAutomation.Application">
+ <summary>
+ Provides the raw COM application object to other classes in the
+ SolidWorks namespace (e.g. MacroRunner, PartBuilder).
+ Returns Nothing if not connected.
+ </summary>
+ <remarks>
+ Callers must handle the case where this returns Nothing and must
+ not cache the reference across a Disconnect/Connect cycle.
+ </remarks>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.IsSolidWorksInstalled">
+ <summary>
+ Checks the registry for a SolidWorks installation entry.
+ This is a fast pre-flight check before attempting COM activation,
+ which produces a less informative error on an unmachined machine.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.CheckVersionCompatibility(System.String@)">
+ <summary>
+ Verifies that the connected SolidWorks instance meets the minimum
+ API version requirement defined by <see cref="F:Drone_Designer.SolidWorks.SolidWorksAutomation.MIN_API_VERSION"/>.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.RevisionToYear(System.String)">
+ <summary>
+ Maps a SolidWorks API major revision number to its marketing year.
+ Kept as a simple lookup table — extend as new versions ship.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.BuildCOMErrorMessage(System.Runtime.InteropServices.COMException)">
+ <summary>
+ Produces a user-friendly error message for common COM HRESULTs
+ encountered when activating SolidWorks.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.ReleaseComObject">
+ <summary>
+ Releases the COM reference and nulls the field.
+ Safe to call multiple times.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Dispose">
+ <summary>
+ Ensures the COM connection is released when the object is garbage
+ collected or falls out of a Using block.
+ </summary>
+</member>
+<member name="T:Drone_Designer.SolidWorks.COMErrorCodes">
+ <summary>
+ Named constants for COM HRESULTs that can appear when activating or
+ communicating with SolidWorks.  Centralised here so the error-handling
+ switch is readable without magic numbers.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.MK_E_UNAVAILABLE">
+ <summary>
+ 0x800401E3 — GetActiveObject found no running instance with that ProgID.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.REGDB_E_CLASSNOTREG">
+ <summary>
+ 0x80040154 — ProgID is not in the registry; SolidWorks not installed
+ or COM registration is broken.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.CO_E_SERVER_EXEC_FAILURE">
+ <summary>
+ 0x80080005 — Out-of-process COM server failed to start; often a
+ licence or permission issue.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.E_ACCESSDENIED">
+ <summary>0x80070005 — Access denied.</summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.RPC_E_DISCONNECTED">
+ <summary>
+ 0x80010004 — The COM server disconnected while a call was in flight;
+ typically means SolidWorks crashed.
+ </summary>
+</member>
+<member name="F:Drone_Designer.MainForm._orchestrator">
+ <summary>
+ Lazily created orchestrator.  Reused across runs so SolidWorks
+ stays connected between multiple Generate CAD calls in the
+ same session.
+ </summary>
+</member>
+<member name="F:Drone_Designer.MainForm._swAutomation">
+ <summary>
+ Connection manager — held at form level so the status label can
+ show SW version on connect.
+ </summary>
+</member>
+<member name="F:Drone_Designer.MainForm._lastOutputDirectory">
+ <summary>
+ Last directory chosen by the user.  Remembered for the duration
+ of the session so the picker opens in the same place.
+ </summary>
+</member>
+<member name="F:Drone_Designer.MainForm._pipelineRunning">
+ <summary>
+ True while the pipeline is running — disables both action buttons.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.WireCADControls">
+ <summary>
+ Call this from MainForm_Load (in MainForm.Logic.vb) to attach
+ all CAD-related event handlers.  Kept separate so Task 11 code
+ doesn't need to be modified.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.btnGenerateCAD_Click(System.Object,System.EventArgs)">
+ <summary>
+ Entry point for the end-to-end pipeline.
+ Validates state, picks output folder, then runs the pipeline async.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.PickOutputDirectory">
+ <summary>
+ Shows a FolderBrowserDialog and returns the chosen path.
+ Returns Nothing if the user cancels.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.EnsureOrchestratorInitialised">
+ <summary>
+ Lazy-initialises <see cref="F:Drone_Designer.MainForm._swAutomation"/> and <see cref="F:Drone_Designer.MainForm._orchestrator"/>.
+ Returns False and shows an error dialog if initialisation fails.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.TryBuildMissionSpecs">
+ <summary>
+ Reads form controls into a MissionSpecs object for manifest writing.
+ Delegates to the existing BuildMissionSpecs method in MainForm.Logic.vb.
+ Returns Nothing on validation failure.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.UpdateCADButtonState">
+ <summary>
+ Enables/disables the Generate CAD button based on current application state.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.SetPipelineRunning(System.Boolean)">
+ <summary>
+ Locks or unlocks the UI action buttons during pipeline execution.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.LogToStatusStrip(System.String)">
+ <summary>
+ Thin logging delegate passed to PipelineOrchestrator.
+ Appends messages to the status strip — useful during development.
+ </summary>
+</member>
 <member name="F:Drone_Designer.MainForm._engine">
  <summary>Selection engine instance. Nothing if database failed to load.</summary>
 </member>
 <member name="F:Drone_Designer.MainForm._lastResult">
  <summary>Most recent successful SelectionResult — available for export (Task 13).</summary>
+</member>
+<member name="F:Drone_Designer.MainForm._cadGen">
+ <summary>
+ SolidWorks automation wrapper. Instantiated eagerly so MainForm.CAD.vb can
+ call _cadGen.Connect() on demand (deferred — see that file).
+ Connect() is NOT called here; the COM handshake only happens when the user
+ clicks "Send to SolidWorks", because SW startup is slow and the user may
+ only need Module 1 (component selection).
+ </summary>
 </member>
 <member name="M:Drone_Designer.MainForm.OnLoad(System.EventArgs)">
  <summary>
@@ -2655,7 +3533,7 @@ Drone Designer
  <param name="totalPowerW">Sum of peak power consumption in watts.</param>
  <param name="count">Number of components selected.</param>
 </member>
-<member name="T:Drone_Designer.ConfigManager">
+<member name="T:Drone_Designer.Utilities.ConfigManager">
  <summary>
  Manages application-wide configuration settings for the Drone Designer tool.
  Reads from and writes to a JSON config file (DroneDesigner.config.json) located
@@ -2664,129 +3542,129 @@ Drone Designer
  Config file is auto-created with defaults on first run if missing.
  </summary>
 </member>
-<member name="F:Drone_Designer.ConfigManager.CONFIG_FILE_NAME">
+<member name="F:Drone_Designer.Utilities.ConfigManager.CONFIG_FILE_NAME">
  <summary>
  The name of the JSON config file on disk.
  </summary>
 </member>
-<member name="P:Drone_Designer.ConfigManager.Settings">
+<member name="P:Drone_Designer.Utilities.ConfigManager.Settings">
  <summary>
  Returns the loaded application settings. Loads from disk on first access.
  Thread-safe for read scenarios typical of a WinForms desktop app.
  </summary>
 </member>
-<member name="P:Drone_Designer.ConfigManager.ConfigFilePath">
+<member name="P:Drone_Designer.Utilities.ConfigManager.ConfigFilePath">
  <summary>
  Full path to the config file being used (next to the executable).
  </summary>
 </member>
-<member name="M:Drone_Designer.ConfigManager.Load">
+<member name="M:Drone_Designer.Utilities.ConfigManager.Load">
  <summary>
  Loads settings from the JSON config file.
  If the file does not exist, creates it with default values.
  Throws ConfigurationException if the file is present but malformed.
  </summary>
 </member>
-<member name="M:Drone_Designer.ConfigManager.Save">
+<member name="M:Drone_Designer.Utilities.ConfigManager.Save">
  <summary>
  Saves the current in-memory settings back to the JSON config file.
  Call this after programmatically changing any Settings property.
  </summary>
 </member>
-<member name="M:Drone_Designer.ConfigManager.Reload">
+<member name="M:Drone_Designer.Utilities.ConfigManager.Reload">
  <summary>
  Forces a reload from disk, discarding any unsaved in-memory changes.
  Useful if the user edits the config file while the application is running.
  </summary>
 </member>
-<member name="T:Drone_Designer.AppSettings">
+<member name="T:Drone_Designer.Utilities.AppSettings">
  <summary>
  Strongly-typed model for all application settings.
  All paths may be absolute or relative to the executable directory.
  Serialized to / deserialized from JSON by ConfigManager.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ComponentsDatabasePath">
+<member name="P:Drone_Designer.Utilities.AppSettings.ComponentsDatabasePath">
  <summary>
  Path to the components database file (JSON).
  Example: "Resources\components.json"
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.SolidWorksInstallPath">
+<member name="P:Drone_Designer.Utilities.AppSettings.SolidWorksInstallPath">
  <summary>
  Root installation directory of SolidWorks.
  Example: "C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS"
  Used by SolidWorksAutomation.vb when locating the COM server.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.TemplatePartsDirectory">
+<member name="P:Drone_Designer.Utilities.AppSettings.TemplatePartsDirectory">
  <summary>
  Directory containing parametric SolidWorks template parts (.SLDPRT / .SLDASM).
  Module 2 reads from here when editing pre-designed templates.
  Example: "C:\DroneDesigner\Templates"
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.OutputDirectory">
+<member name="P:Drone_Designer.Utilities.AppSettings.OutputDirectory">
  <summary>
  Directory where generated CAD files (parts and assemblies) are written.
  Example: "C:\DroneDesigner\Output"
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.SolidWorksTargetVersion">
+<member name="P:Drone_Designer.Utilities.AppSettings.SolidWorksTargetVersion">
  <summary>
  Target SolidWorks version string used when selecting macros or API calls.
  Example: "2023", "2024"
  Macros are version-sensitive; keep this in sync with the installed version.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.LogFilePath">
+<member name="P:Drone_Designer.Utilities.AppSettings.LogFilePath">
  <summary>
  Path to the application log file.
  Example: "Logs\DroneDesigner.log"
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.LogLevel">
+<member name="P:Drone_Designer.Utilities.AppSettings.LogLevel">
  <summary>
  Minimum log level written to file.
  Accepted values: "Debug", "Info", "Warning", "Error"
  </summary>
 </member>
-<member name="M:Drone_Designer.AppSettings.CreateDefaults">
+<member name="M:Drone_Designer.Utilities.AppSettings.CreateDefaults">
  <summary>
  Returns a new AppSettings instance populated with safe default values.
  Called automatically by ConfigManager when no config file is found.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ResolvedComponentsDatabasePath">
+<member name="P:Drone_Designer.Utilities.AppSettings.ResolvedComponentsDatabasePath">
  <summary>
  Returns ComponentsDatabasePath resolved to an absolute path,
  anchored to the executable directory if the stored path is relative.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ResolvedTemplatePartsDirectory">
+<member name="P:Drone_Designer.Utilities.AppSettings.ResolvedTemplatePartsDirectory">
  <summary>
  Returns TemplatePartsDirectory resolved to an absolute path.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ResolvedOutputDirectory">
+<member name="P:Drone_Designer.Utilities.AppSettings.ResolvedOutputDirectory">
  <summary>
  Returns OutputDirectory resolved to an absolute path.
  Creates the directory if it does not already exist.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ResolvedLogFilePath">
+<member name="P:Drone_Designer.Utilities.AppSettings.ResolvedLogFilePath">
  <summary>
  Returns LogFilePath resolved to an absolute path.
  Creates the parent Logs directory if it does not already exist.
  </summary>
 </member>
-<member name="M:Drone_Designer.AppSettings.ResolvePath(System.String)">
+<member name="M:Drone_Designer.Utilities.AppSettings.ResolvePath(System.String)">
  <summary>
  Converts a path that may be relative (to the exe directory) into a full absolute path.
  Absolute paths pass through unchanged.
  </summary>
 </member>
-<member name="T:Drone_Designer.ConfigurationException">
+<member name="T:Drone_Designer.Utilities.ConfigurationException">
  <summary>
  Thrown when ConfigManager cannot read or write the configuration file.
  Wraps the underlying IO/serialization exception for caller context.

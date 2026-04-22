@@ -76,7 +76,7 @@ Namespace SolidWorks
         ''' Used to confirm installation before attempting COM activation.
         ''' </summary>
         Private Const SW_REGISTRY_KEY As String =
-            "SOFTWARE\SolidWorks\SOLIDWORKS"
+            "SOFTWARE\SolidWorks\SOLIDWORKS 2026"
 
         ' ------------------------------------------------------------------ '
         ' Private state                                                        '

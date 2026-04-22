@@ -77,6 +77,7 @@ Partial Class MainForm
         MyBase.OnLoad(e)
         InitialiseEngine()
         AddHandler btnSelectComponents.Click, AddressOf OnSelectComponentsAsync
+        WireCADControls()
     End Sub
 
     ''' <summary>
@@ -138,6 +139,7 @@ Partial Class MainForm
             Dim result As SelectionResult = Await Task.Run(Function() _engine.SelectComponents(specs))
 
             _lastResult = result
+            UpdateCADButtonState()
             DisplaySelectionResult(result)
             UpdateStatus($"✔  Selection complete — {result.SelectedMotors.Count} motor(s) found. " &
                      $"Estimated MTOW: {result.EstimatedMtowGrams:N0} g.")

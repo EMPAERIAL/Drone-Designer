@@ -31,9 +31,9 @@ Imports System.Threading
 Imports System.Windows.Forms
 Imports Drone_Designer.Core.Models
 Imports Drone_Designer.Core.Services
-Imports Drone_Designer.DroneDesigner.Core.Models
+Imports Drone_Designer.Drone_Designer.Core.Models
 
-Namespace DroneDesigner.UI.Forms
+Namespace Drone_Designer.UI.Forms
 
     ''' <summary>
     ''' Modal progress window for the CAD generation pipeline.

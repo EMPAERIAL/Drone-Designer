@@ -17,7 +17,7 @@
 Imports System
 Imports System.Collections.Generic
 
-Namespace DroneDesigner.Core.Models
+Namespace Drone_Designer.Core.Models
 
     ' =========================================================================
     ' Enum: PipelineStage

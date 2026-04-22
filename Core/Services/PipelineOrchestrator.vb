@@ -44,8 +44,8 @@ Imports System.Threading.Tasks
 Imports Drone_Designer.Core.Interfaces
 Imports Drone_Designer.Core.Models
 Imports Drone_Designer.Core.Services
+Imports Drone_Designer.Drone_Designer.Core.Models
 Imports Drone_Designer.Drone_Designer.SolidWorks
-Imports Drone_Designer.DroneDesigner.Core.Models
 Imports Drone_Designer.SolidWorks
 Imports Drone_Designer.Utilities
 
@@ -100,7 +100,6 @@ Namespace Drone_Designer.Core.Services
         ''' <param name="selector">Component selection engine instance.</param>
         ''' <param name="swAutomation">SolidWorks connection manager (Task 12/14).</param>
         ''' <param name="macroRunner">Macro execution runner (Task 13).</param>
-        ''' <param name="config">Application configuration accessor.</param>
         ''' <param name="logger">
         ''' Optional delegate for log messages. Pass <c>AddressOf Debug.WriteLine</c>
         ''' during development, or wire to a real logger later.
@@ -108,25 +107,21 @@ Namespace Drone_Designer.Core.Services
         Public Sub New(selector As IComponentSelector,
                        swAutomation As SolidWorksAutomation,
                        macroRunner As MacroRunner,
-                       config As ConfigManager,
                        Optional logger As Action(Of String) = Nothing)
 
             If selector Is Nothing Then Throw New ArgumentNullException(NameOf(selector))
             If swAutomation Is Nothing Then Throw New ArgumentNullException(NameOf(swAutomation))
             If macroRunner Is Nothing Then Throw New ArgumentNullException(NameOf(macroRunner))
-            If config Is Nothing Then Throw New ArgumentNullException(NameOf(config))
 
             _selector = selector
             _swAutomation = swAutomation
             _macroRunner = macroRunner
-            _config = config
             _logger = If(logger, Sub(msg) System.Diagnostics.Debug.WriteLine($"[Pipeline] {msg}"))
 
             ' Macro path read from config; fall back to a path relative to the executable.
-            _motorMountMacroPath = config.serialize("MacroPaths:MotorMount",
-                                                      defaultValue:=Path.Combine(
-                                                          AppDomain.CurrentDomain.BaseDirectory,
-                                                          "Resources", "Macros", "MotorMount.swb"))
+            _motorMountMacroPath = Path.Combine(
+                        AppDomain.CurrentDomain.BaseDirectory,
+                        "Resources", "Macros", "MotorMount.swb")
         End Sub
 
         ' ------------------------------------------------------------------
@@ -273,28 +268,28 @@ Namespace Drone_Designer.Core.Services
                         ' RunMacroForMotor calls the macro via MacroRunner and saves the part.
                         ' This is the Task 14 method:  SolidWorksAutomation.GenerateMotorMount
                         ' AFTER — route through MacroRunner which already exists
-                        Dim macroSuccess As Boolean = Await Task.Run(
-                            Function()
-                                Dim motorParams As New MacroParameters()
-                                motorParams.Add("MountingPatternMm", motor.Dimensions.MountingPatternMm)
-                                motorParams.Add("ShaftDiameterMm", motor.Dimensions.ShaftDiameterMm)
-                                motorParams.Add("OuterDiameterMm", motor.Dimensions.OuterDiameterMm)
-                                motorParams.Add("MassGrams", motor.MassGrams)
+                        Dim motorParams As New MacroParameters()
+                        motorParams.Add("ShaftDiameterMm", motor.Dimensions.ShaftDiameterMm)
+                        motorParams.Add("MountingBoltCircleMm", motor.Dimensions.MountingPatternMm)
+                        motorParams.Add("OuterDiameterMm", motor.Dimensions.OuterDiameterMm)
 
-                                Dim result As MacroRunResult = _macroRunner.RunMacroOnTemplate(
-            templatePath:=Path.Combine(_config.GetSetting("TemplatePaths:MotorMount",
-                               defaultValue:=Path.Combine(
-                                   AppDomain.CurrentDomain.BaseDirectory,
-                                   "Resources", "Templates", "MotorMount_Template.SLDPRT")),
+                        Dim templatePath As String = Path.Combine(
+    ConfigManager.Settings.ResolvedTemplatePartsDirectory,
+    "MotorMount_Template.SLDPRT")
+
+                        Dim macroResult As MacroRunResult = Await Task.Run(
+    Function()
+        Return _macroRunner.RunMacroOnTemplate(
+            templatePath:=templatePath,
             macroPath:=_motorMountMacroPath,
             macroModule:="MotorMount",
             macroProcedure:="GenerateMotorMount",
             parameters:=motorParams,
             outputPath:=outputPath)
-
-        Return result.Success
-                            End Function,
+    End Function,
     cancellationToken)
+
+                        Dim macroSuccess As Boolean = macroResult.Success
 
                         If macroSuccess Then
                             Report(progress, PipelineStage.SavingFile, pctMid,
@@ -405,13 +400,12 @@ Namespace Drone_Designer.Core.Services
             ' Wrap the existing result in a fake selector so RunAsync can
             ' reuse all its logic without duplicating it.
             Dim wrappedSelector As IComponentSelector =
-                New _PreloadedResultSelector(selectionResult)
+                New PreloadedResultSelector(selectionResult)
 
             Dim tempOrchestrator As New PipelineOrchestrator(
                 wrappedSelector,
                 _swAutomation,
                 _macroRunner,
-                _config,
                 _logger)
 
             Return Await tempOrchestrator.RunAsync(
@@ -560,7 +554,7 @@ Namespace Drone_Designer.Core.Services
         ' reuse the main RunAsync logic without duplicating it.
         ' ------------------------------------------------------------------
 
-        Private Class _PreloadedResultSelector
+        Private Class PreloadedResultSelector
             Implements IComponentSelector
 
             Private ReadOnly _result As SelectionResult
