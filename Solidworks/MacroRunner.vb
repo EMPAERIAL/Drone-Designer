@@ -505,7 +505,7 @@ Namespace Drone_Designer.SolidWorks
             End If
 
             ' --- 7. Run the macro -----------------------------
-            Dim swErr As Long = 0
+            Dim swErr As Integer = 0
             Dim macroOk As Boolean = False
             Try
                 macroOk = RunMacro(macroPath, macroModule, macroProcedure, swErr)
@@ -639,7 +639,7 @@ Namespace Drone_Designer.SolidWorks
             End If
 
             ' Run macro
-            Dim swErr As Long = 0
+            Dim swErr As Integer = 0
             Dim macroOk = RunMacro(macroPath, macroModule, macroProcedure, swErr)
 
             ' Clean up properties
@@ -765,7 +765,7 @@ Namespace Drone_Designer.SolidWorks
                         $"Step {i + 1}: macro file not found: {_step.MacroPath}")
                 End If
 
-                Dim swErr As Long = 0
+                Dim swErr As Integer = 0
                 Dim ok = RunMacro(_step.MacroPath, _step.[Module], _step.Procedure, swErr)
                 If Not ok Then
                     CloseDocument(doc, False)
@@ -827,6 +827,21 @@ Namespace Drone_Designer.SolidWorks
                 Log($"  OpenDoc6 warnings: {warnings}, errors: {errors}")
             End If
 
+            ' ── Critical: explicitly activate the opened document ─────────────────
+            ' OpenDoc6 does not guarantee the new document becomes swApp.ActiveDoc,
+            ' especially when SolidWorks was already running with another doc open.
+            ' The VBA macro uses swApp.ActiveDoc — without this call it will modify
+            ' the wrong document and the working copy will be saved unchanged.
+            If doc IsNot Nothing Then
+                Try
+                    Dim activateErrors As Integer = 0
+                    _swApp.ActivateDoc2(filePath, False, activateErrors)
+                    Log($"  ActivateDoc2: errors={activateErrors}")
+                Catch ex As Exception
+                    Log($"  WARNING: ActivateDoc2 failed — {ex.Message}")
+                End Try
+            End If
+
             Return doc
         End Function
 
@@ -851,7 +866,7 @@ Namespace Drone_Designer.SolidWorks
         Private Function RunMacro(macroPath As String,
                                    [module] As String,
                                    procedure As String,
-                                   ByRef swErr As Long) As Boolean
+                                   ByRef swErr As Integer) As Boolean
             Log($"  RunMacro2: {Path.GetFileName(macroPath)} → {[module]}.{procedure}")
             ' RunMacro2(MacroFile, ModuleName, ProcedureName, Options, Errors) → Boolean
             Dim result As Boolean = _swApp.RunMacro2(
@@ -892,7 +907,7 @@ Namespace Drone_Designer.SolidWorks
                 Try
                     ' Add2(FieldName, FieldType, FieldValue, OverwriteExisting)
                     ' swCustomInfoType_e.swCustomInfoText = 30
-                    custMgr.Add2(kvp.Key, 30, kvp.Value, True)
+                    custMgr.Add3(kvp.Key, 30, kvp.Value, True)
                     injected += 1
                 Catch ex As Exception
                     Log($"  WARNING: Could not inject property '{kvp.Key}' — {ex.Message}")

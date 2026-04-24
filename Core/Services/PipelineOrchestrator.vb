@@ -89,6 +89,7 @@ Namespace Drone_Designer.Core.Services
 
         ''' <summary>Path to the motor mount macro file (.swb).</summary>
         Private ReadOnly _motorMountMacroPath As String
+        Private ReadOnly _motorMountTemplatePath As String
 
         ' ------------------------------------------------------------------
         ' Constructor
@@ -121,7 +122,10 @@ Namespace Drone_Designer.Core.Services
             ' Macro path read from config; fall back to a path relative to the executable.
             _motorMountMacroPath = Path.Combine(
                         AppDomain.CurrentDomain.BaseDirectory,
-                        "Resources", "Macros", "MotorMount.swb")
+                        "Resources", "Macros", "MotorMount.swp")
+            _motorMountTemplatePath = Path.Combine(
+                        ConfigManager.Settings.ResolvedTemplatePartsDirectory,
+                        "MotorMount_Template.SLDPRT")
         End Sub
 
         ' ------------------------------------------------------------------
@@ -210,152 +214,18 @@ Namespace Drone_Designer.Core.Services
                 cancellationToken.ThrowIfCancellationRequested()
 
                 ' ----------------------------------------------------------------
-                ' STAGE 3 — Connect to SolidWorks
+                ' STAGES 3-6 — All SolidWorks COM calls on one dedicated STA thread.
+                ' After the Await Task.Run above, continuations run on MTA thread-pool
+                ' threads. SolidWorks COM is STA — RunMacro2 called from MTA silently
+                ' no-ops with no error. RunOnStaAsync pins Connect, RunMacro2, and
+                ' Disconnect to one STA thread so they all share the same COM apartment.
                 ' ----------------------------------------------------------------
-                Report(progress, PipelineStage.ConnectingToSolidWorks, 18,
-                       "Connecting to SolidWorks…",
-                       "This may take 20–30 seconds if SolidWorks needs to launch.")
-
-                Dim swErrorMsg As String = Nothing
-                Dim swConnected As Boolean = Await Task.Run(
-                    Function() _swAutomation.Connect(swErrorMsg), cancellationToken)
-
-                If Not swConnected Then
-                    Const prefix = "Could not connect to SolidWorks: "
-                    Dim msg = prefix & If(swErrorMsg, "Unknown error.")
-                    Report(progress, PipelineStage.Failed, 18, "SolidWorks connection failed", msg)
-                    Return New PipelineResult(msg, parts, startedAt)
-                End If
-
-                Dim swVersion As String = _swAutomation.GetVersion()
-                _logger($"Connected to SolidWorks {swVersion}.")
-                Report(progress, PipelineStage.ConnectingToSolidWorks, 30,
-                       $"Connected to SolidWorks {swVersion}")
-                cancellationToken.ThrowIfCancellationRequested()
-
-                ' ----------------------------------------------------------------
-                ' STAGE 4 — Generate motor mounts (one per selected motor)
-                ' ----------------------------------------------------------------
-                Dim motors As IReadOnlyList(Of ComponentSpecs) = selectionResult.SelectedMotors
-                Dim motorCount As Integer = motors.Count
-
-                ' Percentage window for all part generation: 30 → 90 = 60 points
-                Dim partWindowStart As Integer = 30
-                Dim partWindowEnd As Integer = 90
-                Dim pointsPerPart As Double = (partWindowEnd - partWindowStart) /
-                                               Math.Max(motorCount, 1)
-
-                For i As Integer = 0 To motorCount - 1
-                    cancellationToken.ThrowIfCancellationRequested()
-
-                    Dim motor As ComponentSpecs = motors(i)
-                    Dim partIndex As Integer = i + 1
-                    Dim pctStart As Integer = partWindowStart + CInt(i * pointsPerPart)
-                    Dim pctMid As Integer = partWindowStart + CInt((i + 0.5) * pointsPerPart)
-
-                    Report(progress, PipelineStage.GeneratingPart, pctStart,
-                           $"Generating motor mount {partIndex} of {motorCount}…",
-                           GetMotorDisplayName(motor))
-
-                    _logger($"Starting motor mount for {GetMotorDisplayName(motor)}")
-
-                    Try
-                        ' Derive parameters and call the Task 14 method on SolidWorksAutomation
-                        Dim outputFilename As String =
-                            SanitiseFilename($"MotorMount_{GetMotorDisplayName(motor)}.SLDPRT")
-                        Dim outputPath As String = Path.Combine(outputDirectory, outputFilename)
-
-                        ' RunMacroForMotor calls the macro via MacroRunner and saves the part.
-                        ' This is the Task 14 method:  SolidWorksAutomation.GenerateMotorMount
-                        ' AFTER — route through MacroRunner which already exists
-                        Dim motorParams As New MacroParameters()
-                        motorParams.Add("ShaftDiameterMm", motor.Dimensions.ShaftDiameterMm)
-                        motorParams.Add("MountingBoltCircleMm", motor.Dimensions.MountingPatternMm)
-                        motorParams.Add("OuterDiameterMm", motor.Dimensions.OuterDiameterMm)
-
-                        Dim templatePath As String = Path.Combine(
-    ConfigManager.Settings.ResolvedTemplatePartsDirectory,
-    "MotorMount_Template.SLDPRT")
-
-                        Dim macroResult As MacroRunResult = Await Task.Run(
-    Function()
-        Return _macroRunner.RunMacroOnTemplate(
-            templatePath:=templatePath,
-            macroPath:=_motorMountMacroPath,
-            macroModule:="MotorMount",
-            macroProcedure:="GenerateMotorMount",
-            parameters:=motorParams,
-            outputPath:=outputPath)
-    End Function,
-    cancellationToken)
-
-                        Dim macroSuccess As Boolean = macroResult.Success
-
-                        If macroSuccess Then
-                            Report(progress, PipelineStage.SavingFile, pctMid,
-                                   $"Saved motor mount {partIndex} of {motorCount}",
-                                   outputFilename)
-                            parts.Add(New GeneratedPartRecord(
-                                          motor.Id,
-                                          GetMotorDisplayName(motor),
-                                          "Motor Mount",
-                                          outputPath))
-                            _logger($"  ✓ Saved: {outputPath}")
-                        Else
-                            Const detail = "Macro returned failure status (see SolidWorks log)."
-                            parts.Add(GeneratedPartRecord.Failure(
-                                          motor.Id,
-                                          GetMotorDisplayName(motor),
-                                          "Motor Mount",
-                                          detail))
-                            _logger($"  ✗ Macro failed for {GetMotorDisplayName(motor)}: {detail}")
-                        End If
-
-                    Catch ex As OperationCanceledException
-                        Throw   ' propagate cancellation — do not swallow
-                    Catch ex As Exception
-                        ' Partial failure — log and continue with the remaining motors
-                        Dim detail = ex.Message
-                        parts.Add(GeneratedPartRecord.Failure(
-                                      motor.Id,
-                                      GetMotorDisplayName(motor),
-                                      "Motor Mount",
-                                      detail))
-                        _logger($"  ✗ Exception for {GetMotorDisplayName(motor)}: {ex}")
-                    End Try
-
-                Next i ' end motor loop
-
-                ' ----------------------------------------------------------------
-                ' STAGE 5 — Write component manifest
-                ' ----------------------------------------------------------------
-                cancellationToken.ThrowIfCancellationRequested()
-                Report(progress, PipelineStage.WritingManifest, 92, "Writing component manifest…")
-
-                Dim manifestPath As String = Path.Combine(outputDirectory, "component_manifest.txt")
-                WriteManifest(manifestPath, specs, selectionResult, parts)
-                _logger($"Manifest written: {manifestPath}")
-
-                ' ----------------------------------------------------------------
-                ' STAGE 6 — Finalise
-                ' ----------------------------------------------------------------
-                Report(progress, PipelineStage.Finalising, 98, "Finalising…")
-
-                ' Disconnect only if WE connected (don't close the user's existing session)
-                If Not swWasConnectedBeforeRun Then
-                    _swAutomation.Disconnect()
-                    _logger("Disconnected from SolidWorks (we opened the session).")
-                End If
-
-                Dim successCount As Integer = 0
-                For Each p In parts
-                    If p.Success Then successCount += 1
-                Next
-                Report(progress, PipelineStage.Finalising, 100,
-                       $"Complete — {successCount} of {motorCount} part(s) generated",
-                       $"Output: {outputDirectory}")
-
-                Return New PipelineResult(parts, outputDirectory, manifestPath, startedAt)
+                Return Await RunOnStaAsync(Of PipelineResult)(Function()
+                                                                  Return RunSolidWorksStages(
+                                                                      selectionResult, specs, outputDirectory,
+                                                                      parts, swWasConnectedBeforeRun,
+                                                                      progress, cancellationToken, startedAt)
+                                                              End Function)
 
             Catch ex As OperationCanceledException
                 _logger("Pipeline cancelled by user.")
@@ -569,6 +439,197 @@ Namespace Drone_Designer.Core.Services
             End Function
 
         End Class
+
+        ' Add to the Private helpers region of PipelineOrchestrator.vb
+
+        ''' <summary>
+        ''' Returns the appropriate carbon round tube outer diameter for a drone arm,
+        ''' based on the maximum thrust the motor produces.
+        ''' Sizes map to common carbon fibre tube stock: 10, 12, 16, 20, 25 mm.
+        ''' </summary>
+        Private Shared Function ComputeArmTubeOdMm(maxThrustGrams As Double) As Double
+            If maxThrustGrams < 500 Then
+                Return 10.0
+            ElseIf maxThrustGrams < 1000 Then
+                Return 12.0
+            ElseIf maxThrustGrams < 2000 Then
+                Return 16.0
+            ElseIf maxThrustGrams < 4000 Then
+                Return 20.0
+            Else
+                Return 25.0
+            End If
+        End Function
+
+        ''' <summary>
+        ''' Executes all SolidWorks-dependent pipeline stages (3-6) synchronously.
+        ''' Always call this via RunOnStaAsync so that Connect, RunMacro2, and
+        ''' Disconnect all run in the same STA COM apartment.
+        ''' </summary>
+        Private Function RunSolidWorksStages(
+                selectionResult As SelectionResult,
+                specs As MissionSpecs,
+                outputDirectory As String,
+                parts As List(Of GeneratedPartRecord),
+                swWasConnectedBeforeRun As Boolean,
+                progress As IProgress(Of PipelineProgressReport),
+                cancellationToken As CancellationToken,
+                startedAt As DateTime) As PipelineResult
+
+            ' ----------------------------------------------------------------
+            ' STAGE 3 — Connect to SolidWorks
+            ' ----------------------------------------------------------------
+            Report(progress, PipelineStage.ConnectingToSolidWorks, 18,
+                   "Connecting to SolidWorks…",
+                   "This may take 20–30 seconds if SolidWorks needs to launch.")
+
+            Dim swErrorMsg As String = Nothing
+            Dim swConnected As Boolean = _swAutomation.Connect(swErrorMsg)
+
+            If Not swConnected Then
+                Const prefix = "Could not connect to SolidWorks: "
+                Dim msg = prefix & If(swErrorMsg, "Unknown error.")
+                Report(progress, PipelineStage.Failed, 18, "SolidWorks connection failed", msg)
+                Return New PipelineResult(msg, parts, startedAt)
+            End If
+
+            Dim swVersion As String = _swAutomation.GetVersion()
+            _logger($"Connected to SolidWorks {swVersion}.")
+            Report(progress, PipelineStage.ConnectingToSolidWorks, 30,
+                   $"Connected to SolidWorks {swVersion}")
+            cancellationToken.ThrowIfCancellationRequested()
+
+            ' ----------------------------------------------------------------
+            ' STAGE 4 — Generate motor mounts (one per selected motor)
+            ' ----------------------------------------------------------------
+            Dim motors As IReadOnlyList(Of ComponentSpecs) = selectionResult.SelectedMotors
+            Dim motorCount As Integer = motors.Count
+
+            ' Percentage window for all part generation: 30 → 90 = 60 points
+            Dim partWindowStart As Integer = 30
+            Dim partWindowEnd As Integer = 90
+            Dim pointsPerPart As Double = (partWindowEnd - partWindowStart) /
+                                           Math.Max(motorCount, 1)
+
+            For i As Integer = 0 To motorCount - 1
+                cancellationToken.ThrowIfCancellationRequested()
+
+                Dim motor As MotorSpec = motors(i)
+                Dim partIndex As Integer = i + 1
+                Dim pctStart As Integer = partWindowStart + CInt(i * pointsPerPart)
+                Dim pctMid As Integer = partWindowStart + CInt((i + 0.5) * pointsPerPart)
+
+                Report(progress, PipelineStage.GeneratingPart, pctStart,
+                       $"Generating motor mount {partIndex} of {motorCount}…",
+                       GetMotorDisplayName(motor))
+
+                _logger($"Starting motor mount for {GetMotorDisplayName(motor)}")
+
+                Try
+                    Dim outputFilename As String =
+                        SanitiseFilename($"MotorMount_{GetMotorDisplayName(motor)}.SLDPRT")
+                    Dim outputPath As String = Path.Combine(outputDirectory, outputFilename)
+
+                    Dim motorParams As New MacroParameters()
+                    motorParams.Add("MOTOR_SHAFT_DIAMETER_MM", motor.Dimensions.ShaftDiameterMm)
+                    motorParams.Add("MOTOR_MOUNT_PATTERN_MM", motor.Dimensions.MountingPatternMm)
+                    motorParams.Add("MOTOR_OUTER_DIAMETER_MM", motor.Dimensions.OuterDiameterMm)
+
+                    Dim motorSpec As MotorSpec = TryCast(motor, MotorSpec)
+                    If motorSpec IsNot Nothing Then
+                        motorParams.Add("ARM_TUBE_OD_MM", ComputeArmTubeOdMm(motorSpec.MaxThrustGrams))
+                    End If
+
+                    Dim macroResult As MacroRunResult = _macroRunner.RunMacroOnTemplate(
+                        _motorMountTemplatePath,
+                        _motorMountMacroPath,
+                        "MotorMount1",
+                        "BuildMotorMount",
+                        motorParams,
+                        outputPath)
+
+                    If macroResult.Success Then
+                        Report(progress, PipelineStage.SavingFile, pctMid,
+                               $"Saved motor mount {partIndex} of {motorCount}",
+                               outputFilename)
+                        parts.Add(New GeneratedPartRecord(
+                                      motor.Id,
+                                      GetMotorDisplayName(motor),
+                                      "Motor Mount",
+                                      outputPath))
+                        _logger($"  ✓ Saved: {outputPath}")
+                    Else
+                        _logger($"  ✗ Macro failed for {GetMotorDisplayName(motor)}: {macroResult.ErrorMessage}")
+                        parts.Add(GeneratedPartRecord.Failure(motor.Id, GetMotorDisplayName(motor), "Motor Mount", macroResult.ErrorMessage))
+                    End If
+
+                Catch ex As OperationCanceledException
+                    Throw
+                Catch ex As Exception
+                    Dim detail = ex.Message
+                    parts.Add(GeneratedPartRecord.Failure(
+                                  motor.Id,
+                                  GetMotorDisplayName(motor),
+                                  "Motor Mount",
+                                  detail))
+                    _logger($"  ✗ Exception for {GetMotorDisplayName(motor)}: {ex}")
+                End Try
+
+            Next i
+
+            ' ----------------------------------------------------------------
+            ' STAGE 5 — Write component manifest
+            ' ----------------------------------------------------------------
+            cancellationToken.ThrowIfCancellationRequested()
+            Report(progress, PipelineStage.WritingManifest, 92, "Writing component manifest…")
+
+            Dim manifestPath As String = Path.Combine(outputDirectory, "component_manifest.txt")
+            WriteManifest(manifestPath, specs, selectionResult, parts)
+            _logger($"Manifest written: {manifestPath}")
+
+            ' ----------------------------------------------------------------
+            ' STAGE 6 — Finalise
+            ' ----------------------------------------------------------------
+            Report(progress, PipelineStage.Finalising, 98, "Finalising…")
+
+            If Not swWasConnectedBeforeRun Then
+                _swAutomation.Disconnect()
+                _logger("Disconnected from SolidWorks (we opened the session).")
+            End If
+
+            Dim successCount As Integer = 0
+            For Each p In parts
+                If p.Success Then successCount += 1
+            Next
+            Report(progress, PipelineStage.Finalising, 100,
+                   $"Complete — {successCount} of {motorCount} part(s) generated",
+                   $"Output: {outputDirectory}")
+
+            Return New PipelineResult(parts, outputDirectory, manifestPath, startedAt)
+
+        End Function
+
+        ''' <summary>
+        ''' Runs a synchronous function on a freshly spawned STA thread and surfaces the
+        ''' result as a Task. Pass the entire SolidWorks work block as a single lambda so
+        ''' Connect and all subsequent COM calls share one STA apartment.
+        ''' </summary>
+        Private Shared Function RunOnStaAsync(Of T)(func As Func(Of T)) As Task(Of T)
+            Dim tcs As New TaskCompletionSource(Of T)(TaskCreationOptions.RunContinuationsAsynchronously)
+            Dim staThread As New System.Threading.Thread(Sub()
+                                                             Try
+                                                                 tcs.SetResult(func())
+                                                             Catch ex As OperationCanceledException
+                                                                 tcs.SetCanceled()
+                                                             Catch ex As Exception
+                                                                 tcs.SetException(ex)
+                                                             End Try
+                                                         End Sub)
+            staThread.SetApartmentState(System.Threading.ApartmentState.STA)
+            staThread.IsBackground = True
+            staThread.Start()
+            Return tcs.Task
+        End Function
 
     End Class
 

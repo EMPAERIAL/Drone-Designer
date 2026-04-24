@@ -173,7 +173,23 @@
     <None Include="Resources\components.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Macros\MotorMount.swb" />
+    <None Include="Resources\Macros\MotorMount.swb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\Macros\MotorMount.swp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\Macros\MotorMount1.swb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\Macros\MotorMount_Test.swb" />
+    <None Include="Resources\Macros\MotorMount_Test.swp" />
+    <None Include="Resources\MotorMount_Template.SLDPRT">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\Templates\MotorMount_Template.SLDPRT">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="UI\Controls\" />

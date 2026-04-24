@@ -1,0 +1,99 @@
+Option Explicit
+
+Private Const TEST_SHAFT_MM        As Double = 5.0
+Private Const TEST_BOLT_CIRCLE_MM  As Double = 19.0
+Private Const TEST_BOLT_HOLE_MM    As Double = 3.2
+Private Const TEST_MOTOR_OD_MM     As Double = 42.0
+Private Const TEST_ARM_TUBE_OD_MM  As Double = 16.0
+
+Private Const VAR_SHAFT     As String = "DD_ShaftDiameterMm"
+Private Const VAR_BOLT_PCD  As String = "DD_BoltCircleMm"
+Private Const VAR_BOLT_HOLE As String = "DD_BoltHoleDiameterMm"
+Private Const VAR_MOTOR_OD  As String = "DD_MotorOuterDiameterMm"
+Private Const VAR_ARM_TUBE  As String = "DD_ArmTubeOdMm"
+
+Sub BuildMotorMount()
+
+    Dim swApp As SldWorks.SldWorks
+    Set swApp = Application.SldWorks
+
+    Dim swDoc As ModelDoc2
+    Set swDoc = swApp.ActiveDoc
+
+    If swDoc Is Nothing Then
+        MsgBox "ERROR: No active document.", vbCritical, "MotorMount_Test"
+        Exit Sub
+    End If
+
+    Dim eqMgr As EquationMgr
+    Set eqMgr = swDoc.GetEquationMgr()
+
+    If eqMgr Is Nothing Then
+        MsgBox "ERROR: GetEquationMgr() returned Nothing.", vbCritical, "MotorMount_Test"
+        Exit Sub
+    End If
+
+    Dim setLog As String
+    setLog = "=== SET ===" & vbCrLf
+    SetGlobalVar eqMgr, VAR_SHAFT,     TEST_SHAFT_MM,       setLog
+    SetGlobalVar eqMgr, VAR_BOLT_PCD,  TEST_BOLT_CIRCLE_MM, setLog
+    SetGlobalVar eqMgr, VAR_BOLT_HOLE, TEST_BOLT_HOLE_MM,   setLog
+    SetGlobalVar eqMgr, VAR_MOTOR_OD,  TEST_MOTOR_OD_MM,    setLog
+    SetGlobalVar eqMgr, VAR_ARM_TUBE,  TEST_ARM_TUBE_OD_MM, setLog
+
+    Dim readLog As String
+    readLog = vbCrLf & "=== READ-BACK ===" & vbCrLf
+    Dim i As Integer
+    For i = 0 To eqMgr.GetCount() - 1
+        readLog = readLog & "[" & i & "] " & eqMgr.Equation(i) & vbCrLf
+    Next i
+
+    MsgBox setLog & readLog, vbInformation, "Step 1 of 2 - Set + Read-back"
+
+    eqMgr.EvaluateAll()
+    Dim rebuildOk As Boolean
+    rebuildOk = swDoc.ForceRebuild3(True)
+
+    If rebuildOk Then
+        MsgBox "ForceRebuild3: OK - Inspect the part, geometry should reflect test values.", vbInformation, "Step 2 of 2 - Done"
+    Else
+        MsgBox "ForceRebuild3: FAILED - Check FeatureManager for red X errors.", vbExclamation, "Step 2 of 2 - Problem"
+    End If
+
+End Sub
+
+Private Sub SetGlobalVar(eqMgr As EquationMgr, varName As String, newValue As Double, ByRef log As String)
+
+    Dim searchToken As String
+    searchToken = Chr(34) & varName & Chr(34)
+
+    Dim i As Integer
+    For i = 0 To eqMgr.GetCount() - 1
+        If InStr(1, eqMgr.Equation(i), searchToken, vbTextCompare) > 0 Then
+            Dim newEq As String
+            newEq = searchToken & "= " & FormatInvariant(newValue)
+            eqMgr.Equation(i) = newEq
+            log = log & "  SET [" & i & "] " & varName & " -> " & FormatInvariant(newValue) & vbCrLf
+            Exit Sub
+        End If
+    Next i
+
+    log = log & "  MISS " & varName & " (not found)" & vbCrLf
+
+End Sub
+
+Private Function FormatInvariant(value As Double) As String
+    Dim probe As String
+    probe = Format(1.5, "0.0")
+    Dim localSep As String
+    localSep = Mid(probe, 2, 1)
+    Dim s As String
+    s = Format(value, "0.##########")
+    If localSep <> "." Then
+        s = Replace(s, localSep, ".")
+    End If
+    If Right(s, 1) = "." Then
+        s = Left(s, Len(s) - 1)
+    End If
+    FormatInvariant = s
+End Function

@@ -177,7 +177,7 @@ Namespace Utilities
         ''' Example: "C:\DroneDesigner\Templates"
         ''' </summary>
         <DataMember(Name:="templatePartsDirectory", Order:=3)>
-        Public Property TemplatePartsDirectory As String = "Templates"
+        Public Property TemplatePartsDirectory As String = "Resources\Templates"
 
         ''' <summary>
         ''' Directory where generated CAD files (parts and assemblies) are written.
@@ -196,7 +196,7 @@ Namespace Utilities
         ''' Macros are version-sensitive; keep this in sync with the installed version.
         ''' </summary>
         <DataMember(Name:="solidWorksTargetVersion", Order:=5)>
-        Public Property SolidWorksTargetVersion As String = "2024"
+        Public Property SolidWorksTargetVersion As String = "2026"
 
         ' -------------------------------------------------------------------------
         ' Logging
