@@ -25,8 +25,7 @@ See `Resources/Macros/MotorMount1.swb` for the reference implementation.
 |---|---|---|
 | `DD_ArmLengthMm` | Tube length (arm reach) | Computed: propeller radius + clearance margin + body radius |
 | `DD_ArmOdMm` | Tube outer diameter | Motor max thrust → `ComputeArmTubeOdMm()` (10 / 12 / 16 / 20 / 25 mm stock) |
-| `DD_ArmIdMm` | Tube inner diameter | Design choice matched to standard carbon tube stock |
-| `DD_ArmWallMm` | Wall thickness | Derived: `(DD_ArmOdMm - DD_ArmIdMm) / 2` |
+| `DD_ArmIdMm` | Tube inner diameter | Depends on the available standard carbon tube stock |
 
 **Parameter keys injected by MacroRunner (read these in the macro):**
 
@@ -34,7 +33,6 @@ See `Resources/Macros/MotorMount1.swb` for the reference implementation.
 ARM_LENGTH_MM
 ARM_OD_MM
 ARM_ID_MM
-ARM_WALL_MM
 ```
 
 **Arm length formula:**
@@ -175,7 +173,6 @@ WALL_THICKNESS_MM
 | `DD_LgLengthMm` | Tube length (leg height) | Computed: battery height + prop ground-tilt clearance + margin |
 | `DD_LgOdMm` | Tube outer diameter | Same value as `DD_LgTubeOdMm` in connection part |
 | `DD_LgIdMm` | Tube inner diameter | Design choice / standard tube stock |
-| `DD_LgWallMm` | Wall thickness | Derived: `(DD_LgOdMm - DD_LgIdMm) / 2` |
 
 **Parameter keys injected by MacroRunner:**
 
@@ -183,7 +180,6 @@ WALL_THICKNESS_MM
 LG_LENGTH_MM
 LG_OD_MM
 LG_ID_MM
-LG_WALL_MM
 ```
 
 **Minimum leg length formula:**
