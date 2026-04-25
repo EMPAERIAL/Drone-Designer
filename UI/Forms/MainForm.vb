@@ -771,19 +771,18 @@ Partial Public Class MainForm
             lblOutputTitle.AutoSize = True
 
             btnExportCSV = New Button()
-            btnExportCSV.Text = "Export CSV"
-            btnExportCSV.Size = New Size(110, 32)
+            btnExportCSV.Text = "Export to Excel"
+            btnExportCSV.Size = New Size(130, 32)
             btnExportCSV.Location = New Point(820, 8)
             btnExportCSV.Font = New Font("Segoe UI", 9.0F, FontStyle.Regular)
             btnExportCSV.FlatStyle = FlatStyle.Flat
             btnExportCSV.Cursor = Cursors.Hand
-            SetTip(btnExportCSV, "Export the component list to a CSV file.")
-            ' TODO (Task 13): wire Click → export logic
+            SetTip(btnExportCSV, "Export the component list to an Excel workbook (.xlsx).")
 
             btnSendToSolidWorks = New Button()
             btnSendToSolidWorks.Text = "▶  Send to SolidWorks"
             btnSendToSolidWorks.Size = New Size(170, 32)
-            btnSendToSolidWorks.Location = New Point(940, 8)
+            btnSendToSolidWorks.Location = New Point(960, 8)
             btnSendToSolidWorks.Font = New Font("Segoe UI", 9.5F, FontStyle.Bold)
             btnSendToSolidWorks.BackColor = Color.FromArgb(20, 140, 70)
             btnSendToSolidWorks.ForeColor = Color.White

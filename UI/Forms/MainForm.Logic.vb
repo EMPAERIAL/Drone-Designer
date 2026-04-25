@@ -77,6 +77,7 @@ Partial Class MainForm
         MyBase.OnLoad(e)
         InitialiseEngine()
         AddHandler btnSelectComponents.Click, AddressOf OnSelectComponentsAsync
+        AddHandler btnExportCSV.Click, AddressOf OnExportExcel
         WireCADControls()
     End Sub
 
