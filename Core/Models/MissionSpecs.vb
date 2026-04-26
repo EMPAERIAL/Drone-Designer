@@ -517,6 +517,39 @@ Namespace Core.Models
         End Property
 
 
+        ' ── ENERGY POLICY ────────────────────────────────────────────
+
+        ''' <summary>
+        ''' Maximum depth of discharge (DoD) the user is willing to apply to
+        ''' the battery per flight, expressed as a fraction of nominal capacity.
+        '''
+        ''' Example: 0.80 means the engine sizes the battery so that 80% of
+        ''' nominal capacity satisfies the mission energy budget, leaving 20%
+        ''' unused at the mission's planned end-of-flight to preserve cycle life.
+        '''
+        ''' Distinct from <c>OperationalReserveFraction</c> (added in a future TODO),
+        ''' which represents safety margin against unplanned events (wind,
+        ''' return-to-home, navigation drift) layered on top of cycle-life DoD.
+        ''' Effective usable energy is the product of both factors:
+        '''   E_usable = E_nominal × DoD × (1 − reserve_fraction)
+        '''
+        ''' Typical values:
+        '''   • Conservative / mission-critical / BVLOS:    0.70
+        '''   • Standard commercial:                        0.80   (Vu et al. 2019 baseline)
+        '''   • Hobbyist / demo / single-flight tolerance:  0.90
+        '''
+        ''' Valid range: 0.50–0.95. Out-of-range values are not enforced here;
+        ''' validation is the responsibility of <c>SpecValidator</c> when added.
+        '''
+        ''' Default: 0.80 — matches the existing engine default
+        ''' (<c>LipoMaxDod</c> in <c>ComponentSelectionEngine.vb</c>) and the
+        ''' agriculture-multicopter validation baseline from Vu et al. 2019.
+        ''' Source: Vu et al. (Aerosp. Sci. Tech. 2019), Bershadsky et al.
+        ''' (AIAA 2016-0581, EMST validator).
+        ''' </summary>
+        Public Property BatteryMaxDepthOfDischarge As Double = 0.80
+
+
         ' ── COMMUNICATION & CONTROL ───────────────────────────────────
 
         ''' <summary>Control link range (km). Defaults to MaxRangeKm if Nothing.</summary>
