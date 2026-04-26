@@ -266,6 +266,36 @@ Namespace Core.Models
         ''' </summary>
         Public Property MaxTakeoffMassGrams As Double = 2000.0
 
+        ''' <summary>
+        ''' User override for the design thrust-to-weight ratio (TWR).
+        '''
+        ''' When <c>Nothing</c> (default), the component selection engine
+        ''' looks up a profile-appropriate default by mission type:
+        '''   • Surveillance, Mapping:        2.0   (Zhang et al., wind-resistance floor)
+        '''   • Delivery, Inspection,
+        '''     SearchAndRescue:              2.5   (margin for payload + maneuvering)
+        '''   • Racing:                       4.0   (aggressive maneuvering)
+        '''   • Agriculture / endurance
+        '''     fallback (low-mobility):      1.8   (Vu et al., calm-flight profile)
+        '''   • General:                      2.0
+        '''
+        ''' When set to a numeric value, the engine uses that exact ratio for
+        ''' per-motor thrust requirement calculation, ignoring the profile lookup.
+        ''' Useful for:
+        '''   • Custom builds outside the standard mission profiles.
+        '''   • High-wind environments requiring extra hover margin (3.0+).
+        '''   • Constrained-payload missions where every gram of overbuilt thrust
+        '''     is a battery penalty (1.8–2.0 even on a "racing" classification).
+        '''
+        ''' Valid range: 1.5–6.0. Out-of-range values are not enforced here;
+        ''' validation is the responsibility of <c>SpecValidator</c> when added.
+        '''
+        ''' Sources: Zhang et al. (Lifting-Wing Multicopters, IEEE/ASME) for the
+        ''' 2:1 wind-resistance floor; Vu et al. (Aerosp. Sci. Tech. 2019) for the
+        ''' 1.8 endurance/agriculture baseline.
+        ''' </summary>
+        Public Property TargetThrustToWeightRatio As Double? = Nothing
+
 
         ' ── MISSION PROFILE SEGMENTS (Phase 1, TODO 16) ───────────────
 
