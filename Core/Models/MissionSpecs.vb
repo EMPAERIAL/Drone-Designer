@@ -259,10 +259,26 @@ Namespace Core.Models
         Public Property MaxWindSpeedMs As Double = 11.0
 
         ''' <summary>
-        ''' Maximum take-off mass (design limit) in grams, including battery and payload.
-        ''' Engine uses this as target to estimate required thrust and power.
-        ''' Valid range: 100–55,000 g (smallest ready-to-fly quad to heavy industrial).
-        ''' Default: 2000 g (2 kg, typical commercial quadcopter).
+        ''' Regulatory / structural ceiling on take-off mass in grams, including
+        ''' battery and payload. This is a HARD UPPER LIMIT the design must not
+        ''' exceed — NOT a target the engine sizes to.
+        '''
+        ''' The component selection engine derives its own MTOW iteratively from
+        ''' payload + airframe + avionics + battery (see <c>EstimateMtow</c> in
+        ''' <c>ComponentSelectionEngine.vb</c>). This property is currently NOT
+        ''' read by the engine.
+        '''
+        ''' TODO (engine-side, future task): <c>SelectComponents</c> should
+        ''' compare its calculated MTOW against this field and raise
+        ''' <c>ComponentSelectionException</c> if the design exceeds the limit.
+        '''
+        ''' Common ceilings:
+        '''   •   250 g — sub-registration recreational class (FAA / EASA A1)
+        '''   •  2,000 g — typical commercial quadcopter
+        '''   • 25,000 g — EASA Specific Category / Italian regulatory cap
+        '''   • 55,000 g — heavy industrial multirotor upper bound
+        '''
+        ''' Valid range: 100–55,000 g. Default: 2000 g (typical commercial quad).
         ''' </summary>
         Public Property MaxTakeoffMassGrams As Double = 2000.0
 
