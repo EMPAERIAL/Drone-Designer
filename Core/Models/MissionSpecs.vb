@@ -213,6 +213,48 @@ Namespace Core.Models
         ''' <summary>Maximum altitude AGL in meters. Valid range: 10–6000 m.</summary>
         Public Property MaxAltitudeMeters As Double = 120.0
 
+        ''' <summary>
+        ''' Design vertical climb rate in m/s.
+        '''
+        ''' Drives peak-thrust calculation in any climb segment of the mission profile.
+        ''' For a multirotor, climb power adds to hover power roughly linearly with
+        ''' climb rate, so this value materially affects motor and battery sizing
+        ''' for missions with significant altitude gain.
+        '''
+        ''' Typical values:
+        '''   • Conservative commercial / mapping: 2–3 m/s
+        '''   • Standard delivery / surveillance:  3–5 m/s
+        '''   • Aggressive racing / sport:        10–15 m/s
+        '''
+        ''' Valid range: 0.1–20 m/s. Out-of-range values are not enforced here;
+        ''' validation is the responsibility of <c>SpecValidator</c> when added.
+        ''' Default: 3.0 m/s — typical commercial multirotor.
+        '''
+        ''' Source: Yang et al. (Aerospace 2024) treat climb as a primary mission
+        ''' phase with rate-driven energy demand.
+        ''' </summary>
+        Public Property ClimbRateMs As Double = 3.0
+
+        ''' <summary>
+        ''' Maximum climb angle in degrees, measured from the horizontal.
+        '''
+        ''' For a multirotor in pure vertical climb this is 90°; for an inclined
+        ''' climb (forward + upward), it is the resultant velocity vector's angle
+        ''' above horizontal. Drives the gravity component of design thrust:
+        '''   T_design = m·g·sin(γ) + ½·ρ·V²·C_D·S_ref
+        ''' (Stolz et al., DLR, AIAA 2018-1009).
+        '''
+        ''' Typical values:
+        '''   • Mapping / inspection (gentle inclined climb):  20–30°
+        '''   • Standard multirotor takeoff:                    30–45°
+        '''   • Vertical takeoff / aggressive climb:            60–90°
+        '''
+        ''' Valid range: 0–90°. Out-of-range values are not enforced here;
+        ''' validation is the responsibility of <c>SpecValidator</c> when added.
+        ''' Default: 30° — typical inclined climb-out for a commercial multirotor.
+        ''' </summary>
+        Public Property MaxClimbAngleDeg As Double = 30.0
+
         ''' <summary>Maximum sustained wind speed in m/s. Valid range: 0–30 m/s. Default ~11 m/s (Beaufort 5).</summary>
         Public Property MaxWindSpeedMs As Double = 11.0
 
