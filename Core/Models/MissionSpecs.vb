@@ -549,6 +549,37 @@ Namespace Core.Models
         ''' </summary>
         Public Property BatteryMaxDepthOfDischarge As Double = 0.80
 
+        ''' <summary>
+        ''' User override for the battery pack's specific energy in Wh/kg.
+        '''
+        ''' When <c>Nothing</c> (default), the component selection engine
+        ''' looks up a <i>pack-level</i> default by <see cref="PowerSource"/>:
+        '''   • LiPo:                130 Wh/kg   (matches existing engine default)
+        '''   • LiIon:               180 Wh/kg   (higher density, better for fixed-wing)
+        '''   • HydrogenFuelCell:    350 Wh/kg   (long endurance, low noise)
+        '''   • HybridFuelCellLiPo:  240 Wh/kg   (between fuel cell and LiPo)
+        '''   • Tethered:              0 Wh/kg   (no onboard storage)
+        '''
+        ''' These are <b>pack-level</b> values, accounting for cells + wiring +
+        ''' BMS / connector overhead. Cell-level datasheet values are typically
+        ''' 30–40% higher (e.g., a 180 Wh/kg cell yields ~130 Wh/kg at the pack).
+        '''
+        ''' When set to a numeric value, the engine uses that exact specific
+        ''' energy in battery mass / capacity calculations. Useful for:
+        '''   • Modeling a specific cell or pack datasheet.
+        '''   • Sweeping next-generation chemistries (e.g., 200, 300, 400, 500
+        '''     Wh/kg per Yang et al. 2024 Fig. 12).
+        '''   • Modeling a known low-density rugged or high-temperature pack.
+        '''
+        ''' Valid range: 50–600 Wh/kg. Out-of-range values are not enforced here;
+        ''' validation is the responsibility of <c>SpecValidator</c> when added.
+        '''
+        ''' Source: Yang et al. (Sizing of Multicopter Air Taxis, Aerospace 2024)
+        ''' parameterize 200–500 Wh/kg sweeps; current LiPo packs measure
+        ''' 100–150 Wh/kg pack-level.
+        ''' </summary>
+        Public Property BatterySpecificEnergyWhPerKgOverride As Double? = Nothing
+
 
         ' ── COMMUNICATION & CONTROL ───────────────────────────────────
 
