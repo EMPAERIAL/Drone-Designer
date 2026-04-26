@@ -269,6 +269,50 @@ Namespace Core.Models
         ''' </summary>
         Public Property PayloadDimensionsMm As PayloadDimensions = New PayloadDimensions()
 
+        ''' <summary>
+        ''' Steady-state electrical power consumed by the mission payload during
+        ''' active operation, in watts.
+        '''
+        ''' Examples:
+        '''   • Passive optical camera + gimbal: 5–15 W
+        '''   • LiDAR scanner: 20–40 W
+        '''   • Agricultural sprayer pump (Vu et al. 2019, MG-1 reference): 40 W
+        '''   • Thermal + visible dual-payload: 25–50 W
+        '''
+        ''' The component selection engine will eventually add this draw to the
+        ''' propulsion current when sizing battery capacity.
+        '''
+        ''' Default: 0.0 W (no powered payload).
+        ''' Sources: Vu et al. (Aerosp. Sci. Tech. 2019), Bershadsky et al. (AIAA 2016-0581).
+        ''' </summary>
+        Public Property PayloadPowerWatts As Double = 0.0
+
+
+        ' ── AVIONICS POWER BUDGET ────────────────────────────────────
+
+        ''' <summary>
+        ''' Steady-state electrical power consumed by the avionics stack
+        ''' (flight controller, GPS, telemetry radio, receiver, etc.) in watts.
+        '''
+        ''' Typical values:
+        '''   • Bare-bones racing build (FC + RX only): 2–3 W
+        '''   • Standard commercial quad (FC + GPS + telemetry + RX): 5–8 W
+        '''   • Heavy mapping/inspection (FC + dual GPS + companion computer + RTK):
+        '''     15–25 W
+        '''
+        ''' Excludes the camera/video transmitter — those are part of the payload
+        ''' budget when present (see <see cref="PayloadPowerWatts"/>).
+        '''
+        ''' Default: 5.0 W — reflects a typical FC + GPS + telemetry + RX stack
+        ''' at idle. Refine upward when adding a companion computer, RTK GPS,
+        ''' or obstacle-avoidance sensors.
+        '''
+        ''' Sources: Vu et al. (Aerosp. Sci. Tech. 2019, P_avionic = 10 W for
+        ''' agriculture multicopter), Bershadsky et al. (AIAA 2016-0581, I_a tracked
+        ''' separately in EMST validator).
+        ''' </summary>
+        Public Property AvionicsPowerWatts As Double = 5.0
+
 
         ' ── ENVIRONMENT ───────────────────────────────────────────────
 
