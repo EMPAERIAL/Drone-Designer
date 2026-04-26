@@ -1,3 +1,5 @@
+Imports System.Collections.Generic
+
 ''' <summary>
 ''' Namespace for all core data models used across the UAV Design Tool.
 ''' These classes are pure data containers — no logic, no UI dependencies.
@@ -142,6 +144,23 @@ Namespace Core.Models
         Harsh = 1
     End Enum
 
+    ''' <summary>
+    ''' Discrete phase of flight within a mission segment.
+    ''' Used by <see cref="MissionSegment"/> to label segments in a mission profile.
+    ''' Source: Bershadsky et al. (AIAA 2016-0581) define missions as hover, climb,
+    ''' or dash segments; Yang et al. (Aerospace 2024) extend this to include descend.
+    ''' </summary>
+    Public Enum MissionPhase
+        ''' <summary>Stationary hover at constant altitude.</summary>
+        Hover = 0
+        ''' <summary>Powered ascent at the user's specified climb rate.</summary>
+        Climb = 1
+        ''' <summary>Steady-state forward flight at cruise airspeed.</summary>
+        Cruise = 2
+        ''' <summary>Controlled descent. May be powered or autorotative.</summary>
+        Descend = 3
+    End Enum
+
 
     ' ─────────────────────────────────────────────────────────────────
     '  MAIN DATA CLASS
@@ -204,6 +223,38 @@ Namespace Core.Models
         ''' Default: 2000 g (2 kg, typical commercial quadcopter).
         ''' </summary>
         Public Property MaxTakeoffMassGrams As Double = 2000.0
+
+
+        ' ── MISSION PROFILE SEGMENTS (Phase 1, TODO 16) ───────────────
+
+        ''' <summary>
+        ''' Ordered list of mission phase segments (hover, climb, cruise, descend).
+        ''' When this list is non-empty, the component selection engine will
+        ''' eventually integrate energy demand across each segment rather than
+        ''' assuming a single all-hover mission.
+        '''
+        ''' When this list is empty (default), the engine should fall back to
+        ''' <see cref="HoverFractionOfMission"/> as a coarser approximation.
+        '''
+        ''' Sources: Bershadsky et al. (AIAA 2016-0581), Yang et al. (Aerospace 2024).
+        ''' </summary>
+        Public Property MissionSegments As List(Of MissionSegment) = New List(Of MissionSegment)()
+
+        ''' <summary>
+        ''' Fraction of <see cref="FlightEnduranceMinutes"/> spent in hover (0.0–1.0).
+        ''' This is a coarse-grained alternative to populating <see cref="MissionSegments"/>
+        ''' for users who do not want to define a full segment list.
+        '''
+        ''' The engine should ONLY consult this property when MissionSegments is empty.
+        ''' If MissionSegments is non-empty, this value is ignored.
+        '''
+        ''' Default: 1.0 (all hover) — preserves backward-compatible behavior with
+        ''' the legacy single-scalar endurance model.
+        '''
+        ''' Valid range: 0.0–1.0. Out-of-range values are not enforced here;
+        ''' validation is the responsibility of <c>SpecValidator</c> when added.
+        ''' </summary>
+        Public Property HoverFractionOfMission As Double = 1.0
 
 
         ' ── PAYLOAD ───────────────────────────────────────────────────
@@ -450,6 +501,53 @@ Namespace Core.Models
             Return If(IsSpecified,
                       $"{LengthMm:0.#} × {WidthMm:0.#} × {HeightMm:0.#} mm",
                       "Unspecified")
+        End Function
+
+    End Class
+
+    ''' <summary>
+    ''' One discrete phase of a UAV mission profile (hover/climb/cruise/descend),
+    ''' with a duration and an airspeed.
+    '''
+    ''' A complete mission is represented as an ordered <see cref="System.Collections.Generic.List(Of MissionSegment)"/>
+    ''' on <see cref="MissionSpecs.MissionSegments"/>. The component selection
+    ''' engine will eventually integrate energy demand across all segments
+    ''' rather than assuming a single all-hover mission.
+    '''
+    ''' Sources: Bershadsky et al. (AIAA 2016-0581), Yang et al. (Aerospace 2024).
+    ''' </summary>
+    Public Class MissionSegment
+
+        ''' <summary>Phase of flight for this segment.</summary>
+        Public Property Phase As MissionPhase = MissionPhase.Hover
+
+        ''' <summary>Duration of this segment in seconds. Must be ≥ 0.</summary>
+        Public Property DurationSeconds As Double = 0.0
+
+        ''' <summary>
+        ''' Airspeed during this segment in m/s. For Hover, this is 0.
+        ''' For Climb and Descend, this is the horizontal airspeed component.
+        ''' </summary>
+        Public Property AirspeedMs As Double = 0.0
+
+        ''' <summary>Default constructor — produces a zero-duration hover segment.</summary>
+        Public Sub New()
+        End Sub
+
+        ''' <summary>
+        ''' Constructs a fully-specified segment.
+        ''' </summary>
+        ''' <param name="phase">Flight phase.</param>
+        ''' <param name="durationSeconds">Segment duration (s).</param>
+        ''' <param name="airspeedMs">Segment airspeed (m/s); 0 for hover.</param>
+        Public Sub New(phase As MissionPhase, durationSeconds As Double, airspeedMs As Double)
+            Me.Phase = phase
+            Me.DurationSeconds = durationSeconds
+            Me.AirspeedMs = airspeedMs
+        End Sub
+
+        Public Overrides Function ToString() As String
+            Return $"{Phase} for {DurationSeconds:F0} s @ {AirspeedMs:F1} m/s"
         End Function
 
     End Class
