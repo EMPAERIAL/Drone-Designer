@@ -580,6 +580,41 @@ Namespace Core.Models
         ''' </summary>
         Public Property BatterySpecificEnergyWhPerKgOverride As Double? = Nothing
 
+        ''' <summary>
+        ''' Per-flight energy reserve as a fraction of usable battery energy,
+        ''' withheld at mission-planning time to protect against unplanned events.
+        '''
+        ''' Distinct from <see cref="BatteryMaxDepthOfDischarge"/>, which protects
+        ''' pack cycle life over many flights. Operational reserve protects a
+        ''' single flight against:
+        '''   • Stronger headwinds than forecast.
+        '''   • Navigation drift / route-planning slack.
+        '''   • Return-to-home and loiter contingencies.
+        '''   • Payload-driven hover or wait time beyond the nominal mission profile.
+        '''
+        ''' The component selection engine will eventually compute usable mission
+        ''' energy as:
+        '''   E_usable = E_nominal × BatteryMaxDepthOfDischarge × (1 − OperationalReserveFraction)
+        '''
+        ''' Example: a 100 Wh nominal pack with DoD = 0.80 and reserve = 0.20 has
+        ''' 100 × 0.80 × 0.80 = 64 Wh available for the planned mission profile.
+        ''' The remaining 16 Wh (DoD-permitted, reserve-withheld) is available for
+        ''' contingencies without exceeding cycle-life limits; the final 20 Wh
+        ''' (below DoD) remains untouched to preserve pack longevity.
+        '''
+        ''' Typical values:
+        '''   • Hobbyist / line-of-sight, calm conditions:   0.10
+        '''   • Standard commercial / mapping:               0.20   (aviation default)
+        '''   • BVLOS / mission-critical / high-wind:        0.30
+        '''
+        ''' Valid range: 0.0–0.50. Out-of-range values are not enforced here;
+        ''' validation is the responsibility of <c>SpecValidator</c> when added.
+        '''
+        ''' Default: 0.20 — matches aviation-standard 20% energy reserve and
+        ''' aligns with Bershadsky et al. (AIAA 2016-0581) reserve handling.
+        ''' </summary>
+        Public Property OperationalReserveFraction As Double = 0.20
+
 
         ' ── COMMUNICATION & CONTROL ───────────────────────────────────
 
