@@ -102,12 +102,25 @@ Namespace Core.Services
         }
 
         ''' <summary>
-        ''' Tip-clearance ratio between arm length and propeller radius.
-        ''' arm_length / prop_radius ≥ this value.
-        ''' Sources: Ampatis &amp; Papadopoulos warn that adjacent-rotor airflow
-        ''' interaction becomes significant if r_s is too small.
+        ''' Required ratio of frame arm length to propeller radius:
+        '''   arm_length_mm ≥ FrameArmToPropRadiusRatio × prop_radius_mm
+        '''
+        ''' Equivalently, the propeller tip clearance to the next motor is
+        '''   (FrameArmToPropRadiusRatio − 1) × prop_radius
+        '''
+        ''' Value 2.0 → 100% tip-to-tip clearance (prop tip reaches at most
+        ''' halfway to the next motor's centre). This matches typical sport,
+        ''' commercial, and inspection multirotor geometry.
+        '''
+        ''' Lower values (e.g. 1.3) are characteristic of dense racing-frame
+        ''' geometry where prop tips nearly touch adjacent arms; using 1.3 in a
+        ''' general-purpose tool over-allocates prop diameter and cascades into
+        ''' oversized motor selection downstream.
+        '''
+        ''' Source: empirical small-drone geometry survey
+        ''' (e.g., 250 mm-diagonal frames typically fly 5–7" props, not 10").
         ''' </summary>
-        Private Const FrameArmToPropRadiusRatio As Double = 1.3
+        Private Const FrameArmToPropRadiusRatio As Double = 2.0
 
         ''' <summary>
         ''' Inset (in inches) below frame clearance for the propeller-first target
