@@ -373,8 +373,9 @@ Namespace Core.Services
         '''   battery_mass_{i+1} = (E_total / usable_density) x 1000  [Wh -> g]
         ''' </summary>
         ''' <exception cref="ComponentSelectionException">
-        ''' Thrown when battery mass grows monotonically beyond 1.5× the seed
-        ''' (mission is physically infeasible).
+        ''' Thrown when (a) battery mass grows monotonically beyond 1.5× the seed
+        ''' (mission is physically infeasible — divergence), or (b) iteration cap
+        ''' is reached without satisfying the convergence tolerance.
         ''' </exception>
         Public Function EstimateMtow(specs As MissionSpecs) As MtowEstimate
             Dim motorCount As Integer = NormaliseMotorCount(specs.MotorCount)
@@ -422,6 +423,15 @@ Namespace Core.Services
 
                 iteration += 1
             Loop While Math.Abs(totalMass - prevMtow) > MtowConvergenceToleranceGrams AndAlso iteration < MtowMaxIterations
+
+            If iteration >= MtowMaxIterations AndAlso
+               Math.Abs(totalMass - prevMtow) > MtowConvergenceToleranceGrams Then
+                Throw New ComponentSelectionException(
+                    $"MTOW did not converge within {MtowMaxIterations} iterations. " &
+                    $"Final delta: {Math.Abs(totalMass - prevMtow):F1} g " &
+                    $"(tolerance: {MtowConvergenceToleranceGrams:F1} g). " &
+                    "Mission may be at the edge of feasibility — try relaxing endurance or payload.")
+            End If
 
             Return New MtowEstimate With {
                 .StructuralMassGrams = structuralMass,
