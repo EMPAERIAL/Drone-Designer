@@ -110,6 +110,19 @@ Namespace Core.Services
         Private Const FrameArmToPropRadiusRatio As Double = 1.3
 
         ''' <summary>
+        ''' Disk-loading correlation coefficient from Yang et al. 2024.
+        ''' DL [kg/m²] ≈ DiskLoadingCoeff × m_t^DiskLoadingExponent
+        ''' </summary>
+        Private Const DiskLoadingCoeff As Double = 1.19
+        Private Const DiskLoadingExponent As Double = 0.4
+
+        ''' <summary>
+        ''' Acceptable propeller diameter deviation from disk-loading target, inches.
+        ''' Outside this band a candidate is rejected by the primary filter.
+        ''' </summary>
+        Private Const PropDiameterToleranceIn As Double = 1.5
+
+        ''' <summary>
         ''' Maximum iterations for the MTOW fixed-point solver.
         ''' Typical convergence: 3–5 passes for well-posed missions.
         ''' </summary>
@@ -572,6 +585,56 @@ Namespace Core.Services
         ' =======================================================================
         ' TASK 7 — STEP 3b: PROPELLER SELECTION
         ' =======================================================================
+
+        ''' <summary>
+        ''' Selects propeller candidates whose diameter is closest to the target
+        ''' diameter computed from disk loading. Does not depend on motor selection.
+        '''
+        ''' Filters:
+        '''   • DiameterInches ≤ frameClearanceIn (hard frame constraint)
+        '''   • DiameterInches within ±PropDiameterToleranceIn of target
+        '''   • Material acceptable for environment (carbon fibre when Harsh)
+        '''
+        ''' Ranking:
+        '''   • Distance from target diameter ASC (closest first)
+        '''   • Then by static thrust DESC (more capable preferred when distance ties)
+        '''   • Take top 5
+        ''' </summary>
+        Private Function SelectPropellersByTargetDiameter(
+                targetDiameterIn As Double,
+                frameClearanceIn As Double,
+                specs As MissionSpecs) As List(Of ComponentSpecs)
+
+            Dim allProps As IEnumerable(Of ComponentSpecs) = _repository.GetAllByCategory(ComponentCategory.Propeller)
+
+            Dim candidates As List(Of ComponentSpecs) =
+                allProps.Where(Function(p As PropellerSpec)
+                                   If p.DiameterInches > frameClearanceIn Then Return False
+                                   If Math.Abs(p.DiameterInches - targetDiameterIn) > PropDiameterToleranceIn Then Return False
+                                   Return True
+                               End Function) _
+                        .OrderBy(Function(p As PropellerSpec) Math.Abs(p.DiameterInches - targetDiameterIn)) _
+                        .ThenByDescending(Function(p As PropellerSpec) p.StaticThrustGrams) _
+                        .Take(5) _
+                        .ToList()
+
+            If candidates.Count = 0 Then
+                ' Fallback: closest by absolute distance, ignore tolerance band
+                candidates = allProps _
+                    .Where(Function(p As PropellerSpec) p.DiameterInches <= frameClearanceIn) _
+                    .OrderBy(Function(p As PropellerSpec) Math.Abs(p.DiameterInches - targetDiameterIn)) _
+                    .Take(3) _
+                    .ToList()
+            End If
+
+            If candidates.Count = 0 Then
+                Throw New ComponentSelectionException(
+                    $"No propellers found near {targetDiameterIn:F1} in target diameter " &
+                    $"(frame clearance: {frameClearanceIn:F1} in). Consider expanding the propeller database.")
+            End If
+
+            Return candidates
+        End Function
 
         ' ─── RecommendedKvRange status (TODO 33 audit) ────────────────────────
         ' The JSON field "recommendedKvRange" (a 2-element integer array [min, max])
@@ -1476,6 +1539,40 @@ Namespace Core.Services
                 Case 3, 4, 6, 8, 12 : Return motorCount
                 Case Else : Return 4
             End Select
+        End Function
+
+        ''' <summary>
+        ''' Computes the target propeller diameter (inches) for a given MTOW
+        ''' and motor count, using the disk-loading correlation from Yang et al.
+        ''' (Sizing of Multicopter Air Taxis, Aerospace 2024).
+        '''
+        ''' Steps:
+        '''   1. Target disk loading per rotor:  DL = 1.19 × m_t^0.4   [kg/m²]
+        '''   2. Rotor disk area:                A = (m_t · g) / (n · DL · g) = m_t / (n · DL)   [m²]
+        '''   3. Rotor diameter:                 D = 2 · √(A / π)   [m]
+        '''   4. Convert to inches.
+        '''
+        ''' This is a target — the propeller actually selected may differ by
+        ''' ±0.5–1.0 inch from this value due to discrete catalog choices and
+        ''' frame clearance constraints (see EstimateMaxPropDiameter).
+        ''' </summary>
+        ''' <param name="mtowKg">Maximum take-off mass in kilograms.</param>
+        ''' <param name="motorCount">Number of rotors (must be ≥ 1).</param>
+        ''' <returns>Target propeller diameter in inches.</returns>
+        Private Shared Function ComputeTargetPropellerDiameter(mtowKg As Double, motorCount As Integer) As Double
+            If mtowKg <= 0.0 Then Throw New ArgumentException("MTOW must be positive.", NameOf(mtowKg))
+            If motorCount < 1 Then Throw New ArgumentException("Motor count must be ≥ 1.", NameOf(motorCount))
+
+            ' Yang et al. eq.: DL [kg/m²] ≈ DiskLoadingCoeff × m_t^DiskLoadingExponent
+            Dim diskLoadingKgPerM2 As Double = DiskLoadingCoeff * Math.Pow(mtowKg, DiskLoadingExponent)
+
+            ' Per-rotor disk area: m_t [kg] / (n × DL [kg/m²]) → [m²]
+            Dim diskAreaM2 As Double = mtowKg / (motorCount * diskLoadingKgPerM2)
+
+            ' Diameter from area
+            Dim diameterM As Double = 2.0 * Math.Sqrt(diskAreaM2 / Math.PI)
+
+            Return diameterM * 39.3701   ' m → inches
         End Function
 
         ''' <summary>
