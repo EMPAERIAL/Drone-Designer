@@ -372,6 +372,10 @@ Namespace Core.Services
         '''   usable_density = LipoEnergyDensityWhPerKg x DoD   [Wh/kg usable]
         '''   battery_mass_{i+1} = (E_total / usable_density) x 1000  [Wh -> g]
         ''' </summary>
+        ''' <exception cref="ComponentSelectionException">
+        ''' Thrown when battery mass grows monotonically beyond 1.5× the seed
+        ''' (mission is physically infeasible).
+        ''' </exception>
         Public Function EstimateMtow(specs As MissionSpecs) As MtowEstimate
             Dim motorCount As Integer = NormaliseMotorCount(specs.MotorCount)
 
@@ -387,6 +391,9 @@ Namespace Core.Services
             Dim totalMass As Double = 0.0
             Dim prevMtow As Double = 0.0
             Dim iteration As Integer = 0
+            Dim initialSeed As Double = batteryMassG
+            Dim batteryMassPrev As Double = batteryMassG
+            Dim consecutiveIncreases As Integer = 0
 
             Do
                 prevMtow = totalMass
@@ -398,6 +405,20 @@ Namespace Core.Services
 
                 Dim usableDensity As Double = LipoEnergyDensityWhPerKg * LipoMaxDod
                 batteryMassG = (totalEnergyWh / usableDensity) * 1000.0
+
+                If batteryMassG > batteryMassPrev Then
+                    consecutiveIncreases += 1
+                Else
+                    consecutiveIncreases = 0
+                End If
+                batteryMassPrev = batteryMassG
+
+                If consecutiveIncreases >= 3 AndAlso batteryMassG > initialSeed * 1.5 Then
+                    Throw New ComponentSelectionException(
+                        $"MTOW iteration is diverging — required battery mass exceeds airframe lift capacity. " &
+                        $"After {iteration} iterations, battery grew from {initialSeed:F0} g to {batteryMassG:F0} g. " &
+                        "Reduce endurance, payload, or increase motor count.")
+                End If
 
                 iteration += 1
             Loop While Math.Abs(totalMass - prevMtow) > MtowConvergenceToleranceGrams AndAlso iteration < MtowMaxIterations
