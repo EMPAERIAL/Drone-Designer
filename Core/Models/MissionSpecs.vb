@@ -433,13 +433,6 @@ Namespace Core.Models
         ''' </summary>
         Public Property RequiresWaterproofing As Boolean = False
 
-        ''' <summary>
-        ''' Target IP rating string (e.g. "IP54", "IP65"). Empty = no requirement.
-        ''' Drives enclosure material and seal selection in Module 2.
-        ''' Default: empty (no waterproofing).
-        ''' </summary>
-
-
         ' ── MISSION PROFILE & CONFIGURATION ───────────────────────────
 
         ''' <summary>
