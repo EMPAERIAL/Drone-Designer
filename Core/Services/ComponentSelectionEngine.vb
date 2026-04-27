@@ -63,9 +63,11 @@ Namespace Core.Services
         ''' Source: averaged over popular mid-class carbon frames (2023-2024).
         ''' </summary>
         Private Shared ReadOnly AirframeMassTable As New Dictionary(Of Integer, Double) From {
+            {3, 350.0},
             {4, 250.0},
             {6, 420.0},
-            {8, 680.0}
+            {8, 680.0},
+            {12, 1200.0}
         }
 
         Private Const FcStackMassG As Double = 35.0   ' FC + 4-in-1 ESC stack
@@ -85,6 +87,27 @@ Namespace Core.Services
         ''' Racers: 4.0+.  Endurance builds: as low as 1.6 with calm flight profile.
         ''' </summary>
         Private Const QuadThrustToWeightRatio As Double = 2.0
+
+        ''' <summary>
+        ''' Frame diagonal (motor-tip-to-motor-tip, mm) keyed by motor count.
+        ''' Sources: averaged over popular mid-class carbon frames (2023–2024).
+        ''' Used as a fallback when frame size is not derived from a chosen propeller.
+        ''' </summary>
+        Private Shared ReadOnly FrameDiagonalTable As New Dictionary(Of Integer, Double) From {
+            {3, 220.0},
+            {4, 250.0},
+            {6, 380.0},
+            {8, 500.0},
+            {12, 700.0}
+        }
+
+        ''' <summary>
+        ''' Tip-clearance ratio between arm length and propeller radius.
+        ''' arm_length / prop_radius ≥ this value.
+        ''' Sources: Ampatis &amp; Papadopoulos warn that adjacent-rotor airflow
+        ''' interaction becomes significant if r_s is too small.
+        ''' </summary>
+        Private Const FrameArmToPropRadiusRatio As Double = 1.3
 
         ''' <summary>
         ''' Maximum iterations for the MTOW fixed-point solver.
@@ -549,6 +572,23 @@ Namespace Core.Services
         ' =======================================================================
         ' TASK 7 — STEP 3b: PROPELLER SELECTION
         ' =======================================================================
+
+        ' ─── RecommendedKvRange status (TODO 33 audit) ────────────────────────
+        ' The JSON field "recommendedKvRange" (a 2-element integer array [min, max])
+        ' is present on ALL 7 propeller records in Resources/components.json.
+        ' Example: prop_001 has "recommendedKvRange": [2000, 2600].
+        '
+        '   - Property exists on PropellerSpec class: NO
+        '   - Property name: n/a
+        '   - JsonProperty / OnDeserialized mapping present: NO
+        '
+        ' The field is silently discarded by Json.NET at deserialisation time
+        ' because no matching VB property exists on PropellerSpec.
+        ' Adding RecommendedKvMin / RecommendedKvMax properties to PropellerSpec
+        ' is a Phase 4 data-model change and is out of scope for this phase.
+        ' TODO 39 must not reference RecommendedKvRange; use motor KV constraints
+        ' (MotorSpec.KV from the selected motor) as the matching axis instead.
+        ' ─────────────────────────────────────────────────────────────────────
 
         ''' <summary>
         ''' Selects propellers compatible with the top-ranked motor.
@@ -1443,19 +1483,19 @@ Namespace Core.Services
         '''
         ''' Formula (symmetric X-frame):
         '''   arm_length (mm)      = frame_diagonal / sqrt(2)
-        '''   max_prop_radius (mm) = arm_length / 1.3  [30% tip clearance]
+        '''   max_prop_radius (mm) = arm_length / FrameArmToPropRadiusRatio
         '''   max_prop_diam (in)   = (max_prop_radius x 2) / 25.4
+        '''
+        ''' Frame diagonal sourced from FrameDiagonalTable keyed by motor count.
+        ''' Falls back to the 4-motor entry (250 mm) for unrecognised counts.
         ''' </summary>
         Private Shared Function EstimateMaxPropDiameter(motorCount As Integer) As Double
-            Dim diagonalMm As Double
-            Select Case NormaliseMotorCount(motorCount)
-                Case 4 : diagonalMm = 250.0
-                Case 6 : diagonalMm = 380.0
-                Case 8 : diagonalMm = 500.0
-                Case Else : diagonalMm = 250.0
-            End Select
+            Dim n As Integer = NormaliseMotorCount(motorCount)
+            Dim diagonalMm As Double = If(FrameDiagonalTable.ContainsKey(n),
+                                          FrameDiagonalTable(n),
+                                          FrameDiagonalTable(4))
             Dim armLengthMm As Double = diagonalMm / Math.Sqrt(2.0)
-            Dim maxPropRadiusMm As Double = armLengthMm / 1.3
+            Dim maxPropRadiusMm As Double = armLengthMm / FrameArmToPropRadiusRatio
             Return (maxPropRadiusMm * 2.0) / 25.4
         End Function
 
