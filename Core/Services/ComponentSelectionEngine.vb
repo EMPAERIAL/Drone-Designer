@@ -110,11 +110,11 @@ Namespace Core.Services
         Private Const FrameArmToPropRadiusRatio As Double = 1.3
 
         ''' <summary>
-        ''' Disk-loading correlation coefficient from Yang et al. 2024.
-        ''' DL [kg/m²] ≈ DiskLoadingCoeff × m_t^DiskLoadingExponent
+        ''' Inset (in inches) below frame clearance for the propeller-first target
+        ''' diameter. Gives SelectPropellersByTargetDiameter room to pick a
+        ''' catalog match without the target itself being unattainable.
         ''' </summary>
-        Private Const DiskLoadingCoeff As Double = 1.19
-        Private Const DiskLoadingExponent As Double = 0.4
+        Private Const TargetDiameterInsetIn As Double = 0.5
 
         ''' <summary>
         ''' Acceptable propeller diameter deviation from disk-loading target, inches.
@@ -1542,37 +1542,38 @@ Namespace Core.Services
         End Function
 
         ''' <summary>
-        ''' Computes the target propeller diameter (inches) for a given MTOW
-        ''' and motor count, using the disk-loading correlation from Yang et al.
-        ''' (Sizing of Multicopter Air Taxis, Aerospace 2024).
+        ''' Computes the target propeller diameter (inches) for a multirotor of
+        ''' given MTOW and motor count.
         '''
-        ''' Steps:
-        '''   1. Target disk loading per rotor:  DL = 1.19 × m_t^0.4   [kg/m²]
-        '''   2. Rotor disk area:                A = (m_t · g) / (n · DL · g) = m_t / (n · DL)   [m²]
-        '''   3. Rotor diameter:                 D = 2 · √(A / π)   [m]
-        '''   4. Convert to inches.
+        ''' DESIGN NOTE: An earlier draft used the disk-loading regression
+        ''' DL ≈ 1.19 × m_t^0.4 from Yang et al. (Sizing of Multicopter Air
+        ''' Taxis, Aerospace 2024). That correlation is fit through helicopter
+        ''' and UAM-class vehicles in the 100–10,000 kg range, where minimizing
+        ''' disk loading is the dominant efficiency objective. For small drones
+        ''' in the 0.1–10 kg regime — the target regime of this tool — real
+        ''' disk loadings are 5–30 kg/m², not the 1–5 kg/m² that regression
+        ''' predicts. Applying it produces target diameters 2–3× larger than
+        ''' practical (e.g., 25 in for a 2 kg quad).
         '''
-        ''' This is a target — the propeller actually selected may differ by
-        ''' ±0.5–1.0 inch from this value due to discrete catalog choices and
-        ''' frame clearance constraints (see EstimateMaxPropDiameter).
+        ''' Small drones are frame-clearance-limited rather than disk-loading-
+        ''' limited: the frame is sized as small as possible given motor
+        ''' placement, then the largest prop that fits is the optimal choice.
+        ''' This function therefore returns the maximum prop diameter the
+        ''' frame can accommodate for the given motor count, with a small
+        ''' inset margin so SelectPropellersByTargetDiameter has flexibility
+        ''' to pick a slightly smaller catalog match.
         ''' </summary>
-        ''' <param name="mtowKg">Maximum take-off mass in kilograms.</param>
+        ''' <param name="mtowKg">MTOW in kilograms (currently unused; kept on
+        ''' the signature for future regime-dependent extension to UAM-class
+        ''' vehicles where disk loading becomes the binding constraint).</param>
         ''' <param name="motorCount">Number of rotors (must be ≥ 1).</param>
         ''' <returns>Target propeller diameter in inches.</returns>
         Private Shared Function ComputeTargetPropellerDiameter(mtowKg As Double, motorCount As Integer) As Double
             If mtowKg <= 0.0 Then Throw New ArgumentException("MTOW must be positive.", NameOf(mtowKg))
             If motorCount < 1 Then Throw New ArgumentException("Motor count must be ≥ 1.", NameOf(motorCount))
 
-            ' Yang et al. eq.: DL [kg/m²] ≈ DiskLoadingCoeff × m_t^DiskLoadingExponent
-            Dim diskLoadingKgPerM2 As Double = DiskLoadingCoeff * Math.Pow(mtowKg, DiskLoadingExponent)
-
-            ' Per-rotor disk area: m_t [kg] / (n × DL [kg/m²]) → [m²]
-            Dim diskAreaM2 As Double = mtowKg / (motorCount * diskLoadingKgPerM2)
-
-            ' Diameter from area
-            Dim diameterM As Double = 2.0 * Math.Sqrt(diskAreaM2 / Math.PI)
-
-            Return diameterM * 39.3701   ' m → inches
+            Dim frameMaxIn As Double = EstimateMaxPropDiameter(motorCount)
+            Return Math.Max(2.0, frameMaxIn - TargetDiameterInsetIn)
         End Function
 
         ''' <summary>
