@@ -123,6 +123,13 @@ Namespace Core.Services
         Private Const PropDiameterToleranceIn As Double = 1.5
 
         ''' <summary>
+        ''' Required ratio of motor no-load RPM to propeller hover RPM.
+        ''' 1.4 ensures the motor operates below its no-load redline at hover,
+        ''' leaving headroom for climb and wind-recovery transients.
+        ''' </summary>
+        Private Const MotorRpmHeadroomFactor As Double = 1.4
+
+        ''' <summary>
         ''' Maximum iterations for the MTOW fixed-point solver.
         ''' Typical convergence: 3–5 passes for well-posed missions.
         ''' </summary>
@@ -544,8 +551,74 @@ Namespace Core.Services
         End Function
 
         ' =======================================================================
-        ' TASK 7 — STEP 3a: MOTOR SELECTION
+        ' TASK 7 — STEP 3a: MOTOR SELECTION (propeller-first pipeline)
         ' =======================================================================
+
+        ''' <summary>
+        ''' Estimates the propeller's required hover RPM given a per-motor thrust target,
+        ''' using the static-thrust scaling law T ∝ RPM² (momentum theory, fixed pitch).
+        '''   RPM_hover ≈ RPM_test × √(T_required / T_static_at_test)
+        ''' </summary>
+        Private Shared Function EstimatePropellerHoverRpm(prop As PropellerSpec, thrustRequiredGf As Double) As Double
+            If prop.StaticThrustGrams <= 0.0 OrElse prop.StaticThrustTestRPM <= 0 Then
+                ' No test data — fall back to 70% of MaxRPM as a coarse estimate
+                Return prop.MaxRPM * 0.70
+            End If
+            Dim ratio As Double = thrustRequiredGf / prop.StaticThrustGrams
+            Return prop.StaticThrustTestRPM * Math.Sqrt(Math.Max(0.0, ratio))
+        End Function
+
+        ''' <summary>
+        ''' Selects motors compatible with a chosen reference propeller and the
+        ''' per-motor thrust requirement. Used in the propeller-first pipeline.
+        '''
+        ''' Filters:
+        '''   • Motor's PropDiameterMinIn ≤ prop.DiameterInches ≤ PropDiameterMaxIn
+        '''   • Voltage range covers nominal pack voltage
+        '''   • MaxThrustGrams ≥ ThrustPerMotorGf (loose check — manufacturer datasheet)
+        '''   • Motor's no-load RPM at hover voltage exceeds prop's hover RPM by margin
+        '''
+        ''' Ranking:
+        '''   • Efficiency DESC (manufacturer-reported gf/W)
+        '''   • Then Mass ASC
+        '''   • Take top 5
+        ''' </summary>
+        Private Function SelectMotorsForPropeller(
+                referenceProp As PropellerSpec,
+                thrust As ThrustRequirement,
+                specs As MissionSpecs) As List(Of ComponentSpecs)
+
+            Dim nominalVoltage As Double = EstimateNominalVoltage(specs)
+            Dim allMotors As IEnumerable(Of ComponentSpecs) = _repository.GetAllByCategory(ComponentCategory.Motor)
+            Dim propHoverRpm As Double = EstimatePropellerHoverRpm(referenceProp, thrust.ThrustPerMotorGf)
+
+            Dim candidates As List(Of ComponentSpecs) =
+                allMotors.Where(Function(m As MotorSpec)
+                                    If m.MaxThrustGrams < thrust.ThrustPerMotorGf Then Return False
+                                    If m.MinVoltage > nominalVoltage Then Return False
+                                    If m.MaxVoltage < nominalVoltage Then Return False
+                                    If referenceProp.DiameterInches < m.PropDiameterMinIn Then Return False
+                                    If referenceProp.DiameterInches > m.PropDiameterMaxIn Then Return False
+                                    ' RPM headroom: motor must be able to drive prop at hover RPM
+                                    ' with margin (so it isn't running at no-load redline)
+                                    Dim motorMaxRpm As Double = m.KV * nominalVoltage
+                                    If motorMaxRpm < propHoverRpm * MotorRpmHeadroomFactor Then Return False
+                                    Return True
+                                End Function) _
+                         .OrderByDescending(Function(m As MotorSpec) m.Efficiency) _
+                         .ThenBy(Function(m As MotorSpec) m.MassGrams) _
+                         .Take(5) _
+                         .ToList()
+
+            If candidates.Count = 0 Then
+                Throw New ComponentSelectionException(
+                    $"No motors found compatible with {referenceProp.DiameterInches:F1}×{referenceProp.PitchInches:F1} prop " &
+                    $"at {thrust.ThrustPerMotorGf:F0} gf/motor, {nominalVoltage:F1} V. " &
+                    "Consider relaxing the prop diameter target or expanding the motor database.")
+            End If
+
+            Return candidates
+        End Function
 
         ''' <summary>
         ''' Queries the repository for motors that:
