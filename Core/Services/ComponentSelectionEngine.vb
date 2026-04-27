@@ -345,15 +345,52 @@ Namespace Core.Services
         ' =======================================================================
 
         ''' <summary>
-        ''' Initial battery mass guess as a fraction of structural mass, scaled
-        ''' by endurance. Longer missions need a heavier battery seed to converge
-        ''' faster (Yang et al. 2024 UAM ≈ 30%; small drones 35–45% for >45 min).
+        ''' Default pack-level specific energy in Wh/kg by power source family.
+        ''' Used as a fallback when MissionSpecs.BatterySpecificEnergyWhPerKgOverride is Nothing.
+        ''' These are pack-level values (cells + wiring + BMS), matching LipoEnergyDensityWhPerKg.
+        ''' </summary>
+        Private Shared Function GetDefaultSpecificEnergyWhPerKg(source As PowerSourceType) As Double
+            Select Case source
+                Case PowerSourceType.LiPo : Return 130.0
+                Case PowerSourceType.LiIon : Return 180.0
+                Case PowerSourceType.HydrogenFuelCell : Return 350.0
+                Case PowerSourceType.HybridFuelCellLiPo : Return 240.0
+                Case PowerSourceType.Tethered : Return 0.0
+                Case Else : Return 130.0
+            End Select
+        End Function
+
+        ''' <summary>
+        ''' Initial battery mass guess as a fraction of structural mass.
+        ''' Scaled by mission endurance (longer = larger seed) and inversely
+        ''' by battery pack specific energy (higher Wh/kg = smaller seed).
+        ''' Reference baseline: LiPo at 130 Wh/kg pack-level.
+        ''' Result clamped to [0.10, 0.60]. Returns 0 for tethered configurations.
         ''' </summary>
         Private Shared Function EstimateInitialBatterySeedFraction(specs As MissionSpecs) As Double
+            Dim specificEnergy As Double = If(specs.BatterySpecificEnergyWhPerKgOverride.HasValue,
+                                                specs.BatterySpecificEnergyWhPerKgOverride.Value,
+                                                GetDefaultSpecificEnergyWhPerKg(specs.PowerSource))
+
+            ' Tethered or invalid: no onboard battery
+            If specificEnergy <= 0.0 Then Return 0.0
+
             Dim minutes As Double = specs.FlightEnduranceMinutes
-            If minutes < 15.0 Then Return 0.25
-            If minutes <= 45.0 Then Return 0.35
-            Return 0.45
+            Dim baseFraction As Double
+            If minutes < 15.0 Then
+                baseFraction = 0.25
+            ElseIf minutes <= 45.0 Then
+                baseFraction = 0.35
+            Else
+                baseFraction = 0.45
+            End If
+
+            ' Scale inversely with specific energy (LiPo pack at 130 Wh/kg = baseline)
+            Const ReferencePackWhPerKg As Double = 130.0
+            Dim scaled As Double = baseFraction * (ReferencePackWhPerKg / specificEnergy)
+
+            ' Clamp to a sensible band
+            Return Math.Max(0.10, Math.Min(0.60, scaled))
         End Function
 
         ''' <summary>
