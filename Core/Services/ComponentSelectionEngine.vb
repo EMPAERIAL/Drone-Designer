@@ -178,16 +178,19 @@ Namespace Core.Services
         Private Const LipoEnergyDensityWhPerKg As Double = 130.0
 
         ''' <summary>
-        ''' Fraction of full-throttle current drawn at hover for a 2:1 TWR build.
+        ''' Fallback hover-current fraction used ONLY when the reference motor's
+        ''' MaxThrustGrams or the thrust requirement is unavailable
+        ''' (i.e., divide-by-zero protection in the thrust-ratio scaling).
         '''
-        ''' Derivation:
-        '''   Hover thrust = MTOW; full-throttle thrust = 2 x MTOW.
-        '''   Thrust proportional to RPM^2; current proportional to RPM^3 / KV^2.
-        '''   => hover current fraction ~= (0.5)^1.5 = 0.354 theoretically.
-        '''   Empirical bench data for 5"-7" quads shows 0.40-0.50 due to
-        '''   iron losses and non-ideal prop loading. Using 0.45 as midpoint.
+        ''' Normal hover current is computed via momentum-theory scaling:
+        '''   I_hover ≈ I_peak × (T_required / T_peak)^1.5
+        ''' which is materially more accurate than a flat fraction whenever the
+        ''' selected motor is oversized relative to per-motor thrust demand.
+        '''
+        ''' Value 0.35 reflects the legacy assumption that motors are sized for
+        ''' ~2:1 TWR (T_required ≈ T_peak/2 → ratio^1.5 ≈ 0.354).
         ''' </summary>
-        Private Const HoverCurrentFraction As Double = 0.35
+        Private Const HoverCurrentFractionFallback As Double = 0.35
 
         ''' <summary>
         ''' Fixed avionics current draw (A) used as an early estimate in the
@@ -811,7 +814,7 @@ Namespace Core.Services
         '''     Last resort:  I_motor_peak = ThrustPerMotorGf / 10  [~1 A per 10 gf empirical]
         '''
         ''' Hover motor current (per motor):
-        '''   I_hover = I_peak x HoverCurrentFraction  (= 0.45)
+        '''   I_hover = I_peak × (T_required / T_peak)^1.5  [momentum theory]
         '''
         ''' Total peak current (ESC and PDB sizing):
         '''   I_peak_total = (I_motor_peak x motor_count) + I_avionics
@@ -849,7 +852,19 @@ Namespace Core.Services
                 motorPeakCurrentA = thrust.ThrustPerMotorGf / 10.0            ' ~1 A per 10 gf
             End If
 
-            Dim motorHoverCurrentA As Double = motorPeakCurrentA * HoverCurrentFraction
+            ' Hover current via momentum theory: I ∝ T^1.5 for fixed propeller.
+            ' I_hover = I_peak × (T_required / T_peak)^1.5
+            ' Honest model when motor is oversized relative to actual thrust demand.
+            Dim motorHoverCurrentA As Double
+            If refMotor.MaxThrustGrams > 0.0 AndAlso thrust.ThrustPerMotorGf > 0.0 Then
+                Dim thrustRatio As Double = thrust.ThrustPerMotorGf / refMotor.MaxThrustGrams
+                ' Clamp ratio to [0.05, 1.0] — below 5% throttle the model loses
+                ' fidelity (no-load current dominates); above 100% is non-physical.
+                thrustRatio = Math.Max(0.05, Math.Min(1.0, thrustRatio))
+                motorHoverCurrentA = motorPeakCurrentA * Math.Pow(thrustRatio, 1.5)
+            Else
+                motorHoverCurrentA = motorPeakCurrentA * HoverCurrentFractionFallback
+            End If
 
             ' ── System current ──────────────────────────────────────────────────
             Dim totalPeakCurrentA As Double = (motorPeakCurrentA * motorCount) + AvionicCurrentDrawA
