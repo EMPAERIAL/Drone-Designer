@@ -345,6 +345,18 @@ Namespace Core.Services
         ' =======================================================================
 
         ''' <summary>
+        ''' Initial battery mass guess as a fraction of structural mass, scaled
+        ''' by endurance. Longer missions need a heavier battery seed to converge
+        ''' faster (Yang et al. 2024 UAM ≈ 30%; small drones 35–45% for >45 min).
+        ''' </summary>
+        Private Shared Function EstimateInitialBatterySeedFraction(specs As MissionSpecs) As Double
+            Dim minutes As Double = specs.FlightEnduranceMinutes
+            If minutes < 15.0 Then Return 0.25
+            If minutes <= 45.0 Then Return 0.35
+            Return 0.45
+        End Function
+
+        ''' <summary>
         ''' Estimates Maximum Take-Off Weight (MTOW) in grams via fixed-point iteration.
         '''
         ''' The battery mass and MTOW are mutually dependent:
@@ -353,6 +365,7 @@ Namespace Core.Services
         ''' The loop iterates until |MTOW_i - MTOW_{i-1}| &lt;= 1 g (typically 3-5 passes).
         '''
         ''' Per-iteration formula:
+        '''   initial guess: endurance-scaled fraction (see EstimateInitialBatterySeedFraction)
         '''   MTOW_i         = (structural_mass + battery_mass_i) x SafetyFactor
         '''   P_hover        = MTOW_i x 10 W / 100 g            [empirical for 5"-7" quads]
         '''   E_total        = P_hover x endurance_h x 1.20     [+20% non-hover overhead]
@@ -370,7 +383,7 @@ Namespace Core.Services
                 WiringMassG +
                 specs.PayloadWeightGrams
 
-            Dim batteryMassG As Double = structuralMass * 0.25   ' initial guess: 25% of structure
+            Dim batteryMassG As Double = structuralMass * EstimateInitialBatterySeedFraction(specs)
             Dim totalMass As Double = 0.0
             Dim prevMtow As Double = 0.0
             Dim iteration As Integer = 0
