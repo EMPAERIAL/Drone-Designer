@@ -334,9 +334,13 @@ Namespace Core.Services
 
         ''' <summary>
         ''' Runs the full selection pipeline for Tasks 7, 8, and 9:
-        '''   MTOW -> Thrust -> Motors -> Propellers ->
-        '''   Power budget -> Battery -> ESCs -> PDB ->
-        '''   Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
+        '''   1.  MTOW estimation (fixed-point iteration).
+        '''   2.  Per-motor thrust requirement.
+        '''   3a. Compute target propeller diameter from disk loading (Yang 2024).
+        '''   3b. Select propellers near target diameter, within frame clearance.
+        '''   3c. Select motors matched to chosen propeller's load envelope.
+        '''   4.  Power budget -> Battery -> ESCs -> PDB.
+        '''   5.  Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
         '''
         ''' Each intermediate result is stored on SelectionResult so the UI can
         ''' display a transparent breakdown of every sizing decision made.
@@ -344,11 +348,20 @@ Namespace Core.Services
         Public Function SelectComponents(specs As MissionSpecs) As SelectionResult Implements IComponentSelector.SelectComponents
             ValidateMissionSpecs(specs)
 
-            ' ── Task 7 ─────────────────────────────────────────────────────────
+            ' ── Task 7 (propeller-first pipeline) ──────────────────────────────
             Dim mtow As MtowEstimate = EstimateMtow(specs)
             Dim thrust As ThrustRequirement = CalculateThrustRequirement(mtow, specs.MotorCount)
-            Dim motors As List(Of ComponentSpecs) = SelectMotors(thrust, specs)
-            Dim propellers As List(Of ComponentSpecs) = SelectPropellers(motors, specs)
+            ' Step 3a: target prop diameter from disk loading (Yang et al. 2024)
+            Dim mtowKg As Double = mtow.TotalMassGrams / 1000.0
+            Dim targetPropDiameterIn As Double = ComputeTargetPropellerDiameter(mtowKg, mtow.MotorCount)
+            Dim frameClearanceIn As Double = EstimateMaxPropDiameter(mtow.MotorCount)
+            ' Step 3b: select propellers by target diameter (no motor dependency)
+            Dim propellers As List(Of ComponentSpecs) =
+                SelectPropellersByTargetDiameter(targetPropDiameterIn, frameClearanceIn, specs)
+            ' Step 3c: select motors matched to the chosen reference propeller
+            Dim refProp As PropellerSpec = CType(propellers.First(), PropellerSpec)
+            Dim motors As List(Of ComponentSpecs) =
+                SelectMotorsForPropeller(refProp, thrust, specs)
 
             ' ── Task 8 ─────────────────────────────────────────────────────────
             Dim power As PowerBudget = CalculatePowerBudget(motors, thrust, specs)
