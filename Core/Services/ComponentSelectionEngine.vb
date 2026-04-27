@@ -86,6 +86,17 @@ Namespace Core.Services
         ''' </summary>
         Private Const QuadThrustToWeightRatio As Double = 2.0
 
+        ''' <summary>
+        ''' Maximum iterations for the MTOW fixed-point solver.
+        ''' Typical convergence: 3–5 passes for well-posed missions.
+        ''' </summary>
+        Private Const MtowMaxIterations As Integer = 10
+
+        ''' <summary>
+        ''' Convergence tolerance in grams. Loop exits when |MTOW_i − MTOW_{i−1}| ≤ this value.
+        ''' </summary>
+        Private Const MtowConvergenceToleranceGrams As Double = 1.0
+
         ' =======================================================================
         ' TASK 8 CONSTANTS — Power System
         ' =======================================================================
@@ -376,7 +387,7 @@ Namespace Core.Services
                 batteryMassG = (totalEnergyWh / usableDensity) * 1000.0
 
                 iteration += 1
-            Loop While Math.Abs(totalMass - prevMtow) > 1.0 AndAlso iteration < 10
+            Loop While Math.Abs(totalMass - prevMtow) > MtowConvergenceToleranceGrams AndAlso iteration < MtowMaxIterations
 
             Return New MtowEstimate With {
                 .StructuralMassGrams = structuralMass,
