@@ -64,7 +64,7 @@ Namespace Core.Services
         ''' </summary>
         Private Shared ReadOnly AirframeMassTable As New Dictionary(Of Integer, Double) From {
             {3, 350.0},
-            {4, 250.0},
+            {4, 150.0},
             {6, 420.0},
             {8, 680.0},
             {12, 1200.0}
@@ -88,6 +88,8 @@ Namespace Core.Services
         ''' </summary>
         Private Const QuadThrustToWeightRatio As Double = 2.0
 
+        'TODO : The frame size below will be an input from the user. Add it to the mainform too and here make it driven by the user's input.
+
         ''' <summary>
         ''' Frame diagonal (motor-tip-to-motor-tip, mm) keyed by motor count.
         ''' Sources: averaged over popular mid-class carbon frames (2023–2024).
@@ -100,6 +102,9 @@ Namespace Core.Services
             {8, 500.0},
             {12, 700.0}
         }
+
+        'TODO : The next four variables are to be replaced by the following:
+        '
 
         ''' <summary>
         ''' Required ratio of frame arm length to propeller radius:
@@ -168,7 +173,7 @@ Namespace Core.Services
         ''' Maximum recommended depth-of-discharge for LiPo cells.
         ''' 80% usable means we stop drawing at 20% remaining capacity to preserve cycle life.
         ''' </summary>
-        Private Const LipoMaxDod As Double = 0.8
+        Private Const LipoMaxDod As Double = 0.9
 
         ''' <summary>
         ''' Conservative LiPo gravimetric energy density (Wh/kg).
@@ -397,6 +402,7 @@ Namespace Core.Services
             Return New SelectionResult With {
                 .EstimatedMtowGrams = mtow.TotalMassGrams,
                 .RequiredThrustPerMotorGf = thrust.ThrustPerMotorGf,
+                .MtowIterationHistory = mtow.IterationHistory,
                 .SelectedMotors = motors,
                 .SelectedPropellers = propellers,
                 .PowerBudget = power,
@@ -462,7 +468,7 @@ Namespace Core.Services
             Dim scaled As Double = baseFraction * (ReferencePackWhPerKg / specificEnergy)
 
             ' Clamp to a sensible band
-            Return Math.Max(0.10, Math.Min(0.60, scaled))
+            Return Math.Max(0.1, Math.Min(0.6, scaled))
         End Function
 
         ''' <summary>
@@ -476,8 +482,8 @@ Namespace Core.Services
         ''' Per-iteration formula:
         '''   initial guess: endurance-scaled fraction (see EstimateInitialBatterySeedFraction)
         '''   MTOW_i         = (structural_mass + battery_mass_i) x SafetyFactor
-        '''   P_hover        = MTOW_i x 10 W / 100 g            [empirical for 5"-7" quads]
-        '''   E_total        = P_hover x endurance_h x 1.20     [+20% non-hover overhead]
+        '''   P_hover        = MTOW_i x 10 W / 100 g            [empirical for 5"-7" quads]  # TODO: We're not only doing 5"-7" quads
+        '''   E_total        = P_hover x endurance_h x 1.10     [+10% non-hover overhead]
         '''   usable_density = LipoEnergyDensityWhPerKg x DoD   [Wh/kg usable]
         '''   battery_mass_{i+1} = (E_total / usable_density) x 1000  [Wh -> g]
         ''' </summary>
@@ -486,7 +492,7 @@ Namespace Core.Services
         ''' (mission is physically infeasible — divergence), or (b) iteration cap
         ''' is reached without satisfying the convergence tolerance.
         ''' </exception>
-        Public Function EstimateMtow(specs As MissionSpecs) As MtowEstimate
+        Public Function EstimateMtow(specs As MissionSpecs) As MtowEstimate  '# TODO: Hikaye burada
             Dim motorCount As Integer = NormaliseMotorCount(specs.MotorCount)
 
             Dim structuralMass As Double =
@@ -504,17 +510,24 @@ Namespace Core.Services
             Dim initialSeed As Double = batteryMassG
             Dim batteryMassPrev As Double = batteryMassG
             Dim consecutiveIncreases As Integer = 0
+            Dim history As New List(Of MtowIterationPoint)
+            history.Add(New MtowIterationPoint With {.Iteration = 0, .BatteryMassG = batteryMassG, .MtowG = 0})
 
             Do
                 prevMtow = totalMass
                 totalMass = (structuralMass + batteryMassG) * MtowSafetyFactor
 
-                Dim hoverPowerW As Double = (totalMass / 100.0) * 10.0            ' 10 W per 100 g
+                Dim hoverPowerW As Double = (totalMass / 100.0) * 10.0            ' 10 W per 100 g # TODO : Better estimate the hover power with a helper function taking in the disc loading.
                 Dim enduranceH As Double = specs.FlightEnduranceMinutes / 60.0
-                Dim totalEnergyWh As Double = hoverPowerW * enduranceH * 1.2       ' +20% overhead
+                Dim totalEnergyWh As Double = hoverPowerW * enduranceH * 1.1       ' +10% overhead
 
                 Dim usableDensity As Double = LipoEnergyDensityWhPerKg * LipoMaxDod
                 batteryMassG = (totalEnergyWh / usableDensity) * 1000.0
+                history.Add(New MtowIterationPoint With {
+                    .Iteration = iteration + 1,
+                    .BatteryMassG = batteryMassG,
+                    .MtowG = totalMass
+                })
 
                 If batteryMassG > batteryMassPrev Then
                     consecutiveIncreases += 1
@@ -523,11 +536,12 @@ Namespace Core.Services
                 End If
                 batteryMassPrev = batteryMassG
 
-                If consecutiveIncreases >= 3 AndAlso batteryMassG > initialSeed * 1.5 Then
+                If consecutiveIncreases >= 3 AndAlso batteryMassG > initialSeed * 3 Then
                     Throw New ComponentSelectionException(
                         $"MTOW iteration is diverging — required battery mass exceeds airframe lift capacity. " &
                         $"After {iteration} iterations, battery grew from {initialSeed:F0} g to {batteryMassG:F0} g. " &
-                        "Reduce endurance, payload, or increase motor count.")
+                        "Reduce endurance, payload, or increase motor count.",
+                        history)
                 End If
 
                 iteration += 1
@@ -539,7 +553,8 @@ Namespace Core.Services
                     $"MTOW did not converge within {MtowMaxIterations} iterations. " &
                     $"Final delta: {Math.Abs(totalMass - prevMtow):F1} g " &
                     $"(tolerance: {MtowConvergenceToleranceGrams:F1} g). " &
-                    "Mission may be at the edge of feasibility — try relaxing endurance or payload.")
+                    "Mission may be at the edge of feasibility — try relaxing endurance or payload.",
+                    history)
             End If
 
             Return New MtowEstimate With {
@@ -547,7 +562,8 @@ Namespace Core.Services
                 .EstimatedBatteryMassGrams = batteryMassG,
                 .TotalMassGrams = totalMass,
                 .MotorCount = motorCount,
-                .IterationsToConverge = iteration
+                .IterationsToConverge = iteration,
+                .IterationHistory = history
             }
         End Function
 
@@ -591,7 +607,7 @@ Namespace Core.Services
         Private Shared Function EstimatePropellerHoverRpm(prop As PropellerSpec, thrustRequiredGf As Double) As Double
             If prop.StaticThrustGrams <= 0.0 OrElse prop.StaticThrustTestRPM <= 0 Then
                 ' No test data — fall back to 70% of MaxRPM as a coarse estimate
-                Return prop.MaxRPM * 0.70
+                Return prop.MaxRPM * 0.7
             End If
             Dim ratio As Double = thrustRequiredGf / prop.StaticThrustGrams
             Return prop.StaticThrustTestRPM * Math.Sqrt(Math.Max(0.0, ratio))
@@ -1734,6 +1750,16 @@ Namespace Core.Services
     ' ===========================================================================
 
     ''' <summary>Result of MTOW fixed-point iteration (Task 7 output).</summary>
+    ''' <summary>One data point recorded per pass of the MTOW fixed-point iterator.</summary>
+    Public Class MtowIterationPoint
+        ''' <summary>0 = seed (before first pass); N = after pass N.</summary>
+        Public Property Iteration As Integer
+        ''' <summary>Battery mass at this step (g).</summary>
+        Public Property BatteryMassG As Double
+        ''' <summary>Total mass / MTOW at this step (g). 0 for the seed point.</summary>
+        Public Property MtowG As Double
+    End Class
+
     Public Class MtowEstimate
         ''' <summary>Airframe + electronics + payload mass before safety factor (g).</summary>
         Public Property StructuralMassGrams As Double
@@ -1745,6 +1771,8 @@ Namespace Core.Services
         Public Property MotorCount As Integer
         ''' <summary>Number of iterations until |delta MTOW| &lt;= 1 g.</summary>
         Public Property IterationsToConverge As Integer
+        ''' <summary>Per-step history for the convergence chart: seed at index 0, pass N at index N.</summary>
+        Public Property IterationHistory As New List(Of MtowIterationPoint)
     End Class
 
     ''' <summary>Per-motor and total thrust requirements (Task 7 output).</summary>
@@ -1837,6 +1865,8 @@ Namespace Core.Services
         Public Property EstimatedMtowGrams As Double
         ''' <summary>Required single-motor thrust at full throttle (gf).</summary>
         Public Property RequiredThrustPerMotorGf As Double
+        ''' <summary>MTOW iterator history: seed at index 0, pass N at index N. Used by ConvergenceForm.</summary>
+        Public Property MtowIterationHistory As New List(Of MtowIterationPoint)
         ''' <summary>Up to 5 motor candidates sorted by efficiency then mass.</summary>
         Public Property SelectedMotors As New List(Of ComponentSpecs)
         ''' <summary>Up to 5 propeller candidates compatible with SelectedMotors(0).</summary>
@@ -1876,8 +1906,20 @@ Namespace Core.Services
     ''' </summary>
     Public Class ComponentSelectionException
         Inherits Exception
+        ''' <summary>
+        ''' MTOW iteration history collected before the failure.
+        ''' Nothing when the exception did not originate from the iterator.
+        ''' Populated when the iterator either diverges or hits the iteration cap.
+        ''' </summary>
+        Public Property IterationHistory As List(Of MtowIterationPoint)
+
         Public Sub New(message As String)
             MyBase.New(message)
+        End Sub
+
+        Public Sub New(message As String, history As List(Of MtowIterationPoint))
+            MyBase.New(message)
+            Me.IterationHistory = history
         End Sub
     End Class
 

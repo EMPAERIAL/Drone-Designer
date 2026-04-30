@@ -156,6 +156,13 @@ Drone Designer
  each entry lands in the right concrete type.
  </summary>
 </member>
+<member name="T:Drone_Designer.ESCProtocolArrayConverter">
+ <summary>
+ Reads a JSON string array of ESC protocol names and combines them into
+ a single ESCProtocol Flags enum value via bitwise OR.
+ Handles case-insensitive name matching with common abbreviation variants.
+ </summary>
+</member>
 <member name="T:Drone_Designer.Core.Interfaces.IComponentSelector">
  <summary>
  Contract for the component selection engine.
@@ -397,10 +404,19 @@ Drone Designer
 <member name="T:Drone_Designer.Core.Models.PowerConnectorType">
  <summary>Main battery / power connector type.</summary>
 </member>
+<member name="T:Drone_Designer.Core.Models.StringArrayConverter">
+ <summary>
+ Converts a JSON array of strings to a single comma-separated String and back.
+ Prevents deserialisation crashes for fields stored as arrays in components.json
+ but mapped to plain String properties on the spec classes.
+ </summary>
+</member>
 <member name="T:Drone_Designer.Core.Models.Dimensions3D">
  <summary>
  Axis-aligned bounding box dimensions for a physical component.
- All values in millimetres (mm).
+ All values in millimetres (mm) unless otherwise noted.
+ Also carries propeller-specific and motor-specific nested dimension fields
+ so that Newtonsoft can deserialise them from the "dimensions" JSON object.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.Dimensions3D.Length">
@@ -413,17 +429,37 @@ Drone Designer
  <summary>Overall height / depth along the Z-axis in mm.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.Dimensions3D.Diameter">
- <summary>Overall Diameter in mm.</summary>
+ <summary>Overall diameter in mm (circular components).</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.Dimensions3D.DiameterInches">
+ <summary>Propeller blade diameter in inches. Sourced from dimensions.diameterInches.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.Dimensions3D.PitchInches">
+ <summary>Propeller blade pitch in inches. Sourced from dimensions.pitchInches.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.Dimensions3D.BladesCount">
+ <summary>Number of blades. Sourced from dimensions.bladesCount.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.Dimensions3D.BoreMm">
+ <summary>Propeller bore (centre hole) diameter in mm. Sourced from dimensions.boreMm.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.Dimensions3D.HubDiameterMm">
+ <summary>Hub outer diameter in mm. Sourced from dimensions.hubDiameterMm.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.Dimensions3D.ShaftDiameterMm">
+ <summary>Motor shaft diameter in mm. Sourced from dimensions.shaftDiameterMm.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.Dimensions3D.MountingPatternMm">
+ <summary>Mounting bolt-circle diameter in mm. Sourced from dimensions.mountingPatternMm.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.Dimensions3D.OuterDiameterMm">
+ <summary>Outer bell diameter in mm. Sourced from dimensions.outerDiameterMm.</summary>
 </member>
 <member name="M:Drone_Designer.Core.Models.Dimensions3D.#ctor">
  <summary>Creates a zero-size instance.</summary>
 </member>
 <member name="M:Drone_Designer.Core.Models.Dimensions3D.#ctor(System.Double,System.Double,System.Double,System.Double)">
  <summary>Creates an instance with specified dimensions.</summary>
- <param name="length">Length in mm.</param>
- <param name="width">Width in mm.</param>
- <param name="height">Height in mm.</param>
- <param name="diameter">Height in mm.</param>
 </member>
 <member name="M:Drone_Designer.Core.Models.Dimensions3D.ToString">
  <summary>Returns a human-readable string: "LxWxH mm".</summary>
@@ -445,6 +481,7 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.ModelName">
  <summary>
  Human-readable product name (e.g. "T-Motor F60 Pro IV 1750KV").
+ JSON field: "name"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.Manufacturer">
@@ -459,7 +496,7 @@ Drone Designer
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs._Interface">
  <summary>
- Manufacturer part number or SKU.  Useful for sourcing and BOM export.
+ Primary communication interface (e.g. "UART", "I2C").
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.Category">
@@ -481,48 +518,36 @@ Drone Designer
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.MinVoltage">
- <summary>
- Minimum operating supply voltage in Volts (V).
- </summary>
+ <summary>Minimum operating supply voltage in Volts (V). JSON field: "voltageMinV"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.NominalVoltageV">
- <summary>
- Nominal operating supply voltage in Volts (V).
- </summary>
+ <summary>Nominal operating supply voltage in Volts (V).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.MaxPowerW">
- <summary>
- Maximum operating Power in Watts (W).
- </summary>
+ <summary>Maximum operating power in Watts (W).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.MaxVoltage">
- <summary>
- Maximum operating supply voltage in Volts (V).
- </summary>
+ <summary>Maximum operating supply voltage in Volts (V). JSON field: "voltageMaxV"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.MaxCurrentA">
- <summary>
- Maximum operating Power in Watts (W).
- </summary>
+ <summary>Maximum continuous current draw in Amperes (A).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.MinCurrentA">
- <summary>
- Maximum operating supply voltage in Volts (V).
- </summary>
+ <summary>Minimum current draw in Amperes (A).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.NominalCurrentA">
- <summary>
- Maximum operating supply voltage in Volts (V).
- </summary>
+ <summary>Nominal current draw in Amperes (A).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.MinOperatingTempC">
  <summary>
  Minimum operating ambient temperature in degrees Celsius (°C).
+ JSON field: "operatingTempMinC"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.MaxOperatingTempC">
  <summary>
  Maximum operating ambient temperature in degrees Celsius (°C).
+ JSON field: "operatingTempMaxC"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ComponentSpecs.PriceUSD">
@@ -551,58 +576,57 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.MotorSpec.KV">
  <summary>
  Velocity constant in RPM per Volt (KV).
- Higher KV = faster spinning at lower torque; lower KV for large props.
+ JSON field: "motorKv"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.MaxPowerWatts">
  <summary>
  Maximum continuous shaft power output in Watts (W).
+ JSON field: "maxPowerW"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.MaxCurrentAmps">
  <summary>
  Maximum continuous current draw in Amperes (A) at rated voltage.
+ JSON field: "maxContinuousCurrentA"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.NoLoadCurrentAmps">
  <summary>
  No-load current draw at 10 V in Amperes (A).
- Used for efficiency estimation at partial throttle.
+ JSON field: "noLoadCurrentA"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.InternalResistanceMilliOhm">
  <summary>
  Internal resistance of the motor windings in milliohms (mΩ).
- Affects heat generation and efficiency calculations.
+ JSON field: "resistance_mOhm"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.MaxThrustGrams">
  <summary>
  Maximum static thrust produced with the recommended propeller in grams (g).
- Used for thrust-to-weight ratio checks.
+ JSON field: "maxThrustG"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.MaxThrustTestPropeller">
  <summary>
- Propeller size (diameter × pitch, e.g. "10×4.5") at which MaxThrustGrams
- was measured.  String format: "DiameterxPitch" in inches.
+ Propeller size at which MaxThrustGrams was measured. Format: "DiameterxPitch" in inches.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.ShaftDiameterMm">
  <summary>
- Motor shaft diameter in mm.  Required by Module 2 for prop-adapter CAD.
+ Motor shaft diameter in mm. Populated from dimensions.shaftDiameterMm via OnDeserialized.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.StatorDiameterMm">
  <summary>
- Stator diameter (the wound core) in mm.  Part of the "XXXX" designation,
- e.g. 2306 = 23 mm stator diameter.
+ Stator diameter (the wound core) in mm.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.StatorHeightMm">
  <summary>
- Stator height (winding stack height) in mm.  Second half of "XXXX"
- designation, e.g. 2306 = 6 mm stator height.
+ Stator height (winding stack height) in mm.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.PoleCount">
@@ -612,18 +636,20 @@ Drone Designer
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.PropDiameterMinIn">
  <summary>
- Bolt-circle diameter for the motor-to-mount bolt pattern in mm.
- Used by Module 2 to generate correct motor mount geometry.
+ Minimum recommended propeller diameter in inches.
+ JSON field: "designatedPropSizeInMin"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.PropDiameterMaxIn">
  <summary>
- Comment yourself
+ Maximum recommended propeller diameter in inches.
+ JSON field: "designatedPropSizeInMax"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.MountingBoltCircleMm">
  <summary>
- Comment yourself
+ Bolt-circle diameter for the motor-to-mount bolt pattern in mm.
+ Populated from dimensions.mountingPatternMm via OnDeserialized.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.MountingBoltCount">
@@ -637,160 +663,133 @@ Drone Designer
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.RecommendedMinCells">
- <summary>
- Recommended minimum cell count (e.g. 4 for "4S min").
- </summary>
+ <summary>Recommended minimum cell count (e.g. 4 for "4S min").</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.RecommendedMaxCells">
- <summary>
- Recommended maximum cell count (e.g. 6 for "6S max").
- </summary>
+ <summary>Recommended maximum cell count (e.g. 6 for "6S max").</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MotorSpec.Efficiency">
+ <summary>Thrust per Watt in gf/W.</summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.MotorSpec.OnDeserialized(System.Runtime.Serialization.StreamingContext)">
  <summary>
- Thrust per Watt in Gf/W
+ Copies nested dimension fields to top-level properties after JSON deserialisation.
  </summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.ESCSpec">
  <summary>
  Specifications for an Electronic Speed Controller.
  One ESC drives one motor.  The selection engine ensures each ESC's
- current rating ≥ the paired motor's MaxCurrentAmps with headroom.
+ current rating >= the paired motor's MaxCurrentAmps with headroom.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.ContinuousCurrentAmps">
  <summary>
  Continuous current rating in Amperes (A).
- Must exceed motor's MaxCurrentAmps (typically 20 % headroom minimum).
+ JSON field: "continuousCurrentPerChannelA"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.BurstCurrentAmps">
  <summary>
  Burst current rating in Amperes (A), sustainable for ~10 seconds.
+ JSON field: "burstCurrentPerChannelA"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.MinInputVoltage">
  <summary>
- Minimum input voltage in Volts (V) — determines minimum battery cell count.
+ Minimum input voltage in Volts (V).
+ JSON field: "voltageMinV"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.MaxInputVoltage">
  <summary>
- Maximum input voltage in Volts (V) — determines maximum battery cell count.
+ Maximum input voltage in Volts (V).
+ JSON field: "voltageMaxV"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.MinCellCount">
- <summary>
- Minimum Li-Po cell count supported (informational shorthand).
- </summary>
+ <summary>Minimum Li-Po cell count supported. JSON field: "cellCountMin"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.MaxCellCount">
- <summary>
- Maximum Li-Po cell count supported (informational shorthand).
- </summary>
+ <summary>Maximum Li-Po cell count supported. JSON field: "cellCountMax"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.HasBEC">
- <summary>
- True if this ESC includes an onboard Battery Eliminator Circuit (BEC)
- that outputs regulated 5 V or adjustable voltage for servos/FC.
- </summary>
+ <summary>True if this ESC includes an onboard BEC.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.IsAllInOne">
- <summary>
- Comment yourself
- </summary>
+ <summary>True if this is a 4-in-1 ESC board.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.BECVoltage">
- <summary>
- BEC output voltage in Volts (V).  Zero / ignored when HasBEC = False.
- </summary>
+ <summary>BEC output voltage in Volts (V). JSON field: "becVoltageV"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.BECCurrentAmps">
- <summary>
- Maximum BEC output current in Amperes (A).  Zero when HasBEC = False.
- </summary>
+ <summary>Maximum BEC output current in Amperes (A). JSON field: "becCurrentMaxA"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.SupportedProtocols">
  <summary>
- Bitfield of digital/analogue signalling protocols this ESC accepts
- from the flight controller.
+ Bitfield of digital/analogue signalling protocols this ESC accepts.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.Firmware">
- <summary>
- Firmware shipped from the factory (e.g. "BLHeli_32", "AM32", "KISS").
- Determines whether the ESC is field-reprogrammable.
- </summary>
+ <summary>Firmware shipped from the factory. JSON field: "firmwareType"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.SupportsBidirectionalDShot">
  <summary>
- True if the ESC supports bidirectional DSHOT telemetry (RPM feedback
- to the flight controller without a separate telemetry wire).
+ True if the ESC supports bidirectional DSHOT telemetry.
+ JSON field: "telemetryOutput"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ESCSpec.IsQuadESC">
- <summary>
- True if this is a 4-in-1 ESC board (all four ESCs on one PCB).
- Affects mounting strategy in Module 2.
- </summary>
+ <summary>True if this is a 4-in-1 ESC board (all four ESCs on one PCB).</summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.PropellerSpec">
  <summary>
  Specifications for a propeller blade assembly.
  Diameter and pitch are the primary aerodynamic sizing inputs.
+ DiameterInches and PitchInches are nested under "dimensions" in the JSON
+ and are lifted to top-level properties via OnDeserialized.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.DiameterInches">
- <summary>
- Blade diameter in inches (industry convention for UAV props).
- </summary>
+ <summary>Blade diameter in inches. Populated from dimensions.diameterInches.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.PitchInches">
- <summary>
- Blade pitch in inches — distance the prop would advance in one revolution
- through solid material.
- </summary>
+ <summary>Blade pitch in inches. Populated from dimensions.pitchInches.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.BladeCount">
- <summary>
- Number of blades (typically 2, 3, or 4).
- </summary>
+ <summary>Number of blades. Populated from dimensions.bladesCount.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.BoreDiameterMm">
- <summary>
- Bore (centre hole) diameter in mm that fits over the motor shaft.
- Must match or be adapted to MotorSpec.ShaftDiameterMm.
- </summary>
+ <summary>Bore diameter in mm. Populated from dimensions.boreMm.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.Material">
- <summary>
- Primary blade material (e.g. "Carbon Fibre", "Nylon Glass-Filled", "Polycarbonate").
- </summary>
+ <summary>Primary blade material.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.IsFoldable">
- <summary>
- True if the blades are foldable (common for fixed-wing and long-range craft).
- </summary>
+ <summary>True if the blades are foldable. JSON field: "isFolding"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.MaxRPM">
- <summary>
- Maximum safe rotational speed in RPM as rated by the manufacturer.
- </summary>
+ <summary>Maximum safe rotational speed in RPM.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.StaticThrustGrams">
  <summary>
- Static thrust in grams (g) at the specified test RPM.
+ Static thrust in grams (g).
+ JSON field: "maxStaticThrustG"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.StaticThrustTestRPM">
- <summary>
- RPM at which StaticThrustGrams was measured.
- </summary>
+ <summary>RPM at which StaticThrustGrams was measured.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.IsClockwiseRotation">
+ <summary>True if this is a clockwise (CW) rotation prop.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.PropellerSpec.Efficiency">
+ <summary>Efficiency proxy (StaticThrustGrams / mass) — computed.</summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.PropellerSpec.OnDeserialized(System.Runtime.Serialization.StreamingContext)">
  <summary>
- True if this is a clockwise (CW) rotation prop.
- False for counter-clockwise (CCW).  Multirotor sets include both.
+ Copies diameter, pitch, blade count, and bore from the nested Dimensions
+ object to top-level properties after JSON deserialisation.
  </summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.FlightControllerSpec">
@@ -800,108 +799,78 @@ Drone Designer
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.Processor">
- <summary>
- CPU / SoC identifier (e.g. "STM32H743", "STM32F405", "Raspberry Pi CM4").
- </summary>
+ <summary>CPU / SoC identifier. JSON field: "processorType"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.GyroscopeChip">
- <summary>
- Primary IMU / gyroscope chip (e.g. "ICM-42688-P", "BMI270").
- </summary>
+ <summary>Primary IMU / gyroscope chip. JSON field: "imuPrimary"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.AccelerometerChip">
- <summary>
- Primary accelerometer chip.  Often the same IC as the gyroscope.
- </summary>
+ <summary>Primary accelerometer chip.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.HasBarometer">
- <summary>
- True if an onboard barometer (altimeter) is present.
- </summary>
+ <summary>True if an onboard barometer is present.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.BarometerChip">
- <summary>
- Barometer chip identifier (e.g. "MS5611", "BMP388").  Empty if absent.
- </summary>
+ <summary>Barometer chip identifier. JSON field: "barometerModel"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.HasMagnetometer">
- <summary>
- True if an onboard magnetometer (compass) is present.
- </summary>
+ <summary>True if an onboard magnetometer is present. JSON field: "hasOnboardMagnetometer"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.UARTCount">
- <summary>
- Number of full hardware UART serial ports (used for GPS, telemetry, RC, etc.).
- </summary>
+ <summary>Number of full hardware UART serial ports.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.I2CBusCount">
- <summary>
- Number of hardware I²C buses available.
- </summary>
+ <summary>Number of hardware I²C buses. JSON field: "i2cCount"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.SPIBusCount">
- <summary>
- Number of hardware SPI buses available.
- </summary>
+ <summary>Number of hardware SPI buses. JSON field: "spiCount"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.PWMOutputCount">
- <summary>
- Number of PWM or DSHOT motor/servo output channels.
- </summary>
+ <summary>Number of PWM or DSHOT motor/servo output channels.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.AnalogInputCount">
- <summary>
- Number of analogue-to-digital converter (ADC) input channels
- available for voltage/current sensing.
- </summary>
+ <summary>Number of ADC input channels. JSON field: "analogInputs"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.MaxLoopRateHz">
- <summary>
- Number of analogue-to-digital converter (ADC) input channels
- available for voltage/current sensing.
- </summary>
+ <summary>Maximum gyro loop rate in Hz. Derived from processor type in OnDeserialized.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.HasSDCardSlot">
- <summary>
- True if a microSD card slot is present for blackbox logging.
- </summary>
+ <summary>True if a microSD card slot is present for blackbox logging.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.HasUSB">
- <summary>
- True if a USB port is present for configuration / firmware flashing.
- </summary>
+ <summary>True if a USB port is present.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.HasOSD">
- <summary>
- True if the board includes a built-in onboard OSD (On-Screen Display) chip.
- </summary>
+ <summary>True if the board includes a built-in OSD chip.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.HasBuiltInVTx">
- <summary>
- True if a built-in video transmitter (VTx) is present on the board.
- </summary>
+ <summary>True if a built-in VTx is present.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.SupportedFirmware">
+ <summary>Firmware ecosystem(s) the FC supports.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.FlightControllerSpec.FirmwareCompatibility">
  <summary>
- Firmware ecosystem(s) the flight controller officially supports.
+ Firmware compatibility as a comma-separated string.
+ JSON field: "firmwareCompatibility" (stored as array in JSON).
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.MountingPatternMm">
- <summary>
- Mounting hole pattern — bolt circle diameter in mm, or standard size
- string like "30.5×30.5", "M3 20×20", etc.
- Used by Module 2 to position standoffs in the airframe.
- </summary>
+ <summary>Form factor / mounting pattern string. JSON field: "formFactor"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.InputVoltageMin">
- <summary>
- Input supply voltage range minimum in Volts (V).
- Some FCs accept 3.3 V from a BEC; others take direct 5 V.
- </summary>
+ <summary>Input supply voltage minimum in Volts (V). JSON field: "inputVoltageMinV"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.FlightControllerSpec.InputVoltageMax">
+ <summary>Input supply voltage maximum in Volts (V). JSON field: "inputVoltageMaxV"</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.FlightControllerSpec.HasBlackbox">
+ <summary>True if blackbox logging is available (SD slot present).</summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.FlightControllerSpec.OnDeserialized(System.Runtime.Serialization.StreamingContext)">
  <summary>
- Input supply voltage range maximum in Volts (V).
+ Derives MaxLoopRateHz from processor type after JSON deserialisation.
+ H7 = 8 kHz, F7 = 4 kHz, F4 = 2 kHz, anything else = 1 kHz.
  </summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.BatterySpec">
@@ -912,74 +881,72 @@ Drone Designer
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.CapacityMAh">
- <summary>
- Energy capacity in milliamp-hours (mAh).
- </summary>
+ <summary>Energy capacity in milliamp-hours (mAh).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.CellCount">
- <summary>
- Number of cells wired in series.
- Common UAV values: 3S (11.1 V), 4S (14.8 V), 6S (22.2 V).
- </summary>
+ <summary>Number of cells wired in series.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.NominalCellVoltageV">
  <summary>
- Nominal cell voltage in Volts (V).  For LiPo this is 3.7 V/cell.
- Nominal pack voltage = CellCount × NominalCellVoltage.
+ Nominal pack voltage in Volts (V).
+ JSON field: "nominalVoltageV"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.FullChargeVoltagePerCellV">
  <summary>
- Fully-charged cell voltage in Volts (V).  For LiPo this is 4.2 V/cell.
+ Fully-charged cell voltage in Volts (V).
+ JSON field: "maxChargeVoltageV"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.MinCellVoltageV">
- <summary>
- Safe minimum discharge cell voltage in Volts (V).  For LiPo ≈ 3.5 V/cell.
- </summary>
+ <summary>Safe minimum discharge cell voltage in Volts (V).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.ContinuousCRating">
  <summary>
- Continuous discharge rate in multiples of capacity (C).
- Maximum continuous current (A) = CapacityMAh / 1000 × ContinuousCRating.
+ Continuous discharge rate in C.
+ JSON field: "dischargeRatingC"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.BurstCRating">
  <summary>
- Peak burst discharge rate in C.  Usually quoted for ≤10 seconds.
+ Peak burst discharge rate in C.
+ JSON field: "burstRatingC"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.Chemistry">
- <summary>
- Cell electrochemistry type.
- </summary>
+ <summary>Cell electrochemistry type.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.FormFactor">
- <summary>
- Physical form factor (e.g. "Hardcase", "Softcase", "Cylindrical 21700").
- </summary>
+ <summary>Physical form factor.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.DischargeConnector">
  <summary>
  Discharge connector type fitted to this pack.
+ JSON field: "mainConnectorType"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.BalanceConnector">
  <summary>
- Balance connector standard (e.g. "JST-XH", "TP-XH").  Always present
- on multi-cell LiPo packs.
+ Balance connector standard.
+ JSON field: "balanceConnectorType"
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.BatterySpec.LipoCellCount">
+ <summary>
+ Engine-facing alias: cell count.
+ The selection engine queries LipoCellCount; maps to CellCount.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.NominalPackVoltageV">
  <summary>
  Calculated nominal pack voltage in Volts (V).
- Read-only derived value: CellCount × NominalCellVoltageV.
+ Read-only derived: CellCount × NominalCellVoltageV.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.BatterySpec.MaxContinuousCurrentAmps">
  <summary>
  Calculated maximum continuous current in Amperes (A).
- Read-only derived value: (CapacityMAh / 1000) × ContinuousCRating.
+ Read-only derived: (CapacityMAh / 1000) × ContinuousCRating.
  </summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.GPSModuleSpec">
@@ -991,402 +958,320 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.SupportedConstellations">
  <summary>
  Bitfield of GNSS constellations the module can receive simultaneously.
+ JSON field: "constellations" (stored as string array).
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.MaxUpdateRateHz">
  <summary>
- Maximum position update rate in Hz (e.g. 5, 10, 18).
+ Maximum position update rate in Hz.
+ JSON field: "updateRateHz"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.HorizontalAccuracyMeters">
  <summary>
- Typical horizontal CEP accuracy in metres (m) under open sky.
+ Typical horizontal CEP50 accuracy in metres (m).
+ JSON field: "positionAccuracyM"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.HasCompass">
- <summary>
- True if an onboard compass (magnetometer) is integrated.
- Dual-compass setups (FC + external GPS compass) reduce magnetic interference.
- </summary>
+ <summary>True if an onboard compass is integrated.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.CompassChip">
- <summary>
- Compass chip identifier (e.g. "IST8310", "HMC5883L", "QMC5883L").
- Empty if HasCompass = False.
- </summary>
+ <summary>Compass chip identifier. JSON field: "compassModel"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.TrackingChannels">
- <summary>
- Number of satellite channels the receiver can track in parallel.
- </summary>
+ <summary>Number of satellite channels the receiver can track.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.DefaultBaudRate">
- <summary>
- Default UART baud rate (e.g. 38400, 115200).
- </summary>
+ <summary>Default UART baud rate.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.GNSSChipset">
- <summary>
- GNSS chipset inside the module (e.g. "u-blox M8N", "u-blox F9P",
- "Unicore UM982").
- </summary>
+ <summary>GNSS chipset inside the module. JSON field: "chipset"</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.GPSModuleSpec.PCBDiameterMm">
+ <summary>Diameter of the circular module PCB in mm.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.GPSModuleSpec.InterfaceTypes">
  <summary>
- Diameter of the circular module PCB in mm.
- Used by Module 2 for GPS mast / mount design.  Zero if not circular.
+ Interface types as a comma-separated string.
+ JSON field: "interfaceType" (stored as string array).
  </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.GPSModuleSpec.CurrentDrawMA">
+ <summary>
+ Current draw in milliamps (mA) at operating voltage.
+ JSON field: "currentDrawMA"
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.GPSModuleSpec.CurrentDrawA">
+ <summary>Current draw in Amperes (A). Derived from CurrentDrawMA.</summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.TelemetryRadioSpec">
  <summary>
- Specifications for an air-to-ground data-link radio used to send
- MAVLink or similar telemetry to a ground-control station.
- Comes in matched air-unit / ground-unit pairs; this class represents
- the air unit mounted on the UAV.
+ Specifications for an air-to-ground data-link radio.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.FrequencyMHz">
- <summary>
- Radio carrier frequency in MHz (e.g. 433, 915, 2400, 5800).
- </summary>
+ <summary>Radio carrier frequency in MHz.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.OutputPowerMW">
  <summary>
  Transmitter output power in milliwatts (mW).
+ JSON field: "maxTxPowerMW"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.OutputPowerDBm">
- <summary>
- Equivalent output power in dBm.  Read-only derived:
- 10 × Log10(OutputPowerMW).
- </summary>
+ <summary>Equivalent output power in dBm. Read-only derived.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.MaxRangeKm">
  <summary>
- Quoted maximum range in kilometres (km) under line-of-sight conditions.
+ Quoted maximum range in kilometres (km).
+ JSON field: "typicalRangeKm"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.AirDataRateBps">
- <summary>
- Air-link data rate in bits per second (bps).
- </summary>
+ <summary>Air-link data rate in bits per second (bps).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.TelemetryProtocol">
  <summary>
- Telemetry protocol natively supported (e.g. "MAVLink 1", "MAVLink 2",
- "Proprietary", "Transparent Serial").
+ Telemetry protocol natively supported.
+ JSON field: "protocol"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.FCInterface">
- <summary>
- Physical interface to the flight controller (typically "UART").
- </summary>
+ <summary>Physical interface to the flight controller.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.SupportsFHSS">
  <summary>
  True if this radio supports frequency-hopping spread spectrum (FHSS).
+ JSON field: "frequencyHopping"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.SupportsRCPassthrough">
+ <summary>True if this module can relay RC commands to the FC.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.CurrentDrawActiveMA">
  <summary>
- True if this module can also relay RC (pilot) commands to the FC,
- eliminating the need for a separate receiver.
+ Active current draw in milliamps (mA).
+ JSON field: "currentDrawActiveMA"
  </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.TelemetryRadioSpec.CurrentDrawA">
+ <summary>Current draw in Amperes (A). Derived from CurrentDrawActiveMA.</summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.CameraSpec">
  <summary>
- Specifications for an imaging sensor mounted on the UAV —
- optical (RGB), thermal infrared, multispectral, or depth.
+ Specifications for an imaging sensor mounted on the UAV.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.SensorType">
  <summary>
- Sensor type description (e.g. "RGB", "Thermal LWIR", "Multispectral",
- "Depth / ToF", "NIR").
+ Sensor type description (e.g. "RGB", "Thermal LWIR", "Action").
+ JSON field: "cameraType"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.ResolutionHorizontalPx">
- <summary>
- Horizontal image resolution in pixels.
- </summary>
+ <summary>Horizontal image resolution in pixels.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.ResolutionVerticalPx">
+ <summary>Vertical image resolution in pixels.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.CameraSpec.ResolutionMpx">
  <summary>
- Vertical image resolution in pixels.
+ Sensor resolution in megapixels.
+ JSON field: "resolutionMpx"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.DiagonalFOVDegrees">
  <summary>
- Diagonal field of view in degrees (°).
+ Field of view in degrees (°).
+ JSON field: "fovDegrees"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.HorizontalFOVDegrees">
- <summary>
- Horizontal field of view in degrees (°).  Zero if not specified.
- </summary>
+ <summary>Horizontal field of view in degrees (°). Zero if not specified.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.MaxFrameRateFPS">
- <summary>
- Maximum video frame rate at full resolution, in frames per second (fps).
- Zero if camera is stills-only.
- </summary>
+ <summary>Maximum video frame rate at full resolution in fps.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.OutputInterface">
+ <summary>Primary data output interface.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.CameraSpec.OutputInterfaces">
  <summary>
- Primary data output interface.
+ Output interfaces as a comma-separated string.
+ JSON field: "outputInterfaces" (stored as string array).
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.FocalLengthMm">
- <summary>
- Focal length in millimetres (mm).  Zero for fixed wide-angle lenses
- where focal length is embedded in FOV.
- </summary>
+ <summary>Focal length in millimetres (mm).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.HasStabilisation">
  <summary>
  True if the camera has an onboard electronic or mechanical image stabiliser.
+ JSON field: "hasElectronicImageStabilization"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.IsLowLatency">
- <summary>
- True if ...
- </summary>
+ <summary>True if this is a low-latency FPV camera (&lt;30 ms).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.IsGimbalMounted">
- <summary>
- True if this camera is sold as part of or designed for a gimbal assembly.
- </summary>
+ <summary>True if this camera is designed for gimbal mounting.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.PowerConsumptionWatts">
  <summary>
  Average power consumption during active recording in Watts (W).
+ JSON field: "powerConsumptionW"
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.OperatingVoltageV">
- <summary>
- Operating supply voltage in Volts (V) — may differ from main bus voltage.
- </summary>
+ <summary>Operating supply voltage in Volts (V).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.CameraSpec.IsThermographic">
  <summary>
- Operating supply voltage in Volts (V) — may differ from main bus voltage.
+ True if this is a thermal/infrared sensor.
+ Derived from SensorType containing "Thermal" or "IR".
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.CameraSpec.IsWeatherproof">
+ <summary>True if camera is weatherproof. JSON field: "isWeatherproof"</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.CameraSpec.CurrentDrawA">
+ <summary>Current draw in Amperes (A). Derived from PowerConsumptionWatts / 5V.</summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.CameraSpec.OnDeserialized(System.Runtime.Serialization.StreamingContext)">
+ <summary>
+ Derives IsThermographic and IsLowLatency from SensorType after deserialisation.
  </summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.ServoSpec">
  <summary>
- Specifications for an RC servo actuator used to deflect control surfaces,
- operate landing gear, or drive a gimbal axis.
+ Specifications for an RC servo actuator.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.StallTorqueKgCm">
- <summary>
- Stall torque at rated voltage in kilogram-centimetres (kg·cm).
- </summary>
+ <summary>Stall torque at rated voltage in kilogram-centimetres (kg·cm).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.StallTorqueNm">
- <summary>
- Stall torque at rated voltage in Newton-metres (N·m).
- Read-only derived: StallTorqueKgCm × 0.0981.
- </summary>
+ <summary>Stall torque in Newton-metres (N·m). Read-only derived.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.SpeedSecPer60Deg">
- <summary>
- Transit speed over 60 degrees of travel at rated voltage,
- in seconds per 60° (s/60°).  Lower = faster.
- </summary>
+ <summary>Transit speed over 60 degrees in seconds per 60°.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.RatedVoltageV">
- <summary>
- Rated operating voltage in Volts (V).
- Common values: 4.8, 6.0, 7.4.
- </summary>
+ <summary>Rated operating voltage in Volts (V).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.NoLoadCurrentMA">
- <summary>
- No-load current draw in mA at rated voltage.
- </summary>
+ <summary>No-load current draw in mA at rated voltage.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.StallCurrentMA">
- <summary>
- Stall current draw in mA at rated voltage.
- </summary>
+ <summary>Stall current draw in mA at rated voltage.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.TotalTravelDeg">
- <summary>
- Total mechanical travel in degrees (°).  Typical = 120–180 °.
- </summary>
+ <summary>Total mechanical travel in degrees (°).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.SignalType">
- <summary>
- Control signal protocol this servo accepts.
- </summary>
+ <summary>Control signal protocol this servo accepts.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.GearMaterial">
- <summary>
- Gear train material (e.g. "Metal", "Karbonite", "Nylon", "Titanium").
- Affects durability and crash resistance.
- </summary>
+ <summary>Gear train material.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.HasBallBearings">
- <summary>
- True if the servo output shaft has ball bearings (vs. bushings).
- </summary>
+ <summary>True if the servo output shaft has ball bearings.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.BodyWidthMm">
- <summary>
- Servo case body width in mm (the narrow dimension, used for slot design).
- </summary>
+ <summary>Servo case body width in mm.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.BodyLengthMm">
- <summary>
- Servo case body length in mm (the long dimension).
- </summary>
+ <summary>Servo case body length in mm.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.BodyHeightMm">
- <summary>
- Servo case body height in mm (depth from base to top of output shaft boss).
- </summary>
+ <summary>Servo case body height in mm.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ServoSpec.MountingLugSpacingMm">
- <summary>
- Mounting lug centre-to-centre distance in mm along the long axis.
- Used by Module 2 to create servo pocket / bracket geometry.
- </summary>
+ <summary>Mounting lug centre-to-centre distance in mm.</summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.ReceiverSpec">
  <summary>
  Specifications for an RC link receiver.
- Handles the pilot-command radio link; separate from TelemetryRadio.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.Protocol">
- <summary>
- RC protocol / manufacturer ecosystem.
- </summary>
+ <summary>RC protocol / manufacturer ecosystem.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.ReceiverSpec.ProtocolName">
+ <summary>Protocol name as a string (e.g. "ELRS", "CRSF", "SBUS").</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.FrequencyMHz">
- <summary>
- Carrier frequency in MHz (e.g. 2400, 900).
- </summary>
+ <summary>Carrier frequency in MHz.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.ChannelCount">
- <summary>
- Number of independent RC channels output.
- </summary>
+ <summary>Number of independent RC channels output.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.OutputFormat">
- <summary>
- Output signal format to the flight controller
- (e.g. "SBUS", "CRSF", "SUMD", "PPM", "PWM").
- </summary>
+ <summary>Output signal format to the flight controller.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.HasRSSIOutput">
- <summary>
- True if the receiver provides a downlink RSSI (signal strength) output
- that can be fed to the FC.
- </summary>
+ <summary>True if the receiver provides a downlink RSSI output.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.HasTelemetry">
- <summary>
- True if the receiver supports bidirectional telemetry back to the transmitter
- (e.g. battery voltage, GPS position).
- </summary>
+ <summary>True if the receiver supports bidirectional telemetry.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.MaxRangeKm">
- <summary>
- Quoted maximum control range in kilometres (km) under open-sky conditions.
- </summary>
+ <summary>Quoted maximum control range in kilometres (km).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.AntennaCount">
- <summary>
- Number of onboard antenna ports.
- </summary>
+ <summary>Number of onboard antenna ports.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.OperatingVoltageV">
- <summary>
- Operating supply voltage in Volts (V).
- </summary>
+ <summary>Operating supply voltage in Volts (V).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.ReceiverSpec.CurrentDrawMA">
- <summary>
- Current draw in mA at operating voltage.
- </summary>
+ <summary>Current draw in mA at operating voltage.</summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.PowerDistributionBoardSpec">
  <summary>
  Specifications for a Power Distribution Board (PDB) or Power Module.
- Routes main battery current to ESCs and provides regulated rails for
- avionics (FC, GPS, camera, etc.).
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.MaxContinuousCurrentAmps">
- <summary>
- Maximum continuous through-current in Amperes (A) across all ESC pads.
- </summary>
+ <summary>Maximum continuous through-current in Amperes (A).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.BurstCurrentAmps">
- <summary>
- Peak burst current in Amperes (A).
- </summary>
+ <summary>Peak burst current in Amperes (A).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.MaxInputVoltageV">
- <summary>
- Maximum input voltage in Volts (V) — determines maximum battery cell count.
- </summary>
+ <summary>Maximum input voltage in Volts (V).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.ESCPadCount">
- <summary>
- Number of ESC solder pad sets (one per motor arm).
- Typical values: 4, 6, 8.
- </summary>
+ <summary>Number of ESC solder pad sets.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.HasCurrentSensor">
- <summary>
- True if the board includes an onboard current sensor (Hall effect or shunt).
- Enables real-time current/consumption monitoring by the FC.
- </summary>
+ <summary>True if the board includes an onboard current sensor.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.CurrentSensorMaxAmps">
- <summary>
- Current sensor full-scale range in Amperes (A).  Zero if absent.
- </summary>
+ <summary>Current sensor full-scale range in Amperes (A).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.Has5VBEC">
- <summary>
- True if the board has a regulated 5 V BEC output for avionics.
- </summary>
+ <summary>True if the board has a regulated 5 V BEC output.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.BEC5VMaxAmps">
- <summary>
- Maximum current of the 5 V BEC output in Amperes (A).  Zero if absent.
- </summary>
+ <summary>Maximum current of the 5 V BEC output in Amperes (A).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.Has12VBEC">
- <summary>
- True if the board has a regulated 12 V output (e.g. for VTx, camera).
- </summary>
+ <summary>True if the board has a regulated 12 V output.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.BEC12VMaxAmps">
- <summary>
- Maximum current of the 12 V output in Amperes (A).  Zero if absent.
- </summary>
+ <summary>Maximum current of the 12 V output in Amperes (A).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.InputConnector">
- <summary>
- Battery input connector type on the board.
- </summary>
+ <summary>Battery input connector type on the board.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.MountingPatternMm">
- <summary>
- Mounting hole pattern as a string (e.g. "30.5×30.5 M3",
- "20×20 M2", "45×45 M3").  Used by Module 2 for stack layout.
- </summary>
+ <summary>Mounting hole pattern string.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.PowerDistributionBoardSpec.IsStackDesign">
- <summary>
- True if ESC pads are arranged for a bottom-mounted (integrated stack)
- layout rather than through-hole arms.
- </summary>
+ <summary>True if ESC pads are arranged for a stack layout.</summary>
 </member>
 <member name="T:Drone_Designer.Core.Models.MissionProfileCategory">
  <summary>
@@ -1512,6 +1397,26 @@ Drone Designer
  Standard = normal conditions, Harsh = extreme temps, maritime, desert, arctic.
  </summary>
 </member>
+<member name="T:Drone_Designer.Core.Models.MissionPhase">
+ <summary>
+ Discrete phase of flight within a mission segment.
+ Used by <see cref="T:Drone_Designer.Core.Models.MissionSegment"/> to label segments in a mission profile.
+ Source: Bershadsky et al. (AIAA 2016-0581) define missions as hover, climb,
+ or dash segments; Yang et al. (Aerospace 2024) extend this to include descend.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Models.MissionPhase.Hover">
+ <summary>Stationary hover at constant altitude.</summary>
+</member>
+<member name="F:Drone_Designer.Core.Models.MissionPhase.Climb">
+ <summary>Powered ascent at the user's specified climb rate.</summary>
+</member>
+<member name="F:Drone_Designer.Core.Models.MissionPhase.Cruise">
+ <summary>Steady-state forward flight at cruise airspeed.</summary>
+</member>
+<member name="F:Drone_Designer.Core.Models.MissionPhase.Descend">
+ <summary>Controlled descent. May be powered or autorotative.</summary>
+</member>
 <member name="T:Drone_Designer.Core.Models.MissionSpecs">
  <summary>
  Represents a complete set of UAV mission specifications.
@@ -1554,15 +1459,132 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxAltitudeMeters">
  <summary>Maximum altitude AGL in meters. Valid range: 10–6000 m.</summary>
 </member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.ClimbRateMs">
+ <summary>
+ Design vertical climb rate in m/s.
+
+ Drives peak-thrust calculation in any climb segment of the mission profile.
+ For a multirotor, climb power adds to hover power roughly linearly with
+ climb rate, so this value materially affects motor and battery sizing
+ for missions with significant altitude gain.
+
+ Typical values:
+   • Conservative commercial / mapping: 2–3 m/s
+   • Standard delivery / surveillance:  3–5 m/s
+   • Aggressive racing / sport:        10–15 m/s
+
+ Valid range: 0.1–20 m/s. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+ Default: 3.0 m/s — typical commercial multirotor.
+
+ Source: Yang et al. (Aerospace 2024) treat climb as a primary mission
+ phase with rate-driven energy demand.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxClimbAngleDeg">
+ <summary>
+ Maximum climb angle in degrees, measured from the horizontal.
+
+ For a multirotor in pure vertical climb this is 90°; for an inclined
+ climb (forward + upward), it is the resultant velocity vector's angle
+ above horizontal. Drives the gravity component of design thrust:
+   T_design = m·g·sin(γ) + ½·ρ·V²·C_D·S_ref
+ (Stolz et al., DLR, AIAA 2018-1009).
+
+ Typical values:
+   • Mapping / inspection (gentle inclined climb):  20–30°
+   • Standard multirotor takeoff:                    30–45°
+   • Vertical takeoff / aggressive climb:            60–90°
+
+ Valid range: 0–90°. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+ Default: 30° — typical inclined climb-out for a commercial multirotor.
+ </summary>
+</member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxWindSpeedMs">
  <summary>Maximum sustained wind speed in m/s. Valid range: 0–30 m/s. Default ~11 m/s (Beaufort 5).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxTakeoffMassGrams">
  <summary>
- Maximum take-off mass (design limit) in grams, including battery and payload.
- Engine uses this as target to estimate required thrust and power.
- Valid range: 100–55,000 g (smallest ready-to-fly quad to heavy industrial).
- Default: 2000 g (2 kg, typical commercial quadcopter).
+ Regulatory / structural ceiling on take-off mass in grams, including
+ battery and payload. This is a HARD UPPER LIMIT the design must not
+ exceed — NOT a target the engine sizes to.
+
+ The component selection engine derives its own MTOW iteratively from
+ payload + airframe + avionics + battery (see <c>EstimateMtow</c> in
+ <c>ComponentSelectionEngine.vb</c>). This property is currently NOT
+ read by the engine.
+
+ TODO (engine-side, future task): <c>SelectComponents</c> should
+ compare its calculated MTOW against this field and raise
+ <c>ComponentSelectionException</c> if the design exceeds the limit.
+
+ Common ceilings:
+   •   250 g — sub-registration recreational class (FAA / EASA A1)
+   •  2,000 g — typical commercial quadcopter
+   • 25,000 g — EASA Specific Category / Italian regulatory cap
+   • 55,000 g — heavy industrial multirotor upper bound
+
+ Valid range: 100–55,000 g. Default: 2000 g (typical commercial quad).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.TargetThrustToWeightRatio">
+ <summary>
+ User override for the design thrust-to-weight ratio (TWR).
+
+ When <c>Nothing</c> (default), the component selection engine
+ looks up a profile-appropriate default by mission type:
+   • Surveillance, Mapping:        2.0   (Zhang et al., wind-resistance floor)
+   • Delivery, Inspection,
+     SearchAndRescue:              2.5   (margin for payload + maneuvering)
+   • Racing:                       4.0   (aggressive maneuvering)
+   • Agriculture / endurance
+     fallback (low-mobility):      1.8   (Vu et al., calm-flight profile)
+   • General:                      2.0
+
+ When set to a numeric value, the engine uses that exact ratio for
+ per-motor thrust requirement calculation, ignoring the profile lookup.
+ Useful for:
+   • Custom builds outside the standard mission profiles.
+   • High-wind environments requiring extra hover margin (3.0+).
+   • Constrained-payload missions where every gram of overbuilt thrust
+     is a battery penalty (1.8–2.0 even on a "racing" classification).
+
+ Valid range: 1.5–6.0. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+
+ Sources: Zhang et al. (Lifting-Wing Multicopters, IEEE/ASME) for the
+ 2:1 wind-resistance floor; Vu et al. (Aerosp. Sci. Tech. 2019) for the
+ 1.8 endurance/agriculture baseline.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.MissionSegments">
+ <summary>
+ Ordered list of mission phase segments (hover, climb, cruise, descend).
+ When this list is non-empty, the component selection engine will
+ eventually integrate energy demand across each segment rather than
+ assuming a single all-hover mission.
+
+ When this list is empty (default), the engine should fall back to
+ <see cref="P:Drone_Designer.Core.Models.MissionSpecs.HoverFractionOfMission"/> as a coarser approximation.
+
+ Sources: Bershadsky et al. (AIAA 2016-0581), Yang et al. (Aerospace 2024).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.HoverFractionOfMission">
+ <summary>
+ Fraction of <see cref="P:Drone_Designer.Core.Models.MissionSpecs.FlightEnduranceMinutes"/> spent in hover (0.0–1.0).
+ This is a coarse-grained alternative to populating <see cref="P:Drone_Designer.Core.Models.MissionSpecs.MissionSegments"/>
+ for users who do not want to define a full segment list.
+
+ The engine should ONLY consult this property when MissionSegments is empty.
+ If MissionSegments is non-empty, this value is ignored.
+
+ Default: 1.0 (all hover) — preserves backward-compatible behavior with
+ the legacy single-scalar endurance model.
+
+ Valid range: 0.0–1.0. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.PayloadMassGrams">
@@ -1573,6 +1595,47 @@ Drone Designer
  3D bounding box for the mission payload (camera gimbal, LiDAR, etc.).
  Used by Module 2 to size the payload bay on the airframe.
  Default: unspecified (all zeros).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.PayloadPowerWatts">
+ <summary>
+ Steady-state electrical power consumed by the mission payload during
+ active operation, in watts.
+
+ Examples:
+   • Passive optical camera + gimbal: 5–15 W
+   • LiDAR scanner: 20–40 W
+   • Agricultural sprayer pump (Vu et al. 2019, MG-1 reference): 40 W
+   • Thermal + visible dual-payload: 25–50 W
+
+ The component selection engine will eventually add this draw to the
+ propulsion current when sizing battery capacity.
+
+ Default: 0.0 W (no powered payload).
+ Sources: Vu et al. (Aerosp. Sci. Tech. 2019), Bershadsky et al. (AIAA 2016-0581).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.AvionicsPowerWatts">
+ <summary>
+ Steady-state electrical power consumed by the avionics stack
+ (flight controller, GPS, telemetry radio, receiver, etc.) in watts.
+
+ Typical values:
+   • Bare-bones racing build (FC + RX only): 2–3 W
+   • Standard commercial quad (FC + GPS + telemetry + RX): 5–8 W
+   • Heavy mapping/inspection (FC + dual GPS + companion computer + RTK):
+     15–25 W
+
+ Excludes the camera/video transmitter — those are part of the payload
+ budget when present (see <see cref="P:Drone_Designer.Core.Models.MissionSpecs.PayloadPowerWatts"/>).
+
+ Default: 5.0 W — reflects a typical FC + GPS + telemetry + RX stack
+ at idle. Refine upward when adding a companion computer, RTK GPS,
+ or obstacle-avoidance sensors.
+
+ Sources: Vu et al. (Aerosp. Sci. Tech. 2019, P_avionic = 10 W for
+ agriculture multicopter), Bershadsky et al. (AIAA 2016-0581, I_a tracked
+ separately in EMST validator).
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MinOperatingTempCelsius">
@@ -1666,6 +1729,102 @@ Drone Designer
  Unit: g.
  </summary>
 </member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.BatteryMaxDepthOfDischarge">
+ <summary>
+ Maximum depth of discharge (DoD) the user is willing to apply to
+ the battery per flight, expressed as a fraction of nominal capacity.
+
+ Example: 0.80 means the engine sizes the battery so that 80% of
+ nominal capacity satisfies the mission energy budget, leaving 20%
+ unused at the mission's planned end-of-flight to preserve cycle life.
+
+ Distinct from <c>OperationalReserveFraction</c> (added in a future TODO),
+ which represents safety margin against unplanned events (wind,
+ return-to-home, navigation drift) layered on top of cycle-life DoD.
+ Effective usable energy is the product of both factors:
+   E_usable = E_nominal × DoD × (1 − reserve_fraction)
+
+ Typical values:
+   • Conservative / mission-critical / BVLOS:    0.70
+   • Standard commercial:                        0.80   (Vu et al. 2019 baseline)
+   • Hobbyist / demo / single-flight tolerance:  0.90
+
+ Valid range: 0.50–0.95. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+
+ Default: 0.80 — matches the existing engine default
+ (<c>LipoMaxDod</c> in <c>ComponentSelectionEngine.vb</c>) and the
+ agriculture-multicopter validation baseline from Vu et al. 2019.
+ Source: Vu et al. (Aerosp. Sci. Tech. 2019), Bershadsky et al.
+ (AIAA 2016-0581, EMST validator).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.BatterySpecificEnergyWhPerKgOverride">
+ <summary>
+ User override for the battery pack's specific energy in Wh/kg.
+
+ When <c>Nothing</c> (default), the component selection engine
+ looks up a <i>pack-level</i> default by <see cref="P:Drone_Designer.Core.Models.MissionSpecs.PowerSource"/>:
+   • LiPo:                130 Wh/kg   (matches existing engine default)
+   • LiIon:               180 Wh/kg   (higher density, better for fixed-wing)
+   • HydrogenFuelCell:    350 Wh/kg   (long endurance, low noise)
+   • HybridFuelCellLiPo:  240 Wh/kg   (between fuel cell and LiPo)
+   • Tethered:              0 Wh/kg   (no onboard storage)
+
+ These are <b>pack-level</b> values, accounting for cells + wiring +
+ BMS / connector overhead. Cell-level datasheet values are typically
+ 30–40% higher (e.g., a 180 Wh/kg cell yields ~130 Wh/kg at the pack).
+
+ When set to a numeric value, the engine uses that exact specific
+ energy in battery mass / capacity calculations. Useful for:
+   • Modeling a specific cell or pack datasheet.
+   • Sweeping next-generation chemistries (e.g., 200, 300, 400, 500
+     Wh/kg per Yang et al. 2024 Fig. 12).
+   • Modeling a known low-density rugged or high-temperature pack.
+
+ Valid range: 50–600 Wh/kg. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+
+ Source: Yang et al. (Sizing of Multicopter Air Taxis, Aerospace 2024)
+ parameterize 200–500 Wh/kg sweeps; current LiPo packs measure
+ 100–150 Wh/kg pack-level.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.OperationalReserveFraction">
+ <summary>
+ Per-flight energy reserve as a fraction of usable battery energy,
+ withheld at mission-planning time to protect against unplanned events.
+
+ Distinct from <see cref="P:Drone_Designer.Core.Models.MissionSpecs.BatteryMaxDepthOfDischarge"/>, which protects
+ pack cycle life over many flights. Operational reserve protects a
+ single flight against:
+   • Stronger headwinds than forecast.
+   • Navigation drift / route-planning slack.
+   • Return-to-home and loiter contingencies.
+   • Payload-driven hover or wait time beyond the nominal mission profile.
+
+ The component selection engine will eventually compute usable mission
+ energy as:
+   E_usable = E_nominal × BatteryMaxDepthOfDischarge × (1 − OperationalReserveFraction)
+
+ Example: a 100 Wh nominal pack with DoD = 0.80 and reserve = 0.20 has
+ 100 × 0.80 × 0.80 = 64 Wh available for the planned mission profile.
+ The remaining 16 Wh (DoD-permitted, reserve-withheld) is available for
+ contingencies without exceeding cycle-life limits; the final 20 Wh
+ (below DoD) remains untouched to preserve pack longevity.
+
+ Typical values:
+   • Hobbyist / line-of-sight, calm conditions:   0.10
+   • Standard commercial / mapping:               0.20   (aviation default)
+   • BVLOS / mission-critical / high-wind:        0.30
+
+ Valid range: 0.0–0.50. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+
+ Default: 0.20 — matches aviation-standard 20% energy reserve and
+ aligns with Bershadsky et al. (AIAA 2016-0581) reserve handling.
+ </summary>
+</member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.ControlLinkRangeKm">
  <summary>Control link range (km). Defaults to MaxRangeKm if Nothing.</summary>
 </member>
@@ -1727,6 +1886,42 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.PayloadDimensions.IsSpecified">
  <summary>True if all three dimensions have been specified (non-zero).</summary>
 </member>
+<member name="T:Drone_Designer.Core.Models.MissionSegment">
+ <summary>
+ One discrete phase of a UAV mission profile (hover/climb/cruise/descend),
+ with a duration and an airspeed.
+
+ A complete mission is represented as an ordered <see cref="T:System.Collections.Generic.List`1"/>
+ on <see cref="P:Drone_Designer.Core.Models.MissionSpecs.MissionSegments"/>. The component selection
+ engine will eventually integrate energy demand across all segments
+ rather than assuming a single all-hover mission.
+
+ Sources: Bershadsky et al. (AIAA 2016-0581), Yang et al. (Aerospace 2024).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSegment.Phase">
+ <summary>Phase of flight for this segment.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSegment.DurationSeconds">
+ <summary>Duration of this segment in seconds. Must be ≥ 0.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSegment.AirspeedMs">
+ <summary>
+ Airspeed during this segment in m/s. For Hover, this is 0.
+ For Climb and Descend, this is the horizontal airspeed component.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.MissionSegment.#ctor">
+ <summary>Default constructor — produces a zero-duration hover segment.</summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.MissionSegment.#ctor(Drone_Designer.Core.Models.MissionPhase,System.Double,System.Double)">
+ <summary>
+ Constructs a fully-specified segment.
+ </summary>
+ <param name="phase">Flight phase.</param>
+ <param name="durationSeconds">Segment duration (s).</param>
+ <param name="airspeedMs">Segment airspeed (m/s); 0 for hover.</param>
+</member>
 <member name="T:Drone_Designer.Core.Services.ComponentSelectionEngine">
  <summary>
  Core component selection engine — Tasks 7, 8, and 9.
@@ -1785,6 +1980,65 @@ Drone Designer
  Racers: 4.0+.  Endurance builds: as low as 1.6 with calm flight profile.
  </summary>
 </member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.FrameDiagonalTable">
+ <summary>
+ Frame diagonal (motor-tip-to-motor-tip, mm) keyed by motor count.
+ Sources: averaged over popular mid-class carbon frames (2023–2024).
+ Used as a fallback when frame size is not derived from a chosen propeller.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.FrameArmToPropRadiusRatio">
+ <summary>
+ Required ratio of frame arm length to propeller radius:
+   arm_length_mm ≥ FrameArmToPropRadiusRatio × prop_radius_mm
+
+ Equivalently, the propeller tip clearance to the next motor is
+   (FrameArmToPropRadiusRatio − 1) × prop_radius
+
+ Value 2.0 → 100% tip-to-tip clearance (prop tip reaches at most
+ halfway to the next motor's centre). This matches typical sport,
+ commercial, and inspection multirotor geometry.
+
+ Lower values (e.g. 1.3) are characteristic of dense racing-frame
+ geometry where prop tips nearly touch adjacent arms; using 1.3 in a
+ general-purpose tool over-allocates prop diameter and cascades into
+ oversized motor selection downstream.
+
+ Source: empirical small-drone geometry survey
+ (e.g., 250 mm-diagonal frames typically fly 5–7" props, not 10").
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.TargetDiameterInsetIn">
+ <summary>
+ Inset (in inches) below frame clearance for the propeller-first target
+ diameter. Gives SelectPropellersByTargetDiameter room to pick a
+ catalog match without the target itself being unattainable.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.PropDiameterToleranceIn">
+ <summary>
+ Acceptable propeller diameter deviation from disk-loading target, inches.
+ Outside this band a candidate is rejected by the primary filter.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.MotorRpmHeadroomFactor">
+ <summary>
+ Required ratio of motor no-load RPM to propeller hover RPM.
+ 1.4 ensures the motor operates below its no-load redline at hover,
+ leaving headroom for climb and wind-recovery transients.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.MtowMaxIterations">
+ <summary>
+ Maximum iterations for the MTOW fixed-point solver.
+ Typical convergence: 3–5 passes for well-posed missions.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.MtowConvergenceToleranceGrams">
+ <summary>
+ Convergence tolerance in grams. Loop exits when |MTOW_i − MTOW_{i−1}| ≤ this value.
+ </summary>
+</member>
 <member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.LipoCellNominalV">
  <summary>
  Nominal LiPo cell voltage (V).
@@ -1805,16 +2059,19 @@ Drone Designer
  Typical 4S 45C packs: 120-145 Wh/kg. 130 is a safe midpoint.
  </summary>
 </member>
-<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.HoverCurrentFraction">
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.HoverCurrentFractionFallback">
  <summary>
- Fraction of full-throttle current drawn at hover for a 2:1 TWR build.
+ Fallback hover-current fraction used ONLY when the reference motor's
+ MaxThrustGrams or the thrust requirement is unavailable
+ (i.e., divide-by-zero protection in the thrust-ratio scaling).
 
- Derivation:
-   Hover thrust = MTOW; full-throttle thrust = 2 x MTOW.
-   Thrust proportional to RPM^2; current proportional to RPM^3 / KV^2.
-   => hover current fraction ~= (0.5)^1.5 = 0.354 theoretically.
-   Empirical bench data for 5"-7" quads shows 0.40-0.50 due to
-   iron losses and non-ideal prop loading. Using 0.45 as midpoint.
+ Normal hover current is computed via momentum-theory scaling:
+   I_hover ≈ I_peak × (T_required / T_peak)^1.5
+ which is materially more accurate than a flat fraction whenever the
+ selected motor is oversized relative to per-motor thrust demand.
+
+ Value 0.35 reflects the legacy assumption that motors are sized for
+ ~2:1 TWR (T_required ≈ T_peak/2 → ratio^1.5 ≈ 0.354).
  </summary>
 </member>
 <member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.AvionicCurrentDrawA">
@@ -1968,12 +2225,32 @@ Drone Designer
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectComponents(Drone_Designer.Core.Models.MissionSpecs)">
  <summary>
  Runs the full selection pipeline for Tasks 7, 8, and 9:
-   MTOW -> Thrust -> Motors -> Propellers ->
-   Power budget -> Battery -> ESCs -> PDB ->
-   Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
+   1.  MTOW estimation (fixed-point iteration).
+   2.  Per-motor thrust requirement.
+   3a. Compute target propeller diameter from disk loading (Yang 2024).
+   3b. Select propellers near target diameter, within frame clearance.
+   3c. Select motors matched to chosen propeller's load envelope.
+   4.  Power budget -> Battery -> ESCs -> PDB.
+   5.  Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
 
  Each intermediate result is stored on SelectionResult so the UI can
  display a transparent breakdown of every sizing decision made.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.GetDefaultSpecificEnergyWhPerKg(Drone_Designer.Core.Models.PowerSourceType)">
+ <summary>
+ Default pack-level specific energy in Wh/kg by power source family.
+ Used as a fallback when MissionSpecs.BatterySpecificEnergyWhPerKgOverride is Nothing.
+ These are pack-level values (cells + wiring + BMS), matching LipoEnergyDensityWhPerKg.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimateInitialBatterySeedFraction(Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Initial battery mass guess as a fraction of structural mass.
+ Scaled by mission endurance (longer = larger seed) and inversely
+ by battery pack specific energy (higher Wh/kg = smaller seed).
+ Reference baseline: LiPo at 130 Wh/kg pack-level.
+ Result clamped to [0.10, 0.60]. Returns 0 for tethered configurations.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimateMtow(Drone_Designer.Core.Models.MissionSpecs)">
@@ -1986,12 +2263,18 @@ Drone Designer
  The loop iterates until |MTOW_i - MTOW_{i-1}| &lt;= 1 g (typically 3-5 passes).
 
  Per-iteration formula:
+   initial guess: endurance-scaled fraction (see EstimateInitialBatterySeedFraction)
    MTOW_i         = (structural_mass + battery_mass_i) x SafetyFactor
    P_hover        = MTOW_i x 10 W / 100 g            [empirical for 5"-7" quads]
    E_total        = P_hover x endurance_h x 1.20     [+20% non-hover overhead]
    usable_density = LipoEnergyDensityWhPerKg x DoD   [Wh/kg usable]
    battery_mass_{i+1} = (E_total / usable_density) x 1000  [Wh -> g]
  </summary>
+ <exception cref="T:Drone_Designer.Core.Services.ComponentSelectionException">
+ Thrown when (a) battery mass grows monotonically beyond 1.5× the seed
+ (mission is physically infeasible — divergence), or (b) iteration cap
+ is reached without satisfying the convergence tolerance.
+ </exception>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.CalculateThrustRequirement(Drone_Designer.Core.Services.MtowEstimate,System.Int32)">
  <summary>
@@ -2006,6 +2289,30 @@ Drone Designer
  when comparing against repository values.
  </summary>
 </member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimatePropellerHoverRpm(Drone_Designer.Core.Models.PropellerSpec,System.Double)">
+ <summary>
+ Estimates the propeller's required hover RPM given a per-motor thrust target,
+ using the static-thrust scaling law T ∝ RPM² (momentum theory, fixed pitch).
+   RPM_hover ≈ RPM_test × √(T_required / T_static_at_test)
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectMotorsForPropeller(Drone_Designer.Core.Models.PropellerSpec,Drone_Designer.Core.Services.ThrustRequirement,Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Selects motors compatible with a chosen reference propeller and the
+ per-motor thrust requirement. Used in the propeller-first pipeline.
+
+ Filters:
+   • Motor's PropDiameterMinIn ≤ prop.DiameterInches ≤ PropDiameterMaxIn
+   • Voltage range covers nominal pack voltage
+   • MaxThrustGrams ≥ ThrustPerMotorGf (loose check — manufacturer datasheet)
+   • Motor's no-load RPM at hover voltage exceeds prop's hover RPM by margin
+
+ Ranking:
+   • Efficiency DESC (manufacturer-reported gf/W)
+   • Then Mass ASC
+   • Take top 5
+ </summary>
+</member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectMotors(Drone_Designer.Core.Services.ThrustRequirement,Drone_Designer.Core.Models.MissionSpecs)">
  <summary>
  Queries the repository for motors that:
@@ -2015,6 +2322,22 @@ Drone Designer
 
  Sorted by: thrust-per-watt DESC (efficiency priority), then mass ASC.
  Returns up to 5 candidates; UI or user picks the final one.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellersByTargetDiameter(System.Double,System.Double,Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Selects propeller candidates whose diameter is closest to the target
+ diameter computed from disk loading. Does not depend on motor selection.
+
+ Filters:
+   • DiameterInches ≤ frameClearanceIn (hard frame constraint)
+   • DiameterInches within ±PropDiameterToleranceIn of target
+   • Material acceptable for environment (carbon fibre when Harsh)
+
+ Ranking:
+   • Distance from target diameter ASC (closest first)
+   • Then by static thrust DESC (more capable preferred when distance ties)
+   • Take top 5
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellers(System.Collections.Generic.List{Drone_Designer.Core.Models.ComponentSpecs},Drone_Designer.Core.Models.MissionSpecs)">
@@ -2046,7 +2369,7 @@ Drone Designer
      Last resort:  I_motor_peak = ThrustPerMotorGf / 10  [~1 A per 10 gf empirical]
 
  Hover motor current (per motor):
-   I_hover = I_peak x HoverCurrentFraction  (= 0.45)
+   I_hover = I_peak × (T_required / T_peak)^1.5  [momentum theory]
 
  Total peak current (ESC and PDB sizing):
    I_peak_total = (I_motor_peak x motor_count) + I_avionics
@@ -2349,14 +2672,46 @@ Drone Designer
  Valid: 3 (tri), 4 (quad), 6 (hex), 8 (octo), 12 (dodeca). Default: 4.
  </summary>
 </member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.ComputeTargetPropellerDiameter(System.Double,System.Int32)">
+ <summary>
+ Computes the target propeller diameter (inches) for a multirotor of
+ given MTOW and motor count.
+
+ DESIGN NOTE: An earlier draft used the disk-loading regression
+ DL ≈ 1.19 × m_t^0.4 from Yang et al. (Sizing of Multicopter Air
+ Taxis, Aerospace 2024). That correlation is fit through helicopter
+ and UAM-class vehicles in the 100–10,000 kg range, where minimizing
+ disk loading is the dominant efficiency objective. For small drones
+ in the 0.1–10 kg regime — the target regime of this tool — real
+ disk loadings are 5–30 kg/m², not the 1–5 kg/m² that regression
+ predicts. Applying it produces target diameters 2–3× larger than
+ practical (e.g., 25 in for a 2 kg quad).
+
+ Small drones are frame-clearance-limited rather than disk-loading-
+ limited: the frame is sized as small as possible given motor
+ placement, then the largest prop that fits is the optimal choice.
+ This function therefore returns the maximum prop diameter the
+ frame can accommodate for the given motor count, with a small
+ inset margin so SelectPropellersByTargetDiameter has flexibility
+ to pick a slightly smaller catalog match.
+ </summary>
+ <param name="mtowKg">MTOW in kilograms (currently unused; kept on
+ the signature for future regime-dependent extension to UAM-class
+ vehicles where disk loading becomes the binding constraint).</param>
+ <param name="motorCount">Number of rotors (must be ≥ 1).</param>
+ <returns>Target propeller diameter in inches.</returns>
+</member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimateMaxPropDiameter(System.Int32)">
  <summary>
  Estimates maximum propeller diameter (inches) within frame geometry clearance.
 
  Formula (symmetric X-frame):
    arm_length (mm)      = frame_diagonal / sqrt(2)
-   max_prop_radius (mm) = arm_length / 1.3  [30% tip clearance]
+   max_prop_radius (mm) = arm_length / FrameArmToPropRadiusRatio
    max_prop_diam (in)   = (max_prop_radius x 2) / 25.4
+
+ Frame diagonal sourced from FrameDiagonalTable keyed by motor count.
+ Falls back to the 4-motor entry (250 mm) for unrecognised counts.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.ValidateMissionSpecs(Drone_Designer.Core.Models.MissionSpecs)">
@@ -2365,8 +2720,18 @@ Drone Designer
  Throws descriptive ArgumentExceptions suitable for direct display in WinForms.
  </summary>
 </member>
-<member name="T:Drone_Designer.Core.Services.MtowEstimate">
+<member name="T:Drone_Designer.Core.Services.MtowIterationPoint">
  <summary>Result of MTOW fixed-point iteration (Task 7 output).</summary>
+ <summary>One data point recorded per pass of the MTOW fixed-point iterator.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.MtowIterationPoint.Iteration">
+ <summary>0 = seed (before first pass); N = after pass N.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.MtowIterationPoint.BatteryMassG">
+ <summary>Battery mass at this step (g).</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.MtowIterationPoint.MtowG">
+ <summary>Total mass / MTOW at this step (g). 0 for the seed point.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Services.MtowEstimate.StructuralMassGrams">
  <summary>Airframe + electronics + payload mass before safety factor (g).</summary>
@@ -2382,6 +2747,9 @@ Drone Designer
 </member>
 <member name="P:Drone_Designer.Core.Services.MtowEstimate.IterationsToConverge">
  <summary>Number of iterations until |delta MTOW| &lt;= 1 g.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.MtowEstimate.IterationHistory">
+ <summary>Per-step history for the convergence chart: seed at index 0, pass N at index N.</summary>
 </member>
 <member name="T:Drone_Designer.Core.Services.ThrustRequirement">
  <summary>Per-motor and total thrust requirements (Task 7 output).</summary>
@@ -2485,6 +2853,9 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Services.SelectionResult.RequiredThrustPerMotorGf">
  <summary>Required single-motor thrust at full throttle (gf).</summary>
 </member>
+<member name="P:Drone_Designer.Core.Services.SelectionResult.MtowIterationHistory">
+ <summary>MTOW iterator history: seed at index 0, pass N at index N. Used by ConvergenceForm.</summary>
+</member>
 <member name="P:Drone_Designer.Core.Services.SelectionResult.SelectedMotors">
  <summary>Up to 5 motor candidates sorted by efficiency then mass.</summary>
 </member>
@@ -2530,11 +2901,937 @@ Drone Designer
  The message string is designed to be shown directly in a WinForms MessageBox or label.
  </summary>
 </member>
+<member name="P:Drone_Designer.Core.Services.ComponentSelectionException.IterationHistory">
+ <summary>
+ MTOW iteration history collected before the failure.
+ Nothing when the exception did not originate from the iterator.
+ Populated when the iterator either diverges or hits the iteration cap.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Models.PipelineStage">
+ <summary>
+ Named stages that the pipeline reports as it progresses.
+ Used by <see cref="T:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport"/> so the UI can display
+ a meaningful status string, not just a percentage.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.Validating">
+ <summary>Initial validation of inputs before any real work begins.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.SelectingComponents">
+ <summary>Running the component selection engine (Module 1).</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.ConnectingToSolidWorks">
+ <summary>Connecting to or launching SolidWorks via COM interop.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.GeneratingPart">
+ <summary>Generating a single CAD part from a macro template.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.SavingFile">
+ <summary>Saving the generated part file to disk.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.WritingManifest">
+ <summary>Writing the component manifest alongside the CAD output.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.Finalising">
+ <summary>All work is complete; releasing SolidWorks resources.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.Failed">
+ <summary>
+ Terminal failure state. Check <see cref="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.ErrorMessage"/>
+ for details.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport">
+ <summary>
+ Immutable snapshot of pipeline progress reported via
+ <see cref="T:System.IProgress`1"/>.
+ One instance is fired for each meaningful state change.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.Stage">
+ <summary>Current named stage of the pipeline.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.PercentComplete">
+ <summary>
+ 0–100 overall completion percentage.
+ Not necessarily linear — stages have different weights.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.StatusMessage">
+ <summary>Human-readable description of the current operation.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.DetailMessage">
+ <summary>
+ Optional detail line shown below the main status message.
+ Useful for "Generating motor mount for T-Motor U8 II (3 of 4)" style messages.
+ Nothing when there is no detail to show.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.ErrorMessage">
+ <summary>
+ Non-Nothing when <see cref="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.Stage"/> is <see cref="F:Drone_Designer.Drone_Designer.Core.Models.PipelineStage.Failed"/>.
+ Contains the exception message (not the full stack trace — use logging for that).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.IsTerminal">
+ <summary>True when the pipeline has ended (either success or failure).</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.#ctor(Drone_Designer.Drone_Designer.Core.Models.PipelineStage,System.Int32,System.String,System.String)">
+ <summary>Initialises a progress report for a normal in-progress stage.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.Failure(System.String,System.Int32)">
+ <summary>Factory — creates a terminal failure report.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport.ToString">
+ <summary>Returns a single-line summary suitable for status-bar display.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord">
+ <summary>
+ Describes a single CAD file produced during a pipeline run.
+ Collected into <see cref="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.GeneratedParts"/>.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.ComponentId">
+ <summary>Component ID from the database that drove this part.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.ComponentName">
+ <summary>Human-readable component name, e.g. "T-Motor U8 II".</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.PartType">
+ <summary>Category of part generated, e.g. "Motor Mount".</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.FilePath">
+ <summary>Absolute path of the saved SolidWorks part (.SLDPRT) file.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.SavedAtUtc">
+ <summary>UTC timestamp when the file was saved.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.Success">
+ <summary>True if this part was generated successfully.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.ErrorDetail">
+ <summary>Error message if <see cref="P:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.Success"/> is False; Nothing otherwise.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.#ctor(System.String,System.String,System.String,System.String)">
+ <summary>Initialises a successful part record.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.Failure(System.String,System.String,System.String,System.String)">
+ <summary>Factory — creates a failed part record (no file path).</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord.#ctor(System.String,System.String,System.String,System.String,System.String)">
+ <summary>Internal constructor for failure records.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Models.PipelineResult">
+ <summary>
+ Final result of a complete pipeline run.
+ Returned by <c>PipelineOrchestrator.RunAsync()</c> when the pipeline
+ finishes (regardless of success or failure).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.Success">
+ <summary>True if the pipeline completed without a fatal error.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.ErrorMessage">
+ <summary>
+ Top-level error message when <see cref="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.Success"/> is False.
+ Nothing on success.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.GeneratedParts">
+ <summary>
+ Individual records for each CAD part that was attempted.
+ Always populated (even on partial failure) so the UI can report
+ which parts succeeded and which failed.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.OutputDirectory">
+ <summary>
+ Directory where all generated files were saved.
+ Nothing if the pipeline failed before any files were written.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.ManifestPath">
+ <summary>
+ Absolute path of the component manifest (.txt) written alongside
+ the CAD files. Nothing if manifest was not written.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.StartedAtUtc">
+ <summary>UTC time the pipeline run started.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.FinishedAtUtc">
+ <summary>UTC time the pipeline run ended.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.Duration">
+ <summary>Total wall-clock duration of the run.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.SuccessfulPartCount">
+ <summary>Count of parts generated successfully.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.FailedPartCount">
+ <summary>Count of parts that failed during generation.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.#ctor(System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord},System.String,System.String,System.DateTime)">
+ <summary>Initialises a successful pipeline result.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.#ctor(System.String,System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord},System.DateTime)">
+ <summary>
+ Initialises a failed pipeline result.
+ <paramref name="partsSoFar"/> can be empty or partially populated.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Models.PipelineResult.ToSummaryString">
+ <summary>
+ Returns a multi-line summary suitable for display in a MessageBox
+ or log file.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator">
+ <summary>
+ Orchestrates the full UAV design pipeline from mission specs through
+ to generated SolidWorks parts.
+ <para>
+ Instantiate once per application session and call
+ <see cref="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunAsync(Drone_Designer.Core.Models.MissionSpecs,System.String,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken)"/> for each design run.
+ </para>
+ </summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator._motorMountMacroPath">
+ <summary>Path to the motor mount macro file (.swb).</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.#ctor(Drone_Designer.Core.Interfaces.IComponentSelector,Drone_Designer.SolidWorks.SolidWorksAutomation,Drone_Designer.Drone_Designer.SolidWorks.MacroRunner,System.Action{System.String})">
+ <summary>
+ Initialises the orchestrator with all required services.
+ </summary>
+ <param name="selector">Component selection engine instance.</param>
+ <param name="swAutomation">SolidWorks connection manager (Task 12/14).</param>
+ <param name="macroRunner">Macro execution runner (Task 13).</param>
+ <param name="logger">
+ Optional delegate for log messages. Pass <c>AddressOf Debug.WriteLine</c>
+ during development, or wire to a real logger later.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunAsync(Drone_Designer.Core.Models.MissionSpecs,System.String,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken)">
+ <summary>
+ Runs the full pipeline asynchronously:
+ <list type="number">
+   <item>Validates inputs.</item>
+   <item>Runs component selection on the given specs.</item>
+   <item>Connects to SolidWorks.</item>
+   <item>Generates a motor-mount part for each selected motor.</item>
+   <item>Saves parts and writes a component manifest.</item>
+ </list>
+ </summary>
+ <param name="specs">Mission specifications from the UI input form.</param>
+ <param name="outputDirectory">
+ Folder where CAD parts and the manifest will be saved.
+ Created if it does not exist.
+ </param>
+ <param name="progress">
+ Receiver for incremental progress updates.  All callbacks are marshalled
+ to whichever thread owns this <see cref="T:System.IProgress`1"/> — normally
+ the UI thread if constructed with <c>New Progress(Of ...)(callback)</c>
+ on the UI thread.
+ </param>
+ <param name="cancellationToken">
+ Token connected to a Cancel button on the progress form.
+ The pipeline checks this before each major step and after each part.
+ </param>
+ <returns>
+ A <see cref="T:Drone_Designer.Drone_Designer.Core.Models.PipelineResult"/> describing what was generated.
+ Never throws — errors are captured into the result object.
+ </returns>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunFromSelectionAsync(Drone_Designer.Core.Services.SelectionResult,Drone_Designer.Core.Models.MissionSpecs,System.String,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken)">
+ <summary>
+ Overload that accepts an already-computed <see cref="T:Drone_Designer.Core.Services.SelectionResult"/>
+ (i.e. the user already ran Module 1 via the UI and this is a re-run
+ of Module 2 only, skipping component selection).
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.Report(System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},Drone_Designer.Drone_Designer.Core.Models.PipelineStage,System.Int32,System.String,System.String)">
+ <summary>
+ Reports a progress update.  Safe to call from any thread — IProgress
+ handles marshalling to the capture thread (usually the UI thread).
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.ValidateInputs(Drone_Designer.Core.Models.MissionSpecs,System.String)">
+ <summary>Validates inputs before any real work begins.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.GetMotorDisplayName(Drone_Designer.Core.Models.ComponentSpecs)">
+ <summary>
+ Returns a display-safe name for a motor component for use in filenames
+ and progress messages.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.SanitiseFilename(System.String)">
+ <summary>
+ Strips characters that are illegal in Windows file names.
+ Replaces spaces with underscores for cleaner filenames.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.WriteManifest(System.String,Drone_Designer.Core.Models.MissionSpecs,Drone_Designer.Core.Services.SelectionResult,System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord})">
+ <summary>
+ Writes a plain-text manifest listing all selected components and
+ which CAD files were generated.  Saved to the output directory so
+ the CAD folder is self-documenting.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.ComputeArmTubeOdMm(System.Double)">
+ <summary>
+ Returns the appropriate carbon round tube outer diameter for a drone arm,
+ based on the maximum thrust the motor produces.
+ Sizes map to common carbon fibre tube stock: 10, 12, 16, 20, 25 mm.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunSolidWorksStages(Drone_Designer.Core.Services.SelectionResult,Drone_Designer.Core.Models.MissionSpecs,System.String,System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord},System.Boolean,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken,System.DateTime)">
+ <summary>
+ Executes all SolidWorks-dependent pipeline stages (3-6) synchronously.
+ Always call this via RunOnStaAsync so that Connect, RunMacro2, and
+ Disconnect all run in the same STA COM apartment.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunOnStaAsync``1(System.Func{``0})">
+ <summary>
+ Runs a synchronous function on a freshly spawned STA thread and surfaces the
+ result as a Task. Pass the entire SolidWorks work block as a single lambda so
+ Connect and all subsequent COM calls share one STA apartment.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.Values">
+ <summary>Flat key→value store passed to the macro.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.SourceDescription">
+ <summary>
+ Optional: path to the source component spec file that
+ generated these parameters, for traceability in logs.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.Add(System.String,System.String)">
+ <summary>Add or overwrite a parameter.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.Add(System.String,System.Double)">
+ <summary>Add a numeric value, formatted invariant-culture.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.FromComponentSpec(Drone_Designer.Core.Models.ComponentSpecs)">
+ <summary>
+ Build parameters from a generic ComponentSpec.
+ Keys mirror property names in ComponentSpec so VBA
+ macros can use consistent, predictable names.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.FromMotorSpec(Drone_Designer.Core.Models.MotorSpec)">
+ <summary>
+ Build parameters for a motor-specific spec, adding
+ motor fields on top of the generic ones.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.FromBatterySpec(Drone_Designer.Core.Models.BatterySpec)">
+ <summary>
+ Build parameters for a battery spec.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.FromPropellerSpec(Drone_Designer.Core.Models.PropellerSpec)">
+ <summary>
+ Build parameters for a propeller spec.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.ToParameterFileContent">
+ <summary>
+ Serialise all parameters to key=value lines for the
+ temp file. VBA macros read this with Open/Line Input.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.CloseDocumentAfterRun">
+ <summary>
+ Close the opened template document after saving the
+ output. Set False to leave it open for inspection.
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.OpenTemplateAsCopy">
+ <summary>
+ Open the template as a copy so the original is never
+ modified. Internally uses OpenDocOptions_e.swOpenDocOptions_Silent
+ + copies the file to a temp location first.
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.SilentMode">
+ <summary>
+ If True, suppress all SolidWorks dialog boxes during
+ the run (recommended for automation).
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.TimeoutMs">
+ <summary>
+ Maximum time in milliseconds to wait for a macro to
+ complete before treating it as hung. 0 = no timeout.
+ Default: 60 000 (1 minute).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.TempDirectory">
+ <summary>
+ Directory for the temp parameter file.
+ Defaults to System.IO.Path.GetTempPath().
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.InjectAsCustomProperties">
+ <summary>
+ If True, write parameters as custom document properties
+ on the open document before the macro runs.
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.InjectAsTempFile">
+ <summary>
+ If True, write parameters to a key=value temp file.
+ Default: True.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.TempParameterFileName">
+ <summary>
+ Well-known file name for the temp parameter file.
+ The VBA macro should open exactly this path.
+ Default: "DroneDesigner_MacroParams.txt"
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions.SaveAsVersion">
+ <summary>
+ SolidWorks save format for the output file.
+ Uses the swSaveAsVersion_e value. 0 = same version.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner">
+ <summary>
+ Executes SolidWorks VBA macros against template documents,
+ injecting ComponentSpec parameters before the macro runs
+ and saving the result to a specified output path.
+ </summary>
+ <remarks>
+ Requires an active SolidWorks COM instance. Obtain one from
+ SolidWorksAutomation.vb before constructing this class.
+ Thread-affinity: call from the UI thread or a dedicated STA
+ thread — SolidWorks COM is apartment-threaded.
+ </remarks>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner._swApp">
+ <summary>Live SolidWorks application COM object.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner._options">
+ <summary>Options governing runtime behaviour.</summary>
+</member>
+<member name="F:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner._log">
+ <summary>Accumulated log entries for this session.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.#ctor(System.Object,Drone_Designer.Drone_Designer.SolidWorks.MacroRunnerOptions)">
+ <summary>
+ Initialise MacroRunner with an existing SolidWorks instance.
+ </summary>
+ <param name="swApp">
+ A live SldWorks.SldWorks COM object. Typically obtained
+ from SolidWorksAutomation.Connect().
+ </param>
+ <param name="options">
+ Optional runtime options. Null → defaults are used.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.GetLog">
+ <summary>
+ Returns a copy of the log entries accumulated since
+ this MacroRunner was constructed. Useful for surfacing
+ run details in the UI or writing to a log file.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.ClearLog">
+ <summary>Clears the internal log buffer.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacroOnTemplate(System.String,System.String,System.String,System.String,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters,System.String)">
+ <summary>
+ Full pipeline: open template → inject parameters →
+ run macro → save output → clean up.
+ </summary>
+ <param name="templatePath">
+ Absolute path to the .SLDPRT or .SLDASM template file.
+ </param>
+ <param name="macroPath">
+ Absolute path to the .swp VBA macro file.
+ </param>
+ <param name="macroModule">
+ VBA module name inside the macro (e.g. "MacroModule1").
+ </param>
+ <param name="macroProcedure">
+ VBA Sub name to call (e.g. "BuildMotorMount").
+ </param>
+ <param name="parameters">
+ Parameters derived from ComponentSpec. Pass Nothing
+ to run the macro without parameter injection.
+ </param>
+ <param name="outputPath">
+ Where to save the finished document. If the directory
+ does not exist it will be created.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacroOnTemplate(System.String,System.String,System.String,System.String,Drone_Designer.Core.Models.ComponentSpecs,System.String)">
+ <summary>
+ Convenience overload: builds MacroParameters from any
+ ComponentSpec automatically before calling the full pipeline.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacroOnActiveDocument(System.String,System.String,System.String,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters,System.String)">
+ <summary>
+ Run a macro against the document that is currently
+ active in SolidWorks (no template open/close). Useful
+ when SolidWorksAutomation.vb has already opened a doc.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacroSequenceOnTemplate(System.String,System.Collections.Generic.IList{System.ValueTuple{System.String,System.String,System.String}},Drone_Designer.Drone_Designer.SolidWorks.MacroParameters,System.String)">
+ <summary>
+ Run multiple macros in sequence on a single template
+ document (e.g. BuildFrame → AddMountHoles → AddCutouts).
+ Each macro sees the state left by the previous one.
+ </summary>
+ <param name="macroSteps">
+ Ordered list of (macroPath, module, procedure) tuples.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.OpenDocument(System.String)">
+ <summary>Opens a SolidWorks document, returning IModelDoc2.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.InferDocumentType(System.String)">
+ <summary>
+ Infer swDocumentTypes_e from file extension.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacro(System.String,System.String,System.String,System.Int32@)">
+ <summary>
+ Calls SldWorks.RunMacro2. Returns True on success.
+ swErr receives the SolidWorks error code on failure.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.InjectCustomProperties(System.Object,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters)">
+ <summary>
+ Writes parameter key=value pairs as Custom Properties
+ on the SolidWorks document's root configuration.
+ VBA reads them with: ActiveDoc.CustomInfo2("", "KEY")
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RemoveInjectedProperties(System.Object,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters)">
+ <summary>
+ Removes all injected parameter properties from the
+ document to avoid polluting the saved output file.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.WriteTempParameterFile(Drone_Designer.Drone_Designer.SolidWorks.MacroParameters)">
+ <summary>
+ Writes the parameter file to the temp directory.
+ Returns the full path of the written file, or Nothing
+ if the write fails.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.SaveDocumentAs(System.Object,System.String)">
+ <summary>
+ Saves the active document as a new file at outputPath.
+ Preserves the SolidWorks file type (part/assembly).
+ Returns True on success.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.CloseDocument(System.Object,System.Boolean)">
+ <summary>
+ Closes a SolidWorks document. saveFirst=True performs
+ a save before close (use False when output already saved).
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.BuildWorkingCopyPath(System.String)">
+ <summary>
+ Builds a temp path for the working copy of a template.
+ Placed next to the original with a _work suffix.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.CleanupWorkingCopy(System.String,System.String)">
+ <summary>
+ Deletes the working copy if it differs from the original
+ (i.e., we actually made a copy and should clean it up).
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.CleanupTempFile(System.String)">
+ <summary>Deletes the temp parameter file if it exists.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.ValidateInputs(System.String,System.String,System.String)">
+ <summary>Validates that required files exist and paths are absolute.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.TranslateSwError(System.Int64)">
+ <summary>Human-readable label for common SW error codes.</summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.Log(System.String)">
+ <summary>Appends a timestamped entry to the internal log.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchJob">
+ <summary>
+ Describes a single job in a batch run.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchJob.Label">
+ <summary>Friendly label used in logs and result reporting.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchResult">
+ <summary>
+ Result of running a MacroBatchJob.
+ </summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchRunner">
+ <summary>
+ Orchestrates multiple macro jobs against a single SolidWorks
+ instance, processing all selected components from Module 1.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchRunner.RunBatch(System.Collections.Generic.IList{Drone_Designer.Drone_Designer.SolidWorks.MacroBatchJob},System.Boolean,System.IProgress{System.ValueTuple{System.Int32,System.Int32,System.String}})">
+ <summary>
+ Execute a list of batch jobs sequentially.
+ Continues on individual failures unless stopOnFirstFailure=True.
+ </summary>
+ <returns>
+ List of results — one per job, in submission order.
+ </returns>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroBatchRunner.GetLog">
+ <summary>Returns the combined log from all runs in this batch session.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm">
+ <summary>
+ Modal progress window for the CAD generation pipeline.
+ Owned by MainForm; created fresh for each pipeline run.
+ </summary>
+</member>
+<member name="E:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.PipelineCompleted">
+ <summary>
+ Raised on the UI thread when the pipeline has finished
+ (either success, failure, or cancel) and the user dismisses
+ the dialog.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.Progress">
+ <summary>
+ The <see cref="T:System.IProgress`1"/> to pass to
+ <c>PipelineOrchestrator.RunAsync()</c>.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.#ctor(System.Threading.CancellationTokenSource)">
+ <summary>
+ Creates the progress form.  Must be called on the UI thread so the
+ <see cref="T:System.Progress`1"/> captures the correct
+ synchronisation context.
+ </summary>
+ <param name="cts">
+ The <see cref="T:System.Threading.CancellationTokenSource"/> shared with the pipeline.
+ Clicking Cancel calls <c>cts.Cancel()</c>.
+ </param>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.AppendLog(System.String)">
+ <summary>
+ Appends a line to the log text box and auto-scrolls to the bottom.
+ Thread-safe.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.MarkComplete(Drone_Designer.Drone_Designer.Core.Models.PipelineResult)">
+ <summary>
+ Called by MainForm after <c>RunAsync</c> returns to update the
+ form into its completed state (success or failure).
+ Thread-safe.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.UI.Forms.CadProgressForm.OnFormClosing(System.Windows.Forms.FormClosingEventArgs)">
+ <summary>Prevent accidental close via the X button while running.</summary>
+</member>
+<member name="T:Drone_Designer.Drone_Designer.UI.Forms.PipelineCompletedEventArgs">
+ <summary>Event arguments carrying the final pipeline result.</summary>
+</member>
+<member name="P:Drone_Designer.Drone_Designer.UI.Forms.PipelineCompletedEventArgs.Result">
+ <summary>The final result of the pipeline run.</summary>
+</member>
+<member name="T:Drone_Designer.SolidWorks.SolidWorksAutomation">
+ <summary>
+ Manages the lifecycle of a SolidWorks COM connection.
+ Provides <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Connect(System.String@)"/>, <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Disconnect"/>,
+ <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.IsConnected"/>, and <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.GetVersion"/> as the
+ public surface used by the rest of Module 2.
+ </summary>
+ <remarks>
+ Design notes:
+ • Late binding is used so the project compiles on any machine, even
+   without SolidWorks installed (useful for CI or Module-1-only work).
+ • <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Connect(System.String@)"/> tries GetActiveObject first (attach to a
+   running SolidWorks window) before falling back to CreateObject
+   (launch a new invisible instance). This mirrors the behaviour of the
+   built-in SolidWorks macro recorder.
+ • The class implements IDisposable so a Using block can guarantee
+   cleanup even if an unhandled exception occurs mid-macro.
+ </remarks>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation.SW_PROG_ID">
+ <summary>COM ProgID registered by the SolidWorks installer.</summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation.MIN_API_VERSION">
+ <summary>
+ Minimum API version we are willing to work with.
+ SolidWorks 2021 = API 29.0.  Adjust if targeting an older release.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation.SW_REGISTRY_KEY">
+ <summary>
+ Registry key written by the SolidWorks installer (64-bit hive).
+ Used to confirm installation before attempting COM activation.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation._swApp">
+ <summary>
+ The live COM object.  Typed as Object for late-binding portability.
+ Cast to ISldWorks if you add the early-binding interop reference.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation._isConnected">
+ <summary>True once <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Connect(System.String@)"/> succeeds.</summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation._weOwnTheProcess">
+ <summary>
+ True when *we* launched SolidWorks (as opposed to attaching to an
+ already-running instance).  Used in <see cref="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Disconnect"/> to
+ decide whether to call ExitApp.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.SolidWorksAutomation._disposed">
+ <summary>IDisposable bookkeeping.</summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Connect(System.String@)">
+ <summary>
+ Establishes a COM connection to SolidWorks.
+ Tries to attach to an already-running instance first; if none is
+ found, launches a new (initially invisible) instance.
+ </summary>
+ <returns>
+ <c>True</c> on success; <c>False</c> if connection could not be
+ established.  Detailed failure information is surfaced through
+ <paramref name="errorMessage"/>.
+ </returns>
+ <param name="errorMessage">
+ Human-readable error description when the method returns False.
+ Empty string on success.
+ </param>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Disconnect">
+ <summary>
+ Releases the COM connection.
+ If we launched SolidWorks ourselves and no documents are open,
+ the application is closed.  If the user had SolidWorks open before
+ we connected, it is left running.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.IsConnected">
+ <summary>
+ Returns <c>True</c> if the COM object is held and SolidWorks
+ is still responding.
+ </summary>
+ <remarks>
+ A quick liveness ping is performed (reading the Visible property)
+ rather than relying solely on the cached flag, so the caller gets
+ an accurate answer even if SolidWorks crashed after Connect().
+ </remarks>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.GetVersion">
+ <summary>
+ Returns a human-readable version string, e.g. "SOLIDWORKS 2023 SP2".
+ Returns an empty string if not connected.
+ </summary>
+</member>
+<member name="P:Drone_Designer.SolidWorks.SolidWorksAutomation.Application">
+ <summary>
+ Provides the raw COM application object to other classes in the
+ SolidWorks namespace (e.g. MacroRunner, PartBuilder).
+ Returns Nothing if not connected.
+ </summary>
+ <remarks>
+ Callers must handle the case where this returns Nothing and must
+ not cache the reference across a Disconnect/Connect cycle.
+ </remarks>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.IsSolidWorksInstalled">
+ <summary>
+ Checks the registry for a SolidWorks installation entry.
+ This is a fast pre-flight check before attempting COM activation,
+ which produces a less informative error on an unmachined machine.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.CheckVersionCompatibility(System.String@)">
+ <summary>
+ Verifies that the connected SolidWorks instance meets the minimum
+ API version requirement defined by <see cref="F:Drone_Designer.SolidWorks.SolidWorksAutomation.MIN_API_VERSION"/>.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.RevisionToYear(System.String)">
+ <summary>
+ Maps a SolidWorks API major revision number to its marketing year.
+ Kept as a simple lookup table — extend as new versions ship.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.BuildCOMErrorMessage(System.Runtime.InteropServices.COMException)">
+ <summary>
+ Produces a user-friendly error message for common COM HRESULTs
+ encountered when activating SolidWorks.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.ReleaseComObject">
+ <summary>
+ Releases the COM reference and nulls the field.
+ Safe to call multiple times.
+ </summary>
+</member>
+<member name="M:Drone_Designer.SolidWorks.SolidWorksAutomation.Dispose">
+ <summary>
+ Ensures the COM connection is released when the object is garbage
+ collected or falls out of a Using block.
+ </summary>
+</member>
+<member name="T:Drone_Designer.SolidWorks.COMErrorCodes">
+ <summary>
+ Named constants for COM HRESULTs that can appear when activating or
+ communicating with SolidWorks.  Centralised here so the error-handling
+ switch is readable without magic numbers.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.MK_E_UNAVAILABLE">
+ <summary>
+ 0x800401E3 — GetActiveObject found no running instance with that ProgID.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.REGDB_E_CLASSNOTREG">
+ <summary>
+ 0x80040154 — ProgID is not in the registry; SolidWorks not installed
+ or COM registration is broken.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.CO_E_SERVER_EXEC_FAILURE">
+ <summary>
+ 0x80080005 — Out-of-process COM server failed to start; often a
+ licence or permission issue.
+ </summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.E_ACCESSDENIED">
+ <summary>0x80070005 — Access denied.</summary>
+</member>
+<member name="F:Drone_Designer.SolidWorks.COMErrorCodes.RPC_E_DISCONNECTED">
+ <summary>
+ 0x80010004 — The COM server disconnected while a call was in flight;
+ typically means SolidWorks crashed.
+ </summary>
+</member>
+<member name="T:Drone_Designer.UI.Forms.ConvergenceForm">
+ <summary>
+ Non-modal popup showing the MTOW fixed-point iteration history as an animated line chart.
+
+ Blue series  : battery mass (g) per iteration.
+ Orange series: total mass / MTOW (g) per iteration.
+
+ Points appear one per 180 ms frame so the convergence path
+ animates in after the selection completes.
+ </summary>
+</member>
+<member name="M:Drone_Designer.UI.Forms.ConvergenceForm.#ctor(System.Collections.Generic.List{Drone_Designer.Core.Services.MtowIterationPoint},System.Double,System.Boolean)">
+ <param name="converged">
+ True when the iterator completed normally.
+ False marks the chart title red and adds a "Diverged / Failed" label.
+ </param>
+</member>
+<member name="F:Drone_Designer.MainForm._orchestrator">
+ <summary>
+ Lazily created orchestrator.  Reused across runs so SolidWorks
+ stays connected between multiple Generate CAD calls in the
+ same session.
+ </summary>
+</member>
+<member name="F:Drone_Designer.MainForm._swAutomation">
+ <summary>
+ Connection manager — held at form level so the status label can
+ show SW version on connect.
+ </summary>
+</member>
+<member name="F:Drone_Designer.MainForm._lastOutputDirectory">
+ <summary>
+ Last directory chosen by the user.  Remembered for the duration
+ of the session so the picker opens in the same place.
+ </summary>
+</member>
+<member name="F:Drone_Designer.MainForm._pipelineRunning">
+ <summary>
+ True while the pipeline is running — disables both action buttons.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.WireCADControls">
+ <summary>
+ Call this from MainForm_Load (in MainForm.Logic.vb) to attach
+ all CAD-related event handlers.  Kept separate so Task 11 code
+ doesn't need to be modified.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.btnGenerateCAD_Click(System.Object,System.EventArgs)">
+ <summary>
+ Entry point for the end-to-end pipeline.
+ Validates state, picks output folder, then runs the pipeline async.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.PickOutputDirectory">
+ <summary>
+ Shows a FolderBrowserDialog and returns the chosen path.
+ Returns Nothing if the user cancels.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.EnsureOrchestratorInitialised">
+ <summary>
+ Lazy-initialises <see cref="F:Drone_Designer.MainForm._swAutomation"/> and <see cref="F:Drone_Designer.MainForm._orchestrator"/>.
+ Returns False and shows an error dialog if initialisation fails.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.TryBuildMissionSpecs">
+ <summary>
+ Reads form controls into a MissionSpecs object for manifest writing.
+ Delegates to the existing BuildMissionSpecs method in MainForm.Logic.vb.
+ Returns Nothing on validation failure.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.UpdateCADButtonState">
+ <summary>
+ Enables/disables the Generate CAD button based on current application state.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.SetPipelineRunning(System.Boolean)">
+ <summary>
+ Locks or unlocks the UI action buttons during pipeline execution.
+ </summary>
+</member>
+<member name="M:Drone_Designer.MainForm.LogToStatusStrip(System.String)">
+ <summary>
+ Thin logging delegate passed to PipelineOrchestrator.
+ Appends messages to the status strip — useful during development.
+ </summary>
+</member>
 <member name="F:Drone_Designer.MainForm._engine">
  <summary>Selection engine instance. Nothing if database failed to load.</summary>
 </member>
 <member name="F:Drone_Designer.MainForm._lastResult">
  <summary>Most recent successful SelectionResult — available for export (Task 13).</summary>
+</member>
+<member name="F:Drone_Designer.MainForm._convergenceForm">
+ <summary>Convergence chart popup; closed and replaced on each new selection run.</summary>
+</member>
+<member name="F:Drone_Designer.MainForm._cadGen">
+ <summary>
+ SolidWorks automation wrapper. Instantiated eagerly so MainForm.CAD.vb can
+ call _cadGen.Connect() on demand (deferred — see that file).
+ Connect() is NOT called here; the COM handshake only happens when the user
+ clicks "Send to SolidWorks", because SW startup is slow and the user may
+ only need Module 1 (component selection).
+ </summary>
 </member>
 <member name="M:Drone_Designer.MainForm.OnLoad(System.EventArgs)">
  <summary>
@@ -2770,7 +4067,7 @@ Drone Designer
  <param name="totalPowerW">Sum of peak power consumption in watts.</param>
  <param name="count">Number of components selected.</param>
 </member>
-<member name="T:Drone_Designer.ConfigManager">
+<member name="T:Drone_Designer.Utilities.ConfigManager">
  <summary>
  Manages application-wide configuration settings for the Drone Designer tool.
  Reads from and writes to a JSON config file (DroneDesigner.config.json) located
@@ -2779,129 +4076,129 @@ Drone Designer
  Config file is auto-created with defaults on first run if missing.
  </summary>
 </member>
-<member name="F:Drone_Designer.ConfigManager.CONFIG_FILE_NAME">
+<member name="F:Drone_Designer.Utilities.ConfigManager.CONFIG_FILE_NAME">
  <summary>
  The name of the JSON config file on disk.
  </summary>
 </member>
-<member name="P:Drone_Designer.ConfigManager.Settings">
+<member name="P:Drone_Designer.Utilities.ConfigManager.Settings">
  <summary>
  Returns the loaded application settings. Loads from disk on first access.
  Thread-safe for read scenarios typical of a WinForms desktop app.
  </summary>
 </member>
-<member name="P:Drone_Designer.ConfigManager.ConfigFilePath">
+<member name="P:Drone_Designer.Utilities.ConfigManager.ConfigFilePath">
  <summary>
  Full path to the config file being used (next to the executable).
  </summary>
 </member>
-<member name="M:Drone_Designer.ConfigManager.Load">
+<member name="M:Drone_Designer.Utilities.ConfigManager.Load">
  <summary>
  Loads settings from the JSON config file.
  If the file does not exist, creates it with default values.
  Throws ConfigurationException if the file is present but malformed.
  </summary>
 </member>
-<member name="M:Drone_Designer.ConfigManager.Save">
+<member name="M:Drone_Designer.Utilities.ConfigManager.Save">
  <summary>
  Saves the current in-memory settings back to the JSON config file.
  Call this after programmatically changing any Settings property.
  </summary>
 </member>
-<member name="M:Drone_Designer.ConfigManager.Reload">
+<member name="M:Drone_Designer.Utilities.ConfigManager.Reload">
  <summary>
  Forces a reload from disk, discarding any unsaved in-memory changes.
  Useful if the user edits the config file while the application is running.
  </summary>
 </member>
-<member name="T:Drone_Designer.AppSettings">
+<member name="T:Drone_Designer.Utilities.AppSettings">
  <summary>
  Strongly-typed model for all application settings.
  All paths may be absolute or relative to the executable directory.
  Serialized to / deserialized from JSON by ConfigManager.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ComponentsDatabasePath">
+<member name="P:Drone_Designer.Utilities.AppSettings.ComponentsDatabasePath">
  <summary>
  Path to the components database file (JSON).
  Example: "Resources\components.json"
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.SolidWorksInstallPath">
+<member name="P:Drone_Designer.Utilities.AppSettings.SolidWorksInstallPath">
  <summary>
  Root installation directory of SolidWorks.
  Example: "C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS"
  Used by SolidWorksAutomation.vb when locating the COM server.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.TemplatePartsDirectory">
+<member name="P:Drone_Designer.Utilities.AppSettings.TemplatePartsDirectory">
  <summary>
  Directory containing parametric SolidWorks template parts (.SLDPRT / .SLDASM).
  Module 2 reads from here when editing pre-designed templates.
  Example: "C:\DroneDesigner\Templates"
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.OutputDirectory">
+<member name="P:Drone_Designer.Utilities.AppSettings.OutputDirectory">
  <summary>
  Directory where generated CAD files (parts and assemblies) are written.
  Example: "C:\DroneDesigner\Output"
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.SolidWorksTargetVersion">
+<member name="P:Drone_Designer.Utilities.AppSettings.SolidWorksTargetVersion">
  <summary>
  Target SolidWorks version string used when selecting macros or API calls.
  Example: "2023", "2024"
  Macros are version-sensitive; keep this in sync with the installed version.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.LogFilePath">
+<member name="P:Drone_Designer.Utilities.AppSettings.LogFilePath">
  <summary>
  Path to the application log file.
  Example: "Logs\DroneDesigner.log"
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.LogLevel">
+<member name="P:Drone_Designer.Utilities.AppSettings.LogLevel">
  <summary>
  Minimum log level written to file.
  Accepted values: "Debug", "Info", "Warning", "Error"
  </summary>
 </member>
-<member name="M:Drone_Designer.AppSettings.CreateDefaults">
+<member name="M:Drone_Designer.Utilities.AppSettings.CreateDefaults">
  <summary>
  Returns a new AppSettings instance populated with safe default values.
  Called automatically by ConfigManager when no config file is found.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ResolvedComponentsDatabasePath">
+<member name="P:Drone_Designer.Utilities.AppSettings.ResolvedComponentsDatabasePath">
  <summary>
  Returns ComponentsDatabasePath resolved to an absolute path,
  anchored to the executable directory if the stored path is relative.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ResolvedTemplatePartsDirectory">
+<member name="P:Drone_Designer.Utilities.AppSettings.ResolvedTemplatePartsDirectory">
  <summary>
  Returns TemplatePartsDirectory resolved to an absolute path.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ResolvedOutputDirectory">
+<member name="P:Drone_Designer.Utilities.AppSettings.ResolvedOutputDirectory">
  <summary>
  Returns OutputDirectory resolved to an absolute path.
  Creates the directory if it does not already exist.
  </summary>
 </member>
-<member name="P:Drone_Designer.AppSettings.ResolvedLogFilePath">
+<member name="P:Drone_Designer.Utilities.AppSettings.ResolvedLogFilePath">
  <summary>
  Returns LogFilePath resolved to an absolute path.
  Creates the parent Logs directory if it does not already exist.
  </summary>
 </member>
-<member name="M:Drone_Designer.AppSettings.ResolvePath(System.String)">
+<member name="M:Drone_Designer.Utilities.AppSettings.ResolvePath(System.String)">
  <summary>
  Converts a path that may be relative (to the exe directory) into a full absolute path.
  Absolute paths pass through unchanged.
  </summary>
 </member>
-<member name="T:Drone_Designer.ConfigurationException">
+<member name="T:Drone_Designer.Utilities.ConfigurationException">
  <summary>
  Thrown when ConfigManager cannot read or write the configuration file.
  Wraps the underlying IO/serialization exception for caller context.

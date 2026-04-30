@@ -38,7 +38,7 @@ Imports System.Threading.Tasks
 Imports Drone_Designer.Core.Models
 Imports Drone_Designer.Core.Services
 Imports Drone_Designer.SolidWorks
-
+Imports Drone_Designer.UI.Forms
 
 
 ''' <summary>
@@ -54,6 +54,9 @@ Partial Class MainForm
 
     ''' <summary>Most recent successful SelectionResult — available for export (Task 13).</summary>
     Friend _lastResult As SelectionResult
+
+    ''' <summary>Convergence chart popup; closed and replaced on each new selection run.</summary>
+    Private _convergenceForm As ConvergenceForm
 
     ''' <summary>
     ''' SolidWorks automation wrapper. Instantiated eagerly so MainForm.CAD.vb can
@@ -144,10 +147,31 @@ Partial Class MainForm
             DisplaySelectionResult(result)
             UpdateStatus($"✔  Selection complete — {result.SelectedMotors.Count} motor(s) found. " &
                      $"Estimated MTOW: {result.EstimatedMtowGrams:N0} g.")
+
+            ' Show convergence popup (close any previous instance first)
+            If _convergenceForm IsNot Nothing AndAlso Not _convergenceForm.IsDisposed Then
+                _convergenceForm.Close()
+            End If
+            _convergenceForm = New ConvergenceForm(
+                result.MtowIterationHistory,
+                result.EstimatedMtowGrams)
+            _convergenceForm.Show(Me)
         Catch ex As ComponentSelectionException
             UpdateStatus("⚠  Selection failed — see message.")
             MessageBox.Show(ex.Message, "Component Selection Failed",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning)
+
+            ' Show the partial convergence chart so the diverging path is visible
+            If ex.IterationHistory IsNot Nothing AndAlso ex.IterationHistory.Count > 1 Then
+                If _convergenceForm IsNot Nothing AndAlso Not _convergenceForm.IsDisposed Then
+                    _convergenceForm.Close()
+                End If
+                _convergenceForm = New ConvergenceForm(
+                    ex.IterationHistory,
+                    0.0,
+                    converged:=False)
+                _convergenceForm.Show(Me)
+            End If
         Catch ex As Exception
             UpdateStatus("⚠  Unexpected error during selection.")
             MessageBox.Show($"Unexpected error:{Environment.NewLine}{ex.Message}",

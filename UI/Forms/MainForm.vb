@@ -376,7 +376,7 @@ Partial Public Class MainForm
             ' Row 1 ── Endurance | Range | Cruise Speed
             lblEndurance = MakeLabel("Endurance (hours):", LBL_X, ROW1)
             nudEndurance = MakeNUD(CTL_X, ROW1, 0.1D, 24D, 1, 90, "h")
-            nudEndurance.Value = 1D
+            nudEndurance.Value = 0.4D
             nudEndurance.Increment = 0.1D
             SetTip(nudEndurance, "Required flight endurance in hours (e.g. 1.5 = 90 minutes).")
 
@@ -387,7 +387,7 @@ Partial Public Class MainForm
 
             lblCruiseSpeed = MakeLabel("Cruise Speed (km/h):", COL3_LBL, ROW1)
             nudCruiseSpeed = MakeNUD(COL3_CTL, ROW1, 0, 300D, 0, 90, "km/h")
-            nudCruiseSpeed.Value = 60
+            nudCruiseSpeed.Value = 30
             SetTip(nudCruiseSpeed, "Nominal cruise speed in km/h.")
 
             ' Row 2 ── Max Altitude | Max Wind Speed | Max Takeoff Weight
@@ -395,7 +395,7 @@ Partial Public Class MainForm
 
             lblMaxAltitude = MakeLabel("Max Altitude (m AGL):", LBL_X, row2)
             nudMaxAltitude = MakeNUD(CTL_X, row2, 0, 10000D, 0, 90, "m")
-            nudMaxAltitude.Value = 400
+            nudMaxAltitude.Value = 100
             nudMaxAltitude.Increment = 50
             SetTip(nudMaxAltitude, "Maximum altitude above ground level in metres.")
 
@@ -617,6 +617,7 @@ Partial Public Class MainForm
                 "Research / Experimental"
             }, 200)
             SetTip(cboMissionProfile, "Primary mission type — drives component priority weighting in the selection algorithm.")
+            cboMissionProfile.SelectedIndex = 1
 
             lblFrameType = MakeLabel("Airframe Type:", COL2_LBL, ROW1)
             cboFrameType = MakeCombo(COL2_CTL, ROW1, New String() {
@@ -934,10 +935,10 @@ Partial Public Class MainForm
         ''' Business logic is NOT called here.
         ''' </summary>
         Private Sub OnClearInputs(sender As Object, e As EventArgs)
-            nudEndurance.Value = 1D
+            nudEndurance.Value = 0.4D
             nudRange.Value = 5
-            nudCruiseSpeed.Value = 60
-            nudMaxAltitude.Value = 400
+            nudCruiseSpeed.Value = 30
+            nudMaxAltitude.Value = 100
             nudMaxWindSpeed.Value = 30
             nudMaxTakeoffWeight.Value = 2000
 
@@ -954,7 +955,7 @@ Partial Public Class MainForm
             nudTempMin.Value = -10
             nudTempMax.Value = 45
 
-            cboMissionProfile.SelectedIndex = 0
+            cboMissionProfile.SelectedIndex = 1
             cboFrameType.SelectedIndex = 0
             cboMotorCount.SelectedIndex = 1
             cboAutonomyLevel.SelectedIndex = 2

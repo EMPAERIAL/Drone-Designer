@@ -3,7 +3,43 @@
   "WorkspaceRootPath": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|c:\\users\\ahmed osman\\desktop\\teknofest\\the drone designer\\drone designer\\solidworks\\solidworksautomation.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|c:\\users\\ahmed osman\\desktop\\teknofest\\the drone designer\\drone designer\\core\\services\\componentselectionengine.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:core\\services\\componentselectionengine.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|c:\\users\\ahmed osman\\desktop\\teknofest\\the drone designer\\drone designer\\ui\\forms\\convergenceform.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:ui\\forms\\convergenceform.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\ui\\forms\\mainform.logic.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:ui\\forms\\mainform.logic.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\core\\interfaces\\icomponentselector.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:core\\interfaces\\icomponentselector.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\core\\services\\pipelineorchestrator.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:core\\services\\pipelineorchestrator.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\solidworks\\macrorunner.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:solidworks\\macrorunner.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\utilities\\configmanager.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:utilities\\configmanager.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\core\\models\\pipelineresult.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:core\\models\\pipelineresult.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\resources\\macros\\motormount_test.swb||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:resources\\macros\\motormount_test.swb||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\solidworks\\solidworksautomation.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
       "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:solidworks\\solidworksautomation.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
     },
     {
@@ -11,23 +47,11 @@
       "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:ui\\forms\\mainform.cad.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\ui\\forms\\mainform.logic.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:ui\\forms\\mainform.logic.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|c:\\users\\ahmed osman\\desktop\\teknofest\\the drone designer\\drone designer\\core\\services\\pipelineorchestrator.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:core\\services\\pipelineorchestrator.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|c:\\users\\ahmed osman\\desktop\\teknofest\\the drone designer\\drone designer\\ui\\forms\\cadprogressform.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\ui\\forms\\cadprogressform.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
       "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:ui\\forms\\cadprogressform.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|c:\\users\\ahmed osman\\desktop\\teknofest\\the drone designer\\drone designer\\core\\models\\pipelineresult.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
-      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:core\\models\\pipelineresult.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|c:\\users\\ahmed osman\\desktop\\teknofest\\the drone designer\\drone designer\\ui\\forms\\cadprogressform.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form",
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\ui\\forms\\cadprogressform.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form",
       "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:ui\\forms\\cadprogressform.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}|Form"
     }
   ],
@@ -38,37 +62,97 @@
       "DocumentGroups": [
         {
           "DockedWidth": 149,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ConvergenceForm.vb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\ConvergenceForm.vb",
+              "RelativeDocumentMoniker": "UI\\Forms\\ConvergenceForm.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\ConvergenceForm.vb",
+              "RelativeToolTip": "UI\\Forms\\ConvergenceForm.vb",
+              "ViewState": "AgIAAEMAAAAAAAAAAAAgwGEAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-28T11:27:56.798Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "ComponentSelectionEngine.vb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Services\\ComponentSelectionEngine.vb",
+              "RelativeDocumentMoniker": "Core\\Services\\ComponentSelectionEngine.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Services\\ComponentSelectionEngine.vb",
+              "RelativeToolTip": "Core\\Services\\ComponentSelectionEngine.vb",
+              "ViewState": "AgIAANwBAAAAAAAAAAAcwO4BAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-24T15:38:31.044Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ConfigManager.vb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Utilities\\ConfigManager.vb",
+              "RelativeDocumentMoniker": "Utilities\\ConfigManager.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Utilities\\ConfigManager.vb",
+              "RelativeToolTip": "Utilities\\ConfigManager.vb",
+              "ViewState": "AgIAAJEAAAAAAAAAAAAwwLMAAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-24T07:31:20.786Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "MotorMount_Test.swb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Resources\\Macros\\MotorMount_Test.swb",
+              "RelativeDocumentMoniker": "Resources\\Macros\\MotorMount_Test.swb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Resources\\Macros\\MotorMount_Test.swb",
+              "RelativeToolTip": "Resources\\Macros\\MotorMount_Test.swb",
+              "ViewState": "AgIAACwAAAAAAAAAAAAAADQAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-04-23T22:14:55.814Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "MacroRunner.vb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Solidworks\\MacroRunner.vb",
+              "RelativeDocumentMoniker": "Solidworks\\MacroRunner.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Solidworks\\MacroRunner.vb",
+              "RelativeToolTip": "Solidworks\\MacroRunner.vb",
+              "ViewState": "AgIAAPACAAAAAAAAAAAmwPsCAABNAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-23T22:05:51.116Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "SolidWorksAutomation.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Solidworks\\SolidWorksAutomation.vb",
               "RelativeDocumentMoniker": "Solidworks\\SolidWorksAutomation.vb",
               "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Solidworks\\SolidWorksAutomation.vb",
               "RelativeToolTip": "Solidworks\\SolidWorksAutomation.vb",
-              "ViewState": "AgIAAD4AAAAAAAAAAAAqwE4AAAAwAAAAAAAAAA==",
+              "ViewState": "AgIAAD4AAAAAAAAAAAAqwE0AAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-04-22T13:44:58.146Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-22T13:44:58.146Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "PipelineResult.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Models\\PipelineResult.vb",
               "RelativeDocumentMoniker": "Core\\Models\\PipelineResult.vb",
               "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Models\\PipelineResult.vb",
               "RelativeToolTip": "Core\\Models\\PipelineResult.vb",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAAABUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-04-22T12:52:02.268Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-22T12:52:02.268Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 11,
               "Title": "CadProgressForm.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\CadProgressForm.vb",
               "RelativeDocumentMoniker": "UI\\Forms\\CadProgressForm.vb",
@@ -76,46 +160,7 @@
               "RelativeToolTip": "UI\\Forms\\CadProgressForm.vb",
               "ViewState": "AgIAACwAAAAAAAAAAAASwDsAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-04-22T12:48:48.864Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "CadProgressForm.vb [Design]",
-              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\CadProgressForm.vb",
-              "RelativeDocumentMoniker": "UI\\Forms\\CadProgressForm.vb",
-              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\CadProgressForm.vb [Design]",
-              "RelativeToolTip": "UI\\Forms\\CadProgressForm.vb [Design]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-04-22T12:48:42.15Z",
-              "EditorCaption": " [Design]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "PipelineOrchestrator.vb",
-              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Services\\PipelineOrchestrator.vb",
-              "RelativeDocumentMoniker": "Core\\Services\\PipelineOrchestrator.vb",
-              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Services\\PipelineOrchestrator.vb",
-              "RelativeToolTip": "Core\\Services\\PipelineOrchestrator.vb",
-              "ViewState": "AgIAAPoAAAAAAAAAAAAiwAMBAABVAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-04-22T12:05:50.369Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "MainForm.CAD.vb",
-              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\MainForm.CAD.vb",
-              "RelativeDocumentMoniker": "UI\\Forms\\MainForm.CAD.vb",
-              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\MainForm.CAD.vb",
-              "RelativeToolTip": "UI\\Forms\\MainForm.CAD.vb",
-              "ViewState": "AgIAAFQBAAAAAAAAAAAUwGMBAAAlAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
-              "WhenOpened": "2026-04-07T13:38:39.98Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-22T12:48:48.864Z"
             },
             {
               "$type": "Document",
@@ -125,10 +170,57 @@
               "RelativeDocumentMoniker": "UI\\Forms\\MainForm.Logic.vb",
               "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\MainForm.Logic.vb",
               "RelativeToolTip": "UI\\Forms\\MainForm.Logic.vb",
-              "ViewState": "AgIAAHoAAAAAAAAAAAAwwI0AAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAACgAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
               "WhenOpened": "2026-04-07T13:29:35.786Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "IComponentSelector.vb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Interfaces\\IComponentSelector.vb",
+              "RelativeDocumentMoniker": "Core\\Interfaces\\IComponentSelector.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Interfaces\\IComponentSelector.vb",
+              "RelativeToolTip": "Core\\Interfaces\\IComponentSelector.vb",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAEwBUAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-24T15:38:24.158Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "CadProgressForm.vb [Design]",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\CadProgressForm.vb",
+              "RelativeDocumentMoniker": "UI\\Forms\\CadProgressForm.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\CadProgressForm.vb [Design]",
+              "RelativeToolTip": "UI\\Forms\\CadProgressForm.vb [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-22T12:48:42.15Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "PipelineOrchestrator.vb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Services\\PipelineOrchestrator.vb",
+              "RelativeDocumentMoniker": "Core\\Services\\PipelineOrchestrator.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Services\\PipelineOrchestrator.vb",
+              "RelativeToolTip": "Core\\Services\\PipelineOrchestrator.vb",
+              "ViewState": "AgIAAHACAAAAAAAAAAAAAHwCAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-22T12:05:50.369Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MainForm.CAD.vb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\MainForm.CAD.vb",
+              "RelativeDocumentMoniker": "UI\\Forms\\MainForm.CAD.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\MainForm.CAD.vb",
+              "RelativeToolTip": "UI\\Forms\\MainForm.CAD.vb",
+              "ViewState": "AgIAAFQBAAAAAAAAAAAUwGMBAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-07T13:38:39.98Z"
             }
           ]
         }

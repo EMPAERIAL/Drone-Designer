@@ -1,0 +1,24 @@
+Attribute VB_Name = "MotorMount"
+Option Explicit
+
+' MotorMount.swb - DIAGNOSTIC VERSION 3
+' No COM objects. No MsgBox. No SolidWorks API.
+' Writes a text file to C:\Temp\ to prove the macro body executes.
+' If the file appears after the pipeline runs, RunMacro2 is working.
+' If the file does NOT appear, the macro crashes before line 1.
+
+Sub BuildMotorMount()
+
+    ' Ensure output folder exists
+    If Dir("C:\Temp", vbDirectory) = "" Then
+        MkDir "C:\Temp"
+    End If
+
+    ' Write proof file - no COM, no SolidWorks, no MsgBox
+    Dim fileNum As Integer
+    fileNum = FreeFile()
+    Open "C:\Temp\DroneDesigner_MacroProbe.txt" For Output As #fileNum
+    Print #fileNum, "Macro reached: " & Now()
+    Close #fileNum
+
+End Sub

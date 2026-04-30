@@ -288,6 +288,43 @@
       "noLoadCurrentA": 0.5,
       "recommendedUseCase": "Heavy-lift multirotor, industrial UAV",
       "notes": "Large-diameter low-KV motor for heavy-lift applications. Provides 7800 gf max thrust at 14.8V with 20-inch props, clearing the 7347 gf/motor requirement."
+    },
+    {
+      "id": "mot_009",
+      "category": "Motor",
+      "name": "Imaginary 2306 2400KV",
+      "manufacturer": "Imaginary Motors Co.",
+      "productUrl": "",
+      "targetClass": "MotorSpecs",
+      "massGrams": 32.0,
+      "dimensions": {
+        "outerDiameterMm": 28.0,
+        "heightMm": 23.5,
+        "shaftDiameterMm": 3.0,
+        "mountingPatternMm": 16.0
+      },
+      "operatingTempMinC": -10,
+      "operatingTempMaxC": 80,
+      "priceUSD": 22.00,
+      "motorKv": 2400,
+      "statorDiameterMm": 23.0,
+      "statorHeightMm": 6.0,
+      "designatedPropSizeInMin": 4.5,
+      "designatedPropSizeInMax": 5.5,
+      "voltageMinV": 11.1,
+      "voltageMaxV": 16.8,
+      "maxContinuousCurrentA": 25.0,
+      "maxBurstCurrentA": 32.0,
+      "maxThrustG": 520,
+      "maxPowerW": 310,
+      "efficiency": 1.68,
+      "resistance_mOhm": 58.0,
+      "noLoadCurrentA": 0.9,
+      "recommendedMinCells": 3,
+      "recommendedMaxCells": 4,
+      "maxThrustTestPropeller": "5.1x4.6",
+      "recommendedUseCase": "5-inch sport and inspection quad on 4S",
+      "notes": "Imaginary entry satisfying: 5.1x4.6 prop (designatedPropSizeInMin 4.5 <= 5.1 <= designatedPropSizeInMax 5.5), maxThrustG 520 >= 385 gf, voltageMinV 11.1 <= 14.8 <= voltageMaxV 16.8, motorMaxRpm 2400x14.8=35520 >= propHoverRpm 24500 x 1.4=34300."
     }
   ],
 
@@ -1290,6 +1327,38 @@
       "recommendedChargeRateC": 0.5,
       "recommendedUseCase": "Heavy-lift industrial UAV, long-endurance cargo or survey platform",
       "notes": "Large-format industrial LiPo meeting >= 88500mAh at 4S. 3C continuous clears the 2.1C minimum. 16800g is within the 19498g mass limit."
+    },
+    {
+      "id": "bat_010",
+      "category": "Battery",
+      "name": "Endurance 10000mAh 4S 15C",
+      "manufacturer": "Imaginary Power Co.",
+      "productUrl": "",
+      "targetClass": "BatterySpecs",
+      "massGrams": 590.0,
+      "dimensions": {
+        "lengthMm": 155.0,
+        "widthMm": 55.0,
+        "heightMm": 50.0
+      },
+      "operatingTempMinC": -10,
+      "operatingTempMaxC": 60,
+      "priceUSD": 89.00,
+      "chemistry": "LiPo",
+      "capacityMAh": 10000,
+      "cellCount": 4,
+      "nominalVoltageV": 14.8,
+      "maxChargeVoltageV": 16.8,
+      "dischargeRatingC": 15,
+      "burstRatingC": 20,
+      "maxContinuousCurrentA": 150.0,
+      "maxBurstCurrentA": 200.0,
+      "energyWh": 148.0,
+      "balanceConnectorType": "JST-XH",
+      "mainConnectorType": "XT90",
+      "recommendedChargeRateC": 1,
+      "recommendedUseCase": "Long-endurance inspection and mapping quadrotor",
+      "notes": "Imaginary entry satisfying: 4S, 10000 mAh >= 9861 mAh, 15C >= 14.3C, 590 g <= 610 g."
     }
   ],
 

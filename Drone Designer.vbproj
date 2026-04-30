@@ -120,6 +120,9 @@
     <Compile Include="UI\Forms\CadProgressForm.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\Forms\ConvergenceForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UI\Forms\MainForm.CAD.vb">
       <SubType>Form</SubType>
     </Compile>

@@ -12,3 +12,13 @@ C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Rel
 C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.exe
 C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.xml
 C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.pdb
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Resources\components.json
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Resources\Macros\MotorMount.swb
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Resources\Macros\MotorMount.swp
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Resources\Macros\MotorMount1.swb
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Resources\MotorMount_Template.SLDPRT
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Resources\Templates\MotorMount_Template.SLDPRT
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Drone Designer.exe.manifest
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Release\Drone Designer.application
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.exe.manifest
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Release\Drone Designer.application

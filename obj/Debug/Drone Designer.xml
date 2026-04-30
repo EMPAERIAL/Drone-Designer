@@ -1397,6 +1397,26 @@ Drone Designer
  Standard = normal conditions, Harsh = extreme temps, maritime, desert, arctic.
  </summary>
 </member>
+<member name="T:Drone_Designer.Core.Models.MissionPhase">
+ <summary>
+ Discrete phase of flight within a mission segment.
+ Used by <see cref="T:Drone_Designer.Core.Models.MissionSegment"/> to label segments in a mission profile.
+ Source: Bershadsky et al. (AIAA 2016-0581) define missions as hover, climb,
+ or dash segments; Yang et al. (Aerospace 2024) extend this to include descend.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Models.MissionPhase.Hover">
+ <summary>Stationary hover at constant altitude.</summary>
+</member>
+<member name="F:Drone_Designer.Core.Models.MissionPhase.Climb">
+ <summary>Powered ascent at the user's specified climb rate.</summary>
+</member>
+<member name="F:Drone_Designer.Core.Models.MissionPhase.Cruise">
+ <summary>Steady-state forward flight at cruise airspeed.</summary>
+</member>
+<member name="F:Drone_Designer.Core.Models.MissionPhase.Descend">
+ <summary>Controlled descent. May be powered or autorotative.</summary>
+</member>
 <member name="T:Drone_Designer.Core.Models.MissionSpecs">
  <summary>
  Represents a complete set of UAV mission specifications.
@@ -1439,15 +1459,132 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxAltitudeMeters">
  <summary>Maximum altitude AGL in meters. Valid range: 10–6000 m.</summary>
 </member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.ClimbRateMs">
+ <summary>
+ Design vertical climb rate in m/s.
+
+ Drives peak-thrust calculation in any climb segment of the mission profile.
+ For a multirotor, climb power adds to hover power roughly linearly with
+ climb rate, so this value materially affects motor and battery sizing
+ for missions with significant altitude gain.
+
+ Typical values:
+   • Conservative commercial / mapping: 2–3 m/s
+   • Standard delivery / surveillance:  3–5 m/s
+   • Aggressive racing / sport:        10–15 m/s
+
+ Valid range: 0.1–20 m/s. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+ Default: 3.0 m/s — typical commercial multirotor.
+
+ Source: Yang et al. (Aerospace 2024) treat climb as a primary mission
+ phase with rate-driven energy demand.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxClimbAngleDeg">
+ <summary>
+ Maximum climb angle in degrees, measured from the horizontal.
+
+ For a multirotor in pure vertical climb this is 90°; for an inclined
+ climb (forward + upward), it is the resultant velocity vector's angle
+ above horizontal. Drives the gravity component of design thrust:
+   T_design = m·g·sin(γ) + ½·ρ·V²·C_D·S_ref
+ (Stolz et al., DLR, AIAA 2018-1009).
+
+ Typical values:
+   • Mapping / inspection (gentle inclined climb):  20–30°
+   • Standard multirotor takeoff:                    30–45°
+   • Vertical takeoff / aggressive climb:            60–90°
+
+ Valid range: 0–90°. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+ Default: 30° — typical inclined climb-out for a commercial multirotor.
+ </summary>
+</member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxWindSpeedMs">
  <summary>Maximum sustained wind speed in m/s. Valid range: 0–30 m/s. Default ~11 m/s (Beaufort 5).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxTakeoffMassGrams">
  <summary>
- Maximum take-off mass (design limit) in grams, including battery and payload.
- Engine uses this as target to estimate required thrust and power.
- Valid range: 100–55,000 g (smallest ready-to-fly quad to heavy industrial).
- Default: 2000 g (2 kg, typical commercial quadcopter).
+ Regulatory / structural ceiling on take-off mass in grams, including
+ battery and payload. This is a HARD UPPER LIMIT the design must not
+ exceed — NOT a target the engine sizes to.
+
+ The component selection engine derives its own MTOW iteratively from
+ payload + airframe + avionics + battery (see <c>EstimateMtow</c> in
+ <c>ComponentSelectionEngine.vb</c>). This property is currently NOT
+ read by the engine.
+
+ TODO (engine-side, future task): <c>SelectComponents</c> should
+ compare its calculated MTOW against this field and raise
+ <c>ComponentSelectionException</c> if the design exceeds the limit.
+
+ Common ceilings:
+   •   250 g — sub-registration recreational class (FAA / EASA A1)
+   •  2,000 g — typical commercial quadcopter
+   • 25,000 g — EASA Specific Category / Italian regulatory cap
+   • 55,000 g — heavy industrial multirotor upper bound
+
+ Valid range: 100–55,000 g. Default: 2000 g (typical commercial quad).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.TargetThrustToWeightRatio">
+ <summary>
+ User override for the design thrust-to-weight ratio (TWR).
+
+ When <c>Nothing</c> (default), the component selection engine
+ looks up a profile-appropriate default by mission type:
+   • Surveillance, Mapping:        2.0   (Zhang et al., wind-resistance floor)
+   • Delivery, Inspection,
+     SearchAndRescue:              2.5   (margin for payload + maneuvering)
+   • Racing:                       4.0   (aggressive maneuvering)
+   • Agriculture / endurance
+     fallback (low-mobility):      1.8   (Vu et al., calm-flight profile)
+   • General:                      2.0
+
+ When set to a numeric value, the engine uses that exact ratio for
+ per-motor thrust requirement calculation, ignoring the profile lookup.
+ Useful for:
+   • Custom builds outside the standard mission profiles.
+   • High-wind environments requiring extra hover margin (3.0+).
+   • Constrained-payload missions where every gram of overbuilt thrust
+     is a battery penalty (1.8–2.0 even on a "racing" classification).
+
+ Valid range: 1.5–6.0. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+
+ Sources: Zhang et al. (Lifting-Wing Multicopters, IEEE/ASME) for the
+ 2:1 wind-resistance floor; Vu et al. (Aerosp. Sci. Tech. 2019) for the
+ 1.8 endurance/agriculture baseline.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.MissionSegments">
+ <summary>
+ Ordered list of mission phase segments (hover, climb, cruise, descend).
+ When this list is non-empty, the component selection engine will
+ eventually integrate energy demand across each segment rather than
+ assuming a single all-hover mission.
+
+ When this list is empty (default), the engine should fall back to
+ <see cref="P:Drone_Designer.Core.Models.MissionSpecs.HoverFractionOfMission"/> as a coarser approximation.
+
+ Sources: Bershadsky et al. (AIAA 2016-0581), Yang et al. (Aerospace 2024).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.HoverFractionOfMission">
+ <summary>
+ Fraction of <see cref="P:Drone_Designer.Core.Models.MissionSpecs.FlightEnduranceMinutes"/> spent in hover (0.0–1.0).
+ This is a coarse-grained alternative to populating <see cref="P:Drone_Designer.Core.Models.MissionSpecs.MissionSegments"/>
+ for users who do not want to define a full segment list.
+
+ The engine should ONLY consult this property when MissionSegments is empty.
+ If MissionSegments is non-empty, this value is ignored.
+
+ Default: 1.0 (all hover) — preserves backward-compatible behavior with
+ the legacy single-scalar endurance model.
+
+ Valid range: 0.0–1.0. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.PayloadMassGrams">
@@ -1458,6 +1595,47 @@ Drone Designer
  3D bounding box for the mission payload (camera gimbal, LiDAR, etc.).
  Used by Module 2 to size the payload bay on the airframe.
  Default: unspecified (all zeros).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.PayloadPowerWatts">
+ <summary>
+ Steady-state electrical power consumed by the mission payload during
+ active operation, in watts.
+
+ Examples:
+   • Passive optical camera + gimbal: 5–15 W
+   • LiDAR scanner: 20–40 W
+   • Agricultural sprayer pump (Vu et al. 2019, MG-1 reference): 40 W
+   • Thermal + visible dual-payload: 25–50 W
+
+ The component selection engine will eventually add this draw to the
+ propulsion current when sizing battery capacity.
+
+ Default: 0.0 W (no powered payload).
+ Sources: Vu et al. (Aerosp. Sci. Tech. 2019), Bershadsky et al. (AIAA 2016-0581).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.AvionicsPowerWatts">
+ <summary>
+ Steady-state electrical power consumed by the avionics stack
+ (flight controller, GPS, telemetry radio, receiver, etc.) in watts.
+
+ Typical values:
+   • Bare-bones racing build (FC + RX only): 2–3 W
+   • Standard commercial quad (FC + GPS + telemetry + RX): 5–8 W
+   • Heavy mapping/inspection (FC + dual GPS + companion computer + RTK):
+     15–25 W
+
+ Excludes the camera/video transmitter — those are part of the payload
+ budget when present (see <see cref="P:Drone_Designer.Core.Models.MissionSpecs.PayloadPowerWatts"/>).
+
+ Default: 5.0 W — reflects a typical FC + GPS + telemetry + RX stack
+ at idle. Refine upward when adding a companion computer, RTK GPS,
+ or obstacle-avoidance sensors.
+
+ Sources: Vu et al. (Aerosp. Sci. Tech. 2019, P_avionic = 10 W for
+ agriculture multicopter), Bershadsky et al. (AIAA 2016-0581, I_a tracked
+ separately in EMST validator).
  </summary>
 </member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MinOperatingTempCelsius">
@@ -1551,6 +1729,102 @@ Drone Designer
  Unit: g.
  </summary>
 </member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.BatteryMaxDepthOfDischarge">
+ <summary>
+ Maximum depth of discharge (DoD) the user is willing to apply to
+ the battery per flight, expressed as a fraction of nominal capacity.
+
+ Example: 0.80 means the engine sizes the battery so that 80% of
+ nominal capacity satisfies the mission energy budget, leaving 20%
+ unused at the mission's planned end-of-flight to preserve cycle life.
+
+ Distinct from <c>OperationalReserveFraction</c> (added in a future TODO),
+ which represents safety margin against unplanned events (wind,
+ return-to-home, navigation drift) layered on top of cycle-life DoD.
+ Effective usable energy is the product of both factors:
+   E_usable = E_nominal × DoD × (1 − reserve_fraction)
+
+ Typical values:
+   • Conservative / mission-critical / BVLOS:    0.70
+   • Standard commercial:                        0.80   (Vu et al. 2019 baseline)
+   • Hobbyist / demo / single-flight tolerance:  0.90
+
+ Valid range: 0.50–0.95. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+
+ Default: 0.80 — matches the existing engine default
+ (<c>LipoMaxDod</c> in <c>ComponentSelectionEngine.vb</c>) and the
+ agriculture-multicopter validation baseline from Vu et al. 2019.
+ Source: Vu et al. (Aerosp. Sci. Tech. 2019), Bershadsky et al.
+ (AIAA 2016-0581, EMST validator).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.BatterySpecificEnergyWhPerKgOverride">
+ <summary>
+ User override for the battery pack's specific energy in Wh/kg.
+
+ When <c>Nothing</c> (default), the component selection engine
+ looks up a <i>pack-level</i> default by <see cref="P:Drone_Designer.Core.Models.MissionSpecs.PowerSource"/>:
+   • LiPo:                130 Wh/kg   (matches existing engine default)
+   • LiIon:               180 Wh/kg   (higher density, better for fixed-wing)
+   • HydrogenFuelCell:    350 Wh/kg   (long endurance, low noise)
+   • HybridFuelCellLiPo:  240 Wh/kg   (between fuel cell and LiPo)
+   • Tethered:              0 Wh/kg   (no onboard storage)
+
+ These are <b>pack-level</b> values, accounting for cells + wiring +
+ BMS / connector overhead. Cell-level datasheet values are typically
+ 30–40% higher (e.g., a 180 Wh/kg cell yields ~130 Wh/kg at the pack).
+
+ When set to a numeric value, the engine uses that exact specific
+ energy in battery mass / capacity calculations. Useful for:
+   • Modeling a specific cell or pack datasheet.
+   • Sweeping next-generation chemistries (e.g., 200, 300, 400, 500
+     Wh/kg per Yang et al. 2024 Fig. 12).
+   • Modeling a known low-density rugged or high-temperature pack.
+
+ Valid range: 50–600 Wh/kg. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+
+ Source: Yang et al. (Sizing of Multicopter Air Taxis, Aerospace 2024)
+ parameterize 200–500 Wh/kg sweeps; current LiPo packs measure
+ 100–150 Wh/kg pack-level.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.OperationalReserveFraction">
+ <summary>
+ Per-flight energy reserve as a fraction of usable battery energy,
+ withheld at mission-planning time to protect against unplanned events.
+
+ Distinct from <see cref="P:Drone_Designer.Core.Models.MissionSpecs.BatteryMaxDepthOfDischarge"/>, which protects
+ pack cycle life over many flights. Operational reserve protects a
+ single flight against:
+   • Stronger headwinds than forecast.
+   • Navigation drift / route-planning slack.
+   • Return-to-home and loiter contingencies.
+   • Payload-driven hover or wait time beyond the nominal mission profile.
+
+ The component selection engine will eventually compute usable mission
+ energy as:
+   E_usable = E_nominal × BatteryMaxDepthOfDischarge × (1 − OperationalReserveFraction)
+
+ Example: a 100 Wh nominal pack with DoD = 0.80 and reserve = 0.20 has
+ 100 × 0.80 × 0.80 = 64 Wh available for the planned mission profile.
+ The remaining 16 Wh (DoD-permitted, reserve-withheld) is available for
+ contingencies without exceeding cycle-life limits; the final 20 Wh
+ (below DoD) remains untouched to preserve pack longevity.
+
+ Typical values:
+   • Hobbyist / line-of-sight, calm conditions:   0.10
+   • Standard commercial / mapping:               0.20   (aviation default)
+   • BVLOS / mission-critical / high-wind:        0.30
+
+ Valid range: 0.0–0.50. Out-of-range values are not enforced here;
+ validation is the responsibility of <c>SpecValidator</c> when added.
+
+ Default: 0.20 — matches aviation-standard 20% energy reserve and
+ aligns with Bershadsky et al. (AIAA 2016-0581) reserve handling.
+ </summary>
+</member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.ControlLinkRangeKm">
  <summary>Control link range (km). Defaults to MaxRangeKm if Nothing.</summary>
 </member>
@@ -1612,6 +1886,42 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.PayloadDimensions.IsSpecified">
  <summary>True if all three dimensions have been specified (non-zero).</summary>
 </member>
+<member name="T:Drone_Designer.Core.Models.MissionSegment">
+ <summary>
+ One discrete phase of a UAV mission profile (hover/climb/cruise/descend),
+ with a duration and an airspeed.
+
+ A complete mission is represented as an ordered <see cref="T:System.Collections.Generic.List`1"/>
+ on <see cref="P:Drone_Designer.Core.Models.MissionSpecs.MissionSegments"/>. The component selection
+ engine will eventually integrate energy demand across all segments
+ rather than assuming a single all-hover mission.
+
+ Sources: Bershadsky et al. (AIAA 2016-0581), Yang et al. (Aerospace 2024).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSegment.Phase">
+ <summary>Phase of flight for this segment.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSegment.DurationSeconds">
+ <summary>Duration of this segment in seconds. Must be ≥ 0.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSegment.AirspeedMs">
+ <summary>
+ Airspeed during this segment in m/s. For Hover, this is 0.
+ For Climb and Descend, this is the horizontal airspeed component.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.MissionSegment.#ctor">
+ <summary>Default constructor — produces a zero-duration hover segment.</summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.MissionSegment.#ctor(Drone_Designer.Core.Models.MissionPhase,System.Double,System.Double)">
+ <summary>
+ Constructs a fully-specified segment.
+ </summary>
+ <param name="phase">Flight phase.</param>
+ <param name="durationSeconds">Segment duration (s).</param>
+ <param name="airspeedMs">Segment airspeed (m/s); 0 for hover.</param>
+</member>
 <member name="T:Drone_Designer.Core.Services.ComponentSelectionEngine">
  <summary>
  Core component selection engine — Tasks 7, 8, and 9.
@@ -1670,6 +1980,65 @@ Drone Designer
  Racers: 4.0+.  Endurance builds: as low as 1.6 with calm flight profile.
  </summary>
 </member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.FrameDiagonalTable">
+ <summary>
+ Frame diagonal (motor-tip-to-motor-tip, mm) keyed by motor count.
+ Sources: averaged over popular mid-class carbon frames (2023–2024).
+ Used as a fallback when frame size is not derived from a chosen propeller.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.FrameArmToPropRadiusRatio">
+ <summary>
+ Required ratio of frame arm length to propeller radius:
+   arm_length_mm ≥ FrameArmToPropRadiusRatio × prop_radius_mm
+
+ Equivalently, the propeller tip clearance to the next motor is
+   (FrameArmToPropRadiusRatio − 1) × prop_radius
+
+ Value 2.0 → 100% tip-to-tip clearance (prop tip reaches at most
+ halfway to the next motor's centre). This matches typical sport,
+ commercial, and inspection multirotor geometry.
+
+ Lower values (e.g. 1.3) are characteristic of dense racing-frame
+ geometry where prop tips nearly touch adjacent arms; using 1.3 in a
+ general-purpose tool over-allocates prop diameter and cascades into
+ oversized motor selection downstream.
+
+ Source: empirical small-drone geometry survey
+ (e.g., 250 mm-diagonal frames typically fly 5–7" props, not 10").
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.TargetDiameterInsetIn">
+ <summary>
+ Inset (in inches) below frame clearance for the propeller-first target
+ diameter. Gives SelectPropellersByTargetDiameter room to pick a
+ catalog match without the target itself being unattainable.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.PropDiameterToleranceIn">
+ <summary>
+ Acceptable propeller diameter deviation from disk-loading target, inches.
+ Outside this band a candidate is rejected by the primary filter.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.MotorRpmHeadroomFactor">
+ <summary>
+ Required ratio of motor no-load RPM to propeller hover RPM.
+ 1.4 ensures the motor operates below its no-load redline at hover,
+ leaving headroom for climb and wind-recovery transients.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.MtowMaxIterations">
+ <summary>
+ Maximum iterations for the MTOW fixed-point solver.
+ Typical convergence: 3–5 passes for well-posed missions.
+ </summary>
+</member>
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.MtowConvergenceToleranceGrams">
+ <summary>
+ Convergence tolerance in grams. Loop exits when |MTOW_i − MTOW_{i−1}| ≤ this value.
+ </summary>
+</member>
 <member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.LipoCellNominalV">
  <summary>
  Nominal LiPo cell voltage (V).
@@ -1690,16 +2059,19 @@ Drone Designer
  Typical 4S 45C packs: 120-145 Wh/kg. 130 is a safe midpoint.
  </summary>
 </member>
-<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.HoverCurrentFraction">
+<member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.HoverCurrentFractionFallback">
  <summary>
- Fraction of full-throttle current drawn at hover for a 2:1 TWR build.
+ Fallback hover-current fraction used ONLY when the reference motor's
+ MaxThrustGrams or the thrust requirement is unavailable
+ (i.e., divide-by-zero protection in the thrust-ratio scaling).
 
- Derivation:
-   Hover thrust = MTOW; full-throttle thrust = 2 x MTOW.
-   Thrust proportional to RPM^2; current proportional to RPM^3 / KV^2.
-   => hover current fraction ~= (0.5)^1.5 = 0.354 theoretically.
-   Empirical bench data for 5"-7" quads shows 0.40-0.50 due to
-   iron losses and non-ideal prop loading. Using 0.45 as midpoint.
+ Normal hover current is computed via momentum-theory scaling:
+   I_hover ≈ I_peak × (T_required / T_peak)^1.5
+ which is materially more accurate than a flat fraction whenever the
+ selected motor is oversized relative to per-motor thrust demand.
+
+ Value 0.35 reflects the legacy assumption that motors are sized for
+ ~2:1 TWR (T_required ≈ T_peak/2 → ratio^1.5 ≈ 0.354).
  </summary>
 </member>
 <member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.AvionicCurrentDrawA">
@@ -1853,12 +2225,32 @@ Drone Designer
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectComponents(Drone_Designer.Core.Models.MissionSpecs)">
  <summary>
  Runs the full selection pipeline for Tasks 7, 8, and 9:
-   MTOW -> Thrust -> Motors -> Propellers ->
-   Power budget -> Battery -> ESCs -> PDB ->
-   Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
+   1.  MTOW estimation (fixed-point iteration).
+   2.  Per-motor thrust requirement.
+   3a. Compute target propeller diameter from disk loading (Yang 2024).
+   3b. Select propellers near target diameter, within frame clearance.
+   3c. Select motors matched to chosen propeller's load envelope.
+   4.  Power budget -> Battery -> ESCs -> PDB.
+   5.  Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
 
  Each intermediate result is stored on SelectionResult so the UI can
  display a transparent breakdown of every sizing decision made.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.GetDefaultSpecificEnergyWhPerKg(Drone_Designer.Core.Models.PowerSourceType)">
+ <summary>
+ Default pack-level specific energy in Wh/kg by power source family.
+ Used as a fallback when MissionSpecs.BatterySpecificEnergyWhPerKgOverride is Nothing.
+ These are pack-level values (cells + wiring + BMS), matching LipoEnergyDensityWhPerKg.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimateInitialBatterySeedFraction(Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Initial battery mass guess as a fraction of structural mass.
+ Scaled by mission endurance (longer = larger seed) and inversely
+ by battery pack specific energy (higher Wh/kg = smaller seed).
+ Reference baseline: LiPo at 130 Wh/kg pack-level.
+ Result clamped to [0.10, 0.60]. Returns 0 for tethered configurations.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimateMtow(Drone_Designer.Core.Models.MissionSpecs)">
@@ -1871,12 +2263,18 @@ Drone Designer
  The loop iterates until |MTOW_i - MTOW_{i-1}| &lt;= 1 g (typically 3-5 passes).
 
  Per-iteration formula:
+   initial guess: endurance-scaled fraction (see EstimateInitialBatterySeedFraction)
    MTOW_i         = (structural_mass + battery_mass_i) x SafetyFactor
    P_hover        = MTOW_i x 10 W / 100 g            [empirical for 5"-7" quads]
    E_total        = P_hover x endurance_h x 1.20     [+20% non-hover overhead]
    usable_density = LipoEnergyDensityWhPerKg x DoD   [Wh/kg usable]
    battery_mass_{i+1} = (E_total / usable_density) x 1000  [Wh -> g]
  </summary>
+ <exception cref="T:Drone_Designer.Core.Services.ComponentSelectionException">
+ Thrown when (a) battery mass grows monotonically beyond 1.5× the seed
+ (mission is physically infeasible — divergence), or (b) iteration cap
+ is reached without satisfying the convergence tolerance.
+ </exception>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.CalculateThrustRequirement(Drone_Designer.Core.Services.MtowEstimate,System.Int32)">
  <summary>
@@ -1891,6 +2289,30 @@ Drone Designer
  when comparing against repository values.
  </summary>
 </member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimatePropellerHoverRpm(Drone_Designer.Core.Models.PropellerSpec,System.Double)">
+ <summary>
+ Estimates the propeller's required hover RPM given a per-motor thrust target,
+ using the static-thrust scaling law T ∝ RPM² (momentum theory, fixed pitch).
+   RPM_hover ≈ RPM_test × √(T_required / T_static_at_test)
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectMotorsForPropeller(Drone_Designer.Core.Models.PropellerSpec,Drone_Designer.Core.Services.ThrustRequirement,Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Selects motors compatible with a chosen reference propeller and the
+ per-motor thrust requirement. Used in the propeller-first pipeline.
+
+ Filters:
+   • Motor's PropDiameterMinIn ≤ prop.DiameterInches ≤ PropDiameterMaxIn
+   • Voltage range covers nominal pack voltage
+   • MaxThrustGrams ≥ ThrustPerMotorGf (loose check — manufacturer datasheet)
+   • Motor's no-load RPM at hover voltage exceeds prop's hover RPM by margin
+
+ Ranking:
+   • Efficiency DESC (manufacturer-reported gf/W)
+   • Then Mass ASC
+   • Take top 5
+ </summary>
+</member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectMotors(Drone_Designer.Core.Services.ThrustRequirement,Drone_Designer.Core.Models.MissionSpecs)">
  <summary>
  Queries the repository for motors that:
@@ -1900,6 +2322,22 @@ Drone Designer
 
  Sorted by: thrust-per-watt DESC (efficiency priority), then mass ASC.
  Returns up to 5 candidates; UI or user picks the final one.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellersByTargetDiameter(System.Double,System.Double,Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Selects propeller candidates whose diameter is closest to the target
+ diameter computed from disk loading. Does not depend on motor selection.
+
+ Filters:
+   • DiameterInches ≤ frameClearanceIn (hard frame constraint)
+   • DiameterInches within ±PropDiameterToleranceIn of target
+   • Material acceptable for environment (carbon fibre when Harsh)
+
+ Ranking:
+   • Distance from target diameter ASC (closest first)
+   • Then by static thrust DESC (more capable preferred when distance ties)
+   • Take top 5
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellers(System.Collections.Generic.List{Drone_Designer.Core.Models.ComponentSpecs},Drone_Designer.Core.Models.MissionSpecs)">
@@ -1931,7 +2369,7 @@ Drone Designer
      Last resort:  I_motor_peak = ThrustPerMotorGf / 10  [~1 A per 10 gf empirical]
 
  Hover motor current (per motor):
-   I_hover = I_peak x HoverCurrentFraction  (= 0.45)
+   I_hover = I_peak × (T_required / T_peak)^1.5  [momentum theory]
 
  Total peak current (ESC and PDB sizing):
    I_peak_total = (I_motor_peak x motor_count) + I_avionics
@@ -2234,14 +2672,46 @@ Drone Designer
  Valid: 3 (tri), 4 (quad), 6 (hex), 8 (octo), 12 (dodeca). Default: 4.
  </summary>
 </member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.ComputeTargetPropellerDiameter(System.Double,System.Int32)">
+ <summary>
+ Computes the target propeller diameter (inches) for a multirotor of
+ given MTOW and motor count.
+
+ DESIGN NOTE: An earlier draft used the disk-loading regression
+ DL ≈ 1.19 × m_t^0.4 from Yang et al. (Sizing of Multicopter Air
+ Taxis, Aerospace 2024). That correlation is fit through helicopter
+ and UAM-class vehicles in the 100–10,000 kg range, where minimizing
+ disk loading is the dominant efficiency objective. For small drones
+ in the 0.1–10 kg regime — the target regime of this tool — real
+ disk loadings are 5–30 kg/m², not the 1–5 kg/m² that regression
+ predicts. Applying it produces target diameters 2–3× larger than
+ practical (e.g., 25 in for a 2 kg quad).
+
+ Small drones are frame-clearance-limited rather than disk-loading-
+ limited: the frame is sized as small as possible given motor
+ placement, then the largest prop that fits is the optimal choice.
+ This function therefore returns the maximum prop diameter the
+ frame can accommodate for the given motor count, with a small
+ inset margin so SelectPropellersByTargetDiameter has flexibility
+ to pick a slightly smaller catalog match.
+ </summary>
+ <param name="mtowKg">MTOW in kilograms (currently unused; kept on
+ the signature for future regime-dependent extension to UAM-class
+ vehicles where disk loading becomes the binding constraint).</param>
+ <param name="motorCount">Number of rotors (must be ≥ 1).</param>
+ <returns>Target propeller diameter in inches.</returns>
+</member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimateMaxPropDiameter(System.Int32)">
  <summary>
  Estimates maximum propeller diameter (inches) within frame geometry clearance.
 
  Formula (symmetric X-frame):
    arm_length (mm)      = frame_diagonal / sqrt(2)
-   max_prop_radius (mm) = arm_length / 1.3  [30% tip clearance]
+   max_prop_radius (mm) = arm_length / FrameArmToPropRadiusRatio
    max_prop_diam (in)   = (max_prop_radius x 2) / 25.4
+
+ Frame diagonal sourced from FrameDiagonalTable keyed by motor count.
+ Falls back to the 4-motor entry (250 mm) for unrecognised counts.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.ValidateMissionSpecs(Drone_Designer.Core.Models.MissionSpecs)">
@@ -2250,8 +2720,18 @@ Drone Designer
  Throws descriptive ArgumentExceptions suitable for direct display in WinForms.
  </summary>
 </member>
-<member name="T:Drone_Designer.Core.Services.MtowEstimate">
+<member name="T:Drone_Designer.Core.Services.MtowIterationPoint">
  <summary>Result of MTOW fixed-point iteration (Task 7 output).</summary>
+ <summary>One data point recorded per pass of the MTOW fixed-point iterator.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.MtowIterationPoint.Iteration">
+ <summary>0 = seed (before first pass); N = after pass N.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.MtowIterationPoint.BatteryMassG">
+ <summary>Battery mass at this step (g).</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.MtowIterationPoint.MtowG">
+ <summary>Total mass / MTOW at this step (g). 0 for the seed point.</summary>
 </member>
 <member name="P:Drone_Designer.Core.Services.MtowEstimate.StructuralMassGrams">
  <summary>Airframe + electronics + payload mass before safety factor (g).</summary>
@@ -2267,6 +2747,9 @@ Drone Designer
 </member>
 <member name="P:Drone_Designer.Core.Services.MtowEstimate.IterationsToConverge">
  <summary>Number of iterations until |delta MTOW| &lt;= 1 g.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.MtowEstimate.IterationHistory">
+ <summary>Per-step history for the convergence chart: seed at index 0, pass N at index N.</summary>
 </member>
 <member name="T:Drone_Designer.Core.Services.ThrustRequirement">
  <summary>Per-motor and total thrust requirements (Task 7 output).</summary>
@@ -2370,6 +2853,9 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Services.SelectionResult.RequiredThrustPerMotorGf">
  <summary>Required single-motor thrust at full throttle (gf).</summary>
 </member>
+<member name="P:Drone_Designer.Core.Services.SelectionResult.MtowIterationHistory">
+ <summary>MTOW iterator history: seed at index 0, pass N at index N. Used by ConvergenceForm.</summary>
+</member>
 <member name="P:Drone_Designer.Core.Services.SelectionResult.SelectedMotors">
  <summary>Up to 5 motor candidates sorted by efficiency then mass.</summary>
 </member>
@@ -2413,6 +2899,13 @@ Drone Designer
  <summary>
  Thrown when the repository contains no component satisfying the calculated requirements.
  The message string is designed to be shown directly in a WinForms MessageBox or label.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.ComponentSelectionException.IterationHistory">
+ <summary>
+ MTOW iteration history collected before the failure.
+ Nothing when the exception did not originate from the iterator.
+ Populated when the iterator either diverges or hits the iteration cap.
  </summary>
 </member>
 <member name="T:Drone_Designer.Drone_Designer.Core.Models.PipelineStage">
@@ -2685,6 +3178,27 @@ Drone Designer
  the CAD folder is self-documenting.
  </summary>
 </member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.ComputeArmTubeOdMm(System.Double)">
+ <summary>
+ Returns the appropriate carbon round tube outer diameter for a drone arm,
+ based on the maximum thrust the motor produces.
+ Sizes map to common carbon fibre tube stock: 10, 12, 16, 20, 25 mm.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunSolidWorksStages(Drone_Designer.Core.Services.SelectionResult,Drone_Designer.Core.Models.MissionSpecs,System.String,System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord},System.Boolean,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken,System.DateTime)">
+ <summary>
+ Executes all SolidWorks-dependent pipeline stages (3-6) synchronously.
+ Always call this via RunOnStaAsync so that Connect, RunMacro2, and
+ Disconnect all run in the same STA COM apartment.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunOnStaAsync``1(System.Func{``0})">
+ <summary>
+ Runs a synchronous function on a freshly spawned STA thread and surfaces the
+ result as a Task. Pass the entire SolidWorks work block as a single lambda so
+ Connect and all subsequent COM calls share one STA apartment.
+ </summary>
+</member>
 <member name="P:Drone_Designer.Drone_Designer.SolidWorks.MacroParameters.Values">
  <summary>Flat key→value store passed to the macro.</summary>
 </member>
@@ -2891,7 +3405,7 @@ Drone Designer
  Infer swDocumentTypes_e from file extension.
  </summary>
 </member>
-<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacro(System.String,System.String,System.String,System.Int64@)">
+<member name="M:Drone_Designer.Drone_Designer.SolidWorks.MacroRunner.RunMacro(System.String,System.String,System.String,System.Int32@)">
  <summary>
  Calls SldWorks.RunMacro2. Returns True on success.
  swErr receives the SolidWorks error code on failure.
@@ -3212,6 +3726,23 @@ Drone Designer
  typically means SolidWorks crashed.
  </summary>
 </member>
+<member name="T:Drone_Designer.UI.Forms.ConvergenceForm">
+ <summary>
+ Non-modal popup showing the MTOW fixed-point iteration history as an animated line chart.
+
+ Blue series  : battery mass (g) per iteration.
+ Orange series: total mass / MTOW (g) per iteration.
+
+ Points appear one per 180 ms frame so the convergence path
+ animates in after the selection completes.
+ </summary>
+</member>
+<member name="M:Drone_Designer.UI.Forms.ConvergenceForm.#ctor(System.Collections.Generic.List{Drone_Designer.Core.Services.MtowIterationPoint},System.Double,System.Boolean)">
+ <param name="converged">
+ True when the iterator completed normally.
+ False marks the chart title red and adds a "Diverged / Failed" label.
+ </param>
+</member>
 <member name="F:Drone_Designer.MainForm._orchestrator">
  <summary>
  Lazily created orchestrator.  Reused across runs so SolidWorks
@@ -3289,6 +3820,9 @@ Drone Designer
 </member>
 <member name="F:Drone_Designer.MainForm._lastResult">
  <summary>Most recent successful SelectionResult — available for export (Task 13).</summary>
+</member>
+<member name="F:Drone_Designer.MainForm._convergenceForm">
+ <summary>Convergence chart popup; closed and replaced on each new selection run.</summary>
 </member>
 <member name="F:Drone_Designer.MainForm._cadGen">
  <summary>
