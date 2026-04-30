@@ -278,6 +278,7 @@ Partial Class MainForm
                 .MaxWindSpeedMs = CDbl(nudMaxWindSpeed.Value) / 3.6,
                 .MaxTakeoffMassGrams = CDbl(nudMaxTakeoffWeight.Value),
                 .PayloadMassGrams = CDbl(nudPayloadWeight.Value),
+                .FrameSizeMm = CDbl(nudFrameSize.Value),
                 .PayloadDimensionsMm = New PayloadDimensions(
                     CDbl(nudPayloadDepth.Value),    ' Length = Depth field on form
                     CDbl(nudPayloadWidth.Value),

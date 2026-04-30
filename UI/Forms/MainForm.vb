@@ -1,4 +1,4 @@
-﻿' =============================================================================
+' =============================================================================
 ' File:    UI/Forms/MainForm.vb
 ' Project: Drone Designer
 ' Task:    10 — Main Form Layout
@@ -47,6 +47,10 @@ Partial Public Class MainForm
 
         ' ── GROUP: Flight Parameters ──────────────────────────────────────────
         Private grpFlight As GroupBox
+
+        Private lblFrameSize As Label
+        '''<summary>UAV frame size.</summary>
+        Friend nudFrameSize As NumericUpDown
 
         Private lblEndurance As Label
         ''' <summary>Mission endurance in decimal hours (e.g. 1.5 = 90 min).</summary>
@@ -410,7 +414,14 @@ Partial Public Class MainForm
             nudMaxTakeoffWeight.Increment = 100
             SetTip(nudMaxTakeoffWeight, "Maximum allowable total takeoff weight including payload, in grams.")
 
-            ' Row 3 (spare for future) — leave blank for now, group height allows it
+            ' Row 3 ── Frame Size
+            Dim row3 As Integer = row2 + ROW_H
+
+            lblFrameSize = MakeLabel("Frame Size (mm):", LBL_X, row3)
+            nudFrameSize = MakeNUD(CTL_X, row3, 100D, 1500D, 0, 90, "mm")
+            nudFrameSize.Value = 250
+            nudFrameSize.Increment = 10
+            SetTip(nudFrameSize, "UAV frame size (diagonal or largest dimension).")
 
             grpFlight.Controls.AddRange(New Control() {
                 lblEndurance, nudEndurance,
@@ -418,7 +429,8 @@ Partial Public Class MainForm
                 lblCruiseSpeed, nudCruiseSpeed,
                 lblMaxAltitude, nudMaxAltitude,
                 lblMaxWindSpeed, nudMaxWindSpeed,
-                lblTakeoffWeight, nudMaxTakeoffWeight
+                lblTakeoffWeight, nudMaxTakeoffWeight,
+                lblFrameSize, nudFrameSize
             })
 
             pnlInputScroll.Controls.Add(grpFlight)

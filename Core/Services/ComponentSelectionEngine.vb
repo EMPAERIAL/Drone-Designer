@@ -158,6 +158,30 @@ Namespace Core.Services
         ''' </summary>
         Private Const MtowConvergenceToleranceGrams As Double = 1.0
 
+        ''' <summary>
+        ''' Prop-diameter-to-arm-length ratio table.
+        ''' Computed as MaxPropDiameter = ratio × ArmLength.
+        ''' </summary>
+        Private Shared Function GetPropToArmRatio(config As UAVConfiguration, Optional warnings As List(Of String) = Nothing) As Double
+            Select Case config
+                Case UAVConfiguration.Quadcopter
+                    Return 2.0 / 3.0
+                Case UAVConfiguration.Tricopter
+                    Return 2.0 / 3.0 ' Same arm-spacing as Quad
+                Case UAVConfiguration.Hexacopter
+                    Return 1.0 / 3.0
+                Case UAVConfiguration.Octocopter
+                    Return 1.0 / 4.0
+                Case UAVConfiguration.FixedWing, UAVConfiguration.VTOL, UAVConfiguration.Helicopter
+                    If warnings IsNot Nothing Then
+                        warnings.Add("Pipeline is multirotor-focused. Component sizing for Fixed Wing, VTOL, or Helicopter may be inaccurate.")
+                    End If
+                    Return 1.0 / 2.0 ' Placeholder
+                Case Else
+                    Return 1.0 / 2.0
+            End Select
+        End Function
+
         ' =======================================================================
         ' TASK 8 CONSTANTS — Power System
         ' =======================================================================
@@ -1860,6 +1884,9 @@ Namespace Core.Services
     ''' Complete output of the selection pipeline (Tasks 7, 8, and 9).
     ''' </summary>
     Public Class SelectionResult
+        ''' <summary>List of warnings generated during selection (e.g., component constraints not met).</summary>
+        Public Property Warnings As New List(Of String)
+
         ' ── Task 7 ─────────────────────────────────────────────────────────────
         ''' <summary>Final MTOW estimate with safety margin (g).</summary>
         Public Property EstimatedMtowGrams As Double

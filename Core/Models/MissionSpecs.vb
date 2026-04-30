@@ -259,20 +259,10 @@ Namespace Core.Models
         Public Property MaxWindSpeedMs As Double = 11.0
 
         ''' <summary>
-        ''' Regulatory / structural ceiling on take-off mass in grams, including
-        ''' battery and payload. This is a HARD UPPER LIMIT the design must not
-        ''' exceed — NOT a target the engine sizes to.
+        ''' Target / design maximum take-off mass in grams, including battery and payload.
+        ''' This is the design MTOW used for sizing thrust and estimating overall performance.
         '''
-        ''' The component selection engine derives its own MTOW iteratively from
-        ''' payload + airframe + avionics + battery (see <c>EstimateMtow</c> in
-        ''' <c>ComponentSelectionEngine.vb</c>). This property is currently NOT
-        ''' read by the engine.
-        '''
-        ''' TODO (engine-side, future task): <c>SelectComponents</c> should
-        ''' compare its calculated MTOW against this field and raise
-        ''' <c>ComponentSelectionException</c> if the design exceeds the limit.
-        '''
-        ''' Common ceilings:
+        ''' Common values:
         '''   •   250 g — sub-registration recreational class (FAA / EASA A1)
         '''   •  2,000 g — typical commercial quadcopter
         '''   • 25,000 g — EASA Specific Category / Italian regulatory cap
@@ -668,6 +658,13 @@ Namespace Core.Models
 
         ''' <summary>Required IP rating string (e.g. "IP54"). Empty = no requirement.</summary>
         Public Property RequiredIPRating As String = String.Empty
+
+        ''' <summary>
+        ''' The physical size of the UAV frame in millimetres (mm).
+        ''' Determines structural dimensions.
+        ''' ArmLength is assumed to be FrameSizeMm / 2.
+        ''' </summary>
+        Public Property FrameSizeMm As Double = 250.0
 
 
         ' ── CONSTRUCTOR ───────────────────────────────────────────────
