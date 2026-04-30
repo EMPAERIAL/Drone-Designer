@@ -1919,7 +1919,7 @@ Drone Designer
  <param name="durationSeconds">Segment duration (s).</param>
  <param name="airspeedMs">Segment airspeed (m/s); 0 for hover.</param>
 </member>
-<member name="T:Drone_Designer.Core.Services.ComponentSelectionEngine">
+<member name="T:Drone_Designer.Core.Services.PropCandidate">
  <summary>
  Core component selection engine — Tasks 7, 8, and 9.
 
@@ -1951,6 +1951,9 @@ Drone Designer
      passed between steps so SelectComponents() reads as a linear pipeline.
    - All constants and empirical factors are named and documented so future
      chats can tune them without hunting through arithmetic.
+ </summary>
+ <summary>
+ Candidate propeller matched with required RPM and cell/KV targets.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.#ctor(Drone_Designer.ComponentRepository)">
@@ -2325,6 +2328,22 @@ Drone Designer
 
  Sorted by: thrust-per-watt DESC (efficiency priority), then mass ASC.
  Returns up to 5 candidates; UI or user picks the final one.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.BuildPropCandidates(Drone_Designer.Core.Models.MissionSpecs,System.Double,System.Double,System.Double,System.Collections.Generic.List{System.String})">
+ <summary>
+ Builds a list of PropCandidate containing matching props, required RPMs, and Cell/KV mappings.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectMotorForCandidate(Drone_Designer.Core.Services.PropCandidate,System.Int32,System.Double,System.Double,System.Collections.Generic.List{System.String})">
+ <summary>
+ Selects the best motor for a specific propeller candidate and cell count.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellerAndMotor(System.Collections.Generic.List{Drone_Designer.Core.Services.PropCandidate},System.Double,System.Collections.Generic.List{System.String})">
+ <summary>
+ Orchestrates propeller and motor selection by iterating candidates and cell counts.
+ First successful pairing wins.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellersByTargetDiameter(System.Double,System.Double,Drone_Designer.Core.Models.MissionSpecs)">

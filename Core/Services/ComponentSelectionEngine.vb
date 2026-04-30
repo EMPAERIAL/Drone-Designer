@@ -37,6 +37,15 @@ Namespace Core.Services
     '''   - All constants and empirical factors are named and documented so future
     '''     chats can tune them without hunting through arithmetic.
     ''' </summary>
+    ''' <summary>
+    ''' Candidate propeller matched with required RPM and cell/KV targets.
+    ''' </summary>
+    Friend Class PropCandidate
+        Public Property Prop As PropellerSpec
+        Public Property RequiredRpmAtAltitude As Double
+        Public Property CellKvTable As List(Of (CellCount As Integer, KvRequired As Double))
+    End Class
+
     Public Class ComponentSelectionEngine
         Implements IComponentSelector
 
@@ -727,6 +736,224 @@ Namespace Core.Services
         ' =======================================================================
         ' TASK 7 — STEP 3b: PROPELLER SELECTION
         ' =======================================================================
+
+        ''' <summary>
+        ''' Builds a list of PropCandidate containing matching props, required RPMs, and Cell/KV mappings.
+        ''' </summary>
+        Private Function BuildPropCandidates(specs As MissionSpecs, maxPropDiameterIn As Double, requiredThrustPerMotorGf As Double, motorRpmCeiling As Double, rejections As List(Of String)) As List(Of PropCandidate)
+            Dim allProps = _repository.GetAllByCategory(ComponentCategory.Propeller).Cast(Of PropellerSpec)()
+            Dim candidates As New List(Of PropCandidate)
+
+            For Each prop In allProps
+                If prop.DiameterInches > maxPropDiameterIn Then
+                    rejections.Add($"Prop {prop.Id}: Diameter {prop.DiameterInches} in exceeds max allowed {maxPropDiameterIn:F1} in.")
+                    Continue For
+                End If
+
+                Dim rpmSeaLevel = EstimatePropellerHoverRpm(prop, requiredThrustPerMotorGf)
+                
+                ' Apply ISA altitude correction
+                Dim rho_ratio = Math.Pow(1.0 - 2.25577e-5 * specs.MaxAltitudeMeters, 4.2559)
+                Dim requiredRpmAtAltitude = rpmSeaLevel * Math.Sqrt(1.0 / rho_ratio)
+
+                If requiredRpmAtAltitude > motorRpmCeiling Then
+                    rejections.Add($"Prop {prop.Id}: Required RPM {requiredRpmAtAltitude:F0} exceeds motor RPM ceiling {motorRpmCeiling:F0}.")
+                    Continue For
+                End If
+
+                If requiredRpmAtAltitude > prop.MaxRPM Then
+                    rejections.Add($"Prop {prop.Id}: Required RPM {requiredRpmAtAltitude:F0} exceeds prop MaxRPM {prop.MaxRPM:F0}.")
+                    Continue For
+                End If
+
+                Dim cellKvTable As New List(Of (CellCount As Integer, KvRequired As Double))
+                For Each cells In {3, 4, 6, 8}
+                    Dim vNominal = cells * LipoCellNominalV
+                    Dim kvRequired = requiredRpmAtAltitude / (vNominal * 0.95)
+                    cellKvTable.Add((cells, kvRequired))
+                Next
+
+                candidates.Add(New PropCandidate With {
+                    .Prop = prop,
+                    .RequiredRpmAtAltitude = requiredRpmAtAltitude,
+                    .CellKvTable = cellKvTable
+                })
+            Next
+
+            If specs.MissionProfile = MissionProfileType.Racing Then
+                Return candidates.OrderBy(Function(c) c.Prop.DiameterInches).ToList()
+            Else
+                Return candidates.OrderByDescending(Function(c) c.Prop.DiameterInches).ToList()
+            End If
+        End Function
+
+        ''' <summary>
+        ''' Selects the best motor for a specific propeller candidate and cell count.
+        ''' </summary>
+        Private Function SelectMotorForCandidate(candidate As PropCandidate, cellCount As Integer, kvRequired As Double, requiredThrustPerMotorGf As Double, rejections As List(Of String)) As MotorSpec
+            Dim allMotors = _repository.GetAllByCategory(ComponentCategory.Motor).Cast(Of MotorSpec)()
+            Dim vNominal As Double = cellCount * LipoCellNominalV
+            Dim validMotors As New List(Of MotorSpec)
+
+            For Each motor In allMotors
+                If motor.MaxThrustGrams < requiredThrustPerMotorGf Then
+                    rejections.Add($"Motor {motor.Id} rejected: Max thrust {motor.MaxThrustGrams:F0}gf < required {requiredThrustPerMotorGf:F0}gf.")
+                    Continue For
+                End If
+
+                If vNominal < motor.MinVoltage OrElse vNominal > motor.MaxVoltage Then
+                    rejections.Add($"Motor {motor.Id} rejected: {vNominal:F1}V is outside motor voltage range [{motor.MinVoltage:F1}V, {motor.MaxVoltage:F1}V].")
+                    Continue For
+                End If
+
+                If motor.KV * vNominal < candidate.RequiredRpmAtAltitude * MotorRpmHeadroomFactor Then
+                    rejections.Add($"Motor {motor.Id} rejected: No-load RPM {motor.KV * vNominal:F0} < required hover RPM {candidate.RequiredRpmAtAltitude:F0} with headroom.")
+                    Continue For
+                End If
+
+                If candidate.Prop.DiameterInches < motor.PropDiameterMinIn OrElse candidate.Prop.DiameterInches > motor.PropDiameterMaxIn Then
+                    rejections.Add($"Motor {motor.Id} rejected: Prop diameter {candidate.Prop.DiameterInches:F1}in outside motor range [{motor.PropDiameterMinIn:F1}in, {motor.PropDiameterMaxIn:F1}in].")
+                    Continue For
+                End If
+
+                Dim fit As Double = candidate.Prop.BoreDiameterMm - motor.ShaftDiameterMm
+                If fit < 0.0 OrElse fit > 0.5 Then
+                    rejections.Add($"Motor {motor.Id} rejected: Shaft-bore fit mismatch (Bore: {candidate.Prop.BoreDiameterMm:F1}mm, Shaft: {motor.ShaftDiameterMm:F1}mm).")
+                    Continue For
+                End If
+
+                validMotors.Add(motor)
+            Next
+
+            If validMotors.Count = 0 Then Return Nothing
+
+            ' Soft constraint: KV within 15%
+            Dim softConstraintMotors = validMotors.Where(Function(m) Math.Abs(m.KV - kvRequired) / kvRequired <= 0.15).ToList()
+            
+            If softConstraintMotors.Count = 0 Then
+                rejections.Add($"No motors found within 15% KV band for {kvRequired:F0}KV. Falling back to 25% band.")
+                softConstraintMotors = validMotors.Where(Function(m) Math.Abs(m.KV - kvRequired) / kvRequired <= 0.25).ToList()
+            End If
+
+            If softConstraintMotors.Count = 0 Then
+                rejections.Add($"No motors found within 25% KV band for {kvRequired:F0}KV.")
+                Return Nothing
+            End If
+
+            Return softConstraintMotors.
+                OrderBy(Function(m) Math.Abs(m.KV - kvRequired)).
+                ThenByDescending(Function(m) m.Efficiency).
+                ThenBy(Function(m) m.MassGrams).
+                FirstOrDefault()
+        End Function
+
+
+        ''' <summary>
+        ''' Orchestrates propeller and motor selection by iterating candidates and cell counts.
+        ''' First successful pairing wins.
+        ''' </summary>
+        Private Function SelectPropellerAndMotor(candidates As List(Of PropCandidate), requiredThrustPerMotorGf As Double, rejections As List(Of String)) As (Prop As PropellerSpec, Motor As MotorSpec, CellCount As Integer, RequiredRpm As Double)
+            For Each candidate In candidates
+                For Each cellKv In candidate.CellKvTable.OrderBy(Function(c) c.CellCount)
+                    Dim motor = SelectMotorForCandidate(candidate, cellKv.CellCount, cellKv.KvRequired, requiredThrustPerMotorGf, rejections)
+                    If motor IsNot Nothing Then
+                        Return (candidate.Prop, motor, cellKv.CellCount, candidate.RequiredRpmAtAltitude)
+                    End If
+                Next
+            Next
+
+            Dim rejectionLog As String = String.Join(Environment.NewLine, rejections)
+            Throw New ComponentSelectionException(
+                $"No compatible propeller and motor combination found for {requiredThrustPerMotorGf:F0} gf/motor." & Environment.NewLine &
+                "Consider relaxing the design parameters or expanding the component database." & Environment.NewLine & Environment.NewLine &
+                "Rejection Log:" & Environment.NewLine & rejectionLog)
+        End Function
+
+        ''' <summary>
+        ''' Selects a battery pack using a mass budget derived from the MTOW and selected components.
+        ''' </summary>
+        Private Function SelectBatteryFromMassBudget(mtowGrams As Double, motorCount As Integer, motor As MotorSpec, prop As PropellerSpec, payloadMassGrams As Double, cellCount As Integer, peakSystemCurrentA As Double) As BatterySpec
+            Dim airframeMass As Double = GetAirframeMass(motorCount)
+            Dim batteryMassBudgetG As Double = mtowGrams - airframeMass - (motorCount * motor.MassGrams) - (motorCount * prop.MassGrams) - payloadMassGrams
+
+            If batteryMassBudgetG <= 0 Then
+                Throw New ComponentSelectionException($"Design infeasible: Component and payload mass ({mtowGrams - batteryMassBudgetG:F0} g) exceeds the design MTOW ({mtowGrams:F0} g), leaving no budget for a battery.")
+            End If
+
+            Dim allBatteries = _repository.GetAllByCategory(ComponentCategory.Battery).Cast(Of BatterySpec)()
+            Dim candidates As New List(Of BatterySpec)
+            Dim rejections As New List(Of String)
+
+            For Each battery In allBatteries
+                If battery.CellCount <> cellCount Then
+                    rejections.Add($"Battery {battery.Id} rejected: Cell count {battery.CellCount}S != required {cellCount}S.")
+                    Continue For
+                End If
+
+                If battery.MassGrams > batteryMassBudgetG Then
+                    rejections.Add($"Battery {battery.Id} rejected: Mass {battery.MassGrams:F0} g exceeds budget of {batteryMassBudgetG:F0} g.")
+                    Continue For
+                End If
+
+                Dim continuousCurrentA = (battery.CapacityMAh / 1000.0) * battery.ContinuousCRating
+                Dim requiredCurrentA = peakSystemCurrentA * CRatingHeadroomFactor
+                If continuousCurrentA < requiredCurrentA Then
+                    rejections.Add($"Battery {battery.Id} rejected: Continuous discharge {continuousCurrentA:F1} A < required {requiredCurrentA:F1} A.")
+                    Continue For
+                End If
+
+                candidates.Add(battery)
+            Next
+
+            If candidates.Count = 0 Then
+                Dim rejectionLog As String = String.Join(Environment.NewLine, rejections.Take(15))
+                Throw New ComponentSelectionException(
+                    $"No compatible battery found for mass budget {batteryMassBudgetG:F0} g, {cellCount}S, and {peakSystemCurrentA:F1} A peak current." & Environment.NewLine &
+                    "Rejection Log:" & Environment.NewLine & rejectionLog)
+            End If
+
+            Return candidates.OrderByDescending(Function(b) b.CapacityMAh).First()
+        End Function
+
+        ''' <summary>
+        ''' Computes flight endurance and range, generating warnings based on requested specs.
+        ''' </summary>
+        Private Function ComputeRangeAndEnduranceWarnings(battery As BatterySpec, hoverPowerW As Double, cruiseSpeedMs As Double, specs As MissionSpecs) As (FlightMinutes As Double, RangeKm As Double, Warnings As List(Of String))
+            Dim warnings As New List(Of String)
+            Dim availableWh As Double = (battery.CapacityMAh / 1000.0) * battery.CellCount * LipoCellNominalV * specs.BatteryMaxDepthOfDischarge * (1.0 - specs.OperationalReserveFraction)
+            
+            Dim flightHours As Double = availableWh / hoverPowerW
+            Dim flightMinutes As Double = flightHours * 60.0
+            Dim rangeKm As Double = flightHours * cruiseSpeedMs * 3.6
+
+            ' Endurance Check
+            If specs.FlightEnduranceMinutes > 0 Then
+                Dim endRatio As Double = flightMinutes / specs.FlightEnduranceMinutes
+                Dim endPct As Integer = CInt(Math.Floor(endRatio * 100))
+                If endRatio >= 1.0 Then
+                    warnings.Add($"Endurance OK: {flightMinutes:F1} / {specs.FlightEnduranceMinutes:F1} min")
+                ElseIf endRatio >= 0.7 Then
+                    warnings.Add($"Endurance short: {flightMinutes:F1} / {specs.FlightEnduranceMinutes:F1} min ({endPct}%)")
+                Else
+                    warnings.Add($"[SEVERE] Endurance severely short: {flightMinutes:F1} / {specs.FlightEnduranceMinutes:F1} min ({endPct}%) — design likely infeasible")
+                End If
+            End If
+
+            ' Range Check
+            If specs.MaxRangeKm > 0 Then
+                Dim rangeRatio As Double = rangeKm / specs.MaxRangeKm
+                Dim rangePct As Integer = CInt(Math.Floor(rangeRatio * 100))
+                If rangeRatio >= 1.0 Then
+                    warnings.Add($"Range OK: {rangeKm:F1} / {specs.MaxRangeKm:F1} km")
+                ElseIf rangeRatio >= 0.7 Then
+                    warnings.Add($"Range short: {rangeKm:F1} / {specs.MaxRangeKm:F1} km ({rangePct}%)")
+                Else
+                    warnings.Add($"[SEVERE] Range severely short: {rangeKm:F1} / {specs.MaxRangeKm:F1} km ({rangePct}%) — design likely infeasible")
+                End If
+            End If
+
+            Return (flightMinutes, rangeKm, warnings)
+        End Function
 
         ''' <summary>
         ''' Selects propeller candidates whose diameter is closest to the target

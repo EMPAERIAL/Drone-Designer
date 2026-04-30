@@ -42,14 +42,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="Drone Designer.exe" size="218624">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="Drone Designer.exe" size="224768">
       <assemblyIdentity name="Drone Designer" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>SwZ5K9mmJWYHLMkIzfNY06Pk39cEhB5FD7PZ8erS9lc=</dsig:DigestValue>
+        <dsig:DigestValue>RxXYW/kqtuMk39TtRcuGANWtCeAi7nVPFf5BNLraaCc=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
