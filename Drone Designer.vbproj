@@ -112,6 +112,7 @@
     <Compile Include="Core\Models\ComponentSpecs.vb" />
     <Compile Include="Core\Models\MissionSpecs.vb" />
     <Compile Include="Core\Models\PipelineResult.vb" />
+    <Compile Include="Core\Models\SizingPolicy.vb" />
     <Compile Include="Core\Services\ComponentSelectionEngine.vb" />
     <Compile Include="Core\Services\PipelineOrchestrator.vb" />
     <Compile Include="Solidworks\MacroRunner.vb" />

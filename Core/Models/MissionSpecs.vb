@@ -667,6 +667,27 @@ Namespace Core.Models
         Public Property FrameSizeMm As Double = 250.0
 
 
+        ' ── MISSION PHASE PROFILE ─────────────────────────────────────
+
+        ''' <summary>
+        ''' Fraction of total endurance spent hovering (takeoff loiter + landing).
+        ''' Default 0.3. Must satisfy: HoverTimeFraction + ClimbTimeFraction + CruiseTimeFraction = 1.0.
+        ''' </summary>
+        Public Property HoverTimeFraction As Double = 0.3
+
+        ''' <summary>Fraction of endurance spent climbing. Default 0.1.</summary>
+        Public Property ClimbTimeFraction As Double = 0.1
+
+        ''' <summary>Fraction of endurance spent in level cruise. Default 0.6.</summary>
+        Public Property CruiseTimeFraction As Double = 0.6
+
+        ''' <summary>
+        ''' Safety-margin policy applied during component sizing.
+        ''' Default-constructed so existing callers require no changes.
+        ''' Tune via the "Advanced Sizing Margins" panel or use SizingPolicy presets.
+        ''' </summary>
+        Public Property SizingPolicy As SizingPolicy = New SizingPolicy()
+
         ' ── CONSTRUCTOR ───────────────────────────────────────────────
 
         ''' <summary>

@@ -19,6 +19,7 @@
 
 Imports System.Windows.Forms
 Imports System.Drawing
+Imports Drone_Designer.Core.Services
 
 
 
@@ -148,6 +149,27 @@ Partial Public Class MainForm
         Private lblNotes As Label
         ''' <summary>Free-text notes forwarded to the selection engine as hints.</summary>
         Friend txtNotes As TextBox
+
+        ' ── GROUP: Advanced Sizing Margins + Mission Phase Profile ────────────
+        Private grpSizing As GroupBox
+        Private lblKMotor As Label
+        Friend nudKMotor As NumericUpDown
+        Private lblKBatVoltage As Label
+        Friend nudKBatVoltage As NumericUpDown
+        Private lblKBatCapacity As Label
+        Friend nudKBatCapacity As NumericUpDown
+        Private lblKEsc As Label
+        Friend nudKEsc As NumericUpDown
+        Private lblSizingPreset As Label
+        Friend cboSizingPreset As ComboBox
+        Private lblHoverFraction As Label
+        Friend nudHoverFraction As NumericUpDown
+        Private lblClimbFraction As Label
+        Friend nudClimbFraction As NumericUpDown
+        Private lblCruiseFraction As Label
+        Friend nudCruiseFraction As NumericUpDown
+        Private lblClimbRate As Label
+        Friend nudClimbRate As NumericUpDown
 
         ' ── ACTION BUTTON ─────────────────────────────────────────────────────
         Private pnlAction As Panel
@@ -279,6 +301,8 @@ Partial Public Class MainForm
             currentY = BuildGroupEnvironment(currentY)
             currentY += 10
             currentY = BuildGroupMission(currentY)
+            currentY += 10
+            currentY = BuildGroupSizingMargins(currentY)
             currentY += 10
             BuildActionPanel(currentY)
         End Sub
@@ -725,6 +749,125 @@ Partial Public Class MainForm
         End Function
 
         ' =====================================================================
+        '  GROUP 5 — Advanced Sizing Margins
+        ' =====================================================================
+
+        ''' <summary>Builds the Advanced Sizing Margins + Mission Phase Profile group and returns next Y offset.</summary>
+        Private Function BuildGroupSizingMargins(startY As Integer) As Integer
+            Const GRP_W As Integer = 1100
+            Const GRP_H As Integer = 160
+            Const LBL_X As Integer = 10
+            Const CTL_X As Integer = 186
+            Const ROW1 As Integer = 26
+            Const COL2_LBL As Integer = 350
+            Const COL2_CTL As Integer = 526
+            Const COL3_LBL As Integer = 690
+            Const COL3_CTL As Integer = 866
+
+            grpSizing = MakeGroup("Advanced Sizing Margins", 0, startY, GRP_W, GRP_H)
+
+            ' Row 1 ── Motor torque k | Battery voltage k | Preset
+            lblKMotor = MakeLabel("Motor torque margin (k):", LBL_X, ROW1)
+            nudKMotor = MakeNUD(CTL_X, ROW1, 1.0D, 4.0D, 1, 80)
+            nudKMotor.Value = 2.0D
+            nudKMotor.Increment = 0.1D
+            SetTip(nudKMotor, "Motor must sustain at least (k × hover torque). Higher = more gust/climb headroom.")
+
+            lblKBatVoltage = MakeLabel("Battery voltage margin (k):", COL2_LBL, ROW1)
+            nudKBatVoltage = MakeNUD(COL2_CTL, ROW1, 1.0D, 2.0D, 2, 80)
+            nudKBatVoltage.Value = 1.3D
+            nudKBatVoltage.Increment = 0.05D
+            SetTip(nudKBatVoltage, "Pack voltage = motor nominal × k. Covers cell sag under full load.")
+
+            lblSizingPreset = MakeLabel("Preset:", COL3_LBL, ROW1)
+            cboSizingPreset = MakeCombo(COL3_CTL, ROW1, New String() {
+                "General Purpose",
+                "Racing (minimum weight)",
+                "Harsh Environment"
+            }, 180)
+            SetTip(cboSizingPreset, "Quick-fill all four margin fields from a preset profile.")
+            AddHandler cboSizingPreset.SelectedIndexChanged, AddressOf OnSizingPresetChanged
+
+            ' Row 2 ── Battery capacity k | ESC current k
+            Dim row2 As Integer = ROW1 + 34
+            lblKBatCapacity = MakeLabel("Battery capacity margin (k):", LBL_X, row2)
+            nudKBatCapacity = MakeNUD(CTL_X, row2, 1.0D, 2.0D, 2, 80)
+            nudKBatCapacity.Value = 1.2D
+            nudKBatCapacity.Increment = 0.05D
+            SetTip(nudKBatCapacity, "Required battery energy = calculated mission energy × k. 1.2 = 20% reserve.")
+
+            lblKEsc = MakeLabel("ESC current margin (k):", COL2_LBL, row2)
+            nudKEsc = MakeNUD(COL2_CTL, row2, 1.0D, 2.0D, 2, 80)
+            nudKEsc.Value = 1.25D
+            nudKEsc.Increment = 0.05D
+            SetTip(nudKEsc, "ESC continuous rating ≥ motor peak current × k. 1.25 = 25% thermal headroom.")
+
+            ' Row 3 ── Hover fraction | Climb fraction | Cruise fraction
+            Dim row3 As Integer = row2 + 34
+            lblHoverFraction = MakeLabel("Hover time (0-1):", LBL_X, row3)
+            nudHoverFraction = MakeNUD(CTL_X, row3, 0.0D, 1.0D, 2, 80)
+            nudHoverFraction.Value = 0.3D
+            nudHoverFraction.Increment = 0.05D
+            SetTip(nudHoverFraction, "Fraction of total endurance spent hovering (takeoff loiter + landing). Must sum to 1.0 with climb and cruise fractions.")
+
+            lblClimbFraction = MakeLabel("Climb time (0-1):", COL2_LBL, row3)
+            nudClimbFraction = MakeNUD(COL2_CTL, row3, 0.0D, 1.0D, 2, 80)
+            nudClimbFraction.Value = 0.1D
+            nudClimbFraction.Increment = 0.05D
+            SetTip(nudClimbFraction, "Fraction of total endurance spent climbing. Must sum to 1.0 with hover and cruise fractions.")
+
+            lblCruiseFraction = MakeLabel("Cruise time (0-1):", COL3_LBL, row3)
+            nudCruiseFraction = MakeNUD(COL3_CTL, row3, 0.0D, 1.0D, 2, 80)
+            nudCruiseFraction.Value = 0.6D
+            nudCruiseFraction.Increment = 0.05D
+            SetTip(nudCruiseFraction, "Fraction of total endurance spent in level cruise. Must sum to 1.0 with hover and climb fractions.")
+
+            ' Row 4 ── Climb rate
+            Dim row4 As Integer = row3 + 34
+            lblClimbRate = MakeLabel("Climb rate (m/s):", LBL_X, row4)
+            nudClimbRate = MakeNUD(CTL_X, row4, 0.5D, 20.0D, 1, 80, "m/s")
+            nudClimbRate.Value = 3.0D
+            nudClimbRate.Increment = 0.5D
+            SetTip(nudClimbRate, "Vertical climb rate in m/s. Used by momentum-theory climb power model.")
+
+            grpSizing.Controls.AddRange(New Control() {
+                lblKMotor, nudKMotor,
+                lblKBatVoltage, nudKBatVoltage,
+                lblSizingPreset, cboSizingPreset,
+                lblKBatCapacity, nudKBatCapacity,
+                lblKEsc, nudKEsc,
+                lblHoverFraction, nudHoverFraction,
+                lblClimbFraction, nudClimbFraction,
+                lblCruiseFraction, nudCruiseFraction,
+                lblClimbRate, nudClimbRate
+            })
+
+            pnlInputScroll.Controls.Add(grpSizing)
+            Return startY + GRP_H
+        End Function
+
+        ''' <summary>Populates all four k-factor NUDs from the selected preset.</summary>
+        Private Sub OnSizingPresetChanged(sender As Object, e As EventArgs)
+            Select Case cboSizingPreset.SelectedIndex
+                Case 1  ' Racing
+                    nudKMotor.Value = 1.5D
+                    nudKBatVoltage.Value = 1.1D
+                    nudKBatCapacity.Value = 1.1D
+                    nudKEsc.Value = 1.15D
+                Case 2  ' Harsh Environment
+                    nudKMotor.Value = 3.0D
+                    nudKBatVoltage.Value = 1.4D
+                    nudKBatCapacity.Value = 1.4D
+                    nudKEsc.Value = 1.5D
+                Case Else  ' General Purpose
+                    nudKMotor.Value = 2.0D
+                    nudKBatVoltage.Value = 1.3D
+                    nudKBatCapacity.Value = 1.2D
+                    nudKEsc.Value = 1.25D
+            End Select
+        End Sub
+
+        ' =====================================================================
         '  ACTION PANEL — Select Components + Clear buttons
         ' =====================================================================
 
@@ -1016,11 +1159,23 @@ Partial Public Class MainForm
         ''' <param name="totalMassG">Sum of component masses in grams.</param>
         ''' <param name="totalPowerW">Sum of peak power consumption in watts.</param>
         ''' <param name="count">Number of components selected.</param>
-        Public Sub UpdateSummary(totalMassG As Double, totalPowerW As Double, count As Integer)
+        Public Sub UpdateSummary(totalMassG As Double, totalPowerW As Double, count As Integer,
+                                 Optional budget As PowerBudget = Nothing)
             Dim update As Action = Sub()
                                        lblSummaryMass.Text = $"Total Component Mass:  {totalMassG:N0} g"
                                        lblSummaryPower.Text = $"Total System Power:  {totalPowerW:N1} W"
-                                       lblSummaryBudget.Text = $"Component Count:  {count}"
+                                       If budget IsNot Nothing AndAlso budget.TotalMissionEnergyWh > 0 Then
+                                           Dim noMarginWh = budget.TotalMissionEnergyWh / Math.Max(0.01, budget.TotalMissionEnergyWh /
+                                               (budget.HoverPhaseEnergyWh + budget.ClimbPhaseEnergyWh + budget.CruisePhaseEnergyWh + budget.AvionicsEnergyWh))
+                                           lblSummaryBudget.Text =
+                                               $"Energy — Hover: {budget.HoverPhaseEnergyWh:N1} Wh  " &
+                                               $"Climb: {budget.ClimbPhaseEnergyWh:N1} Wh  " &
+                                               $"Cruise: {budget.CruisePhaseEnergyWh:N1} Wh  " &
+                                               $"| Total (×k): {budget.TotalMissionEnergyWh:N1} Wh  " &
+                                               $"| Range: {budget.EstimatedFlightRangeKm:N1} km"
+                                       Else
+                                           lblSummaryBudget.Text = $"Component Count:  {count}"
+                                       End If
                                    End Sub
 
             If Me.InvokeRequired Then

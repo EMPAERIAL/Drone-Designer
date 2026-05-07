@@ -595,6 +595,28 @@ Namespace Core.Models
         Public Property Efficiency As Double
 
         ''' <summary>
+        ''' Motor torque constant (N·m/A).
+        ''' Relationship to KV: Kt = 1 / Kv_SI where Kv_SI = KV × (2π/60).
+        ''' Derived automatically if not provided: KtNmPerA = 60 / (2π × KV).
+        ''' </summary>
+        <JsonProperty("ktNmPerA")>
+        Public Property KtNmPerA As Double
+
+        ''' <summary>
+        ''' Maximum continuous torque the motor can produce (N·m).
+        ''' Derived automatically if not provided: MaxTorqueNm = KtNmPerA × MaxCurrentAmps.
+        ''' </summary>
+        <JsonProperty("maxTorqueNm")>
+        Public Property MaxTorqueNm As Double
+
+        ''' <summary>
+        ''' Winding resistance in Ohms. Used for copper-loss efficiency checks.
+        ''' Derived automatically from InternalResistanceMilliOhm / 1000 if not provided.
+        ''' </summary>
+        <JsonProperty("windingResistanceOhm")>
+        Public Property WindingResistanceOhm As Double
+
+        ''' <summary>
         ''' Copies nested dimension fields to top-level properties after JSON deserialisation.
         ''' </summary>
         <OnDeserialized>
@@ -603,9 +625,17 @@ Namespace Core.Models
                 ShaftDiameterMm = Dimensions.ShaftDiameterMm
                 MountingBoltCircleMm = Dimensions.MountingPatternMm
             End If
-            ' Compute efficiency if not already set
             If Efficiency = 0 AndAlso MaxPowerWatts > 0 Then
                 Efficiency = MaxThrustGrams / MaxPowerWatts
+            End If
+            If WindingResistanceOhm <= 0 AndAlso InternalResistanceMilliOhm > 0 Then
+                WindingResistanceOhm = InternalResistanceMilliOhm / 1000.0
+            End If
+            If KtNmPerA <= 0 AndAlso KV > 0 Then
+                KtNmPerA = 60.0 / (2.0 * Math.PI * KV)
+            End If
+            If MaxTorqueNm <= 0 AndAlso KtNmPerA > 0 AndAlso MaxCurrentAmps > 0 Then
+                MaxTorqueNm = KtNmPerA * MaxCurrentAmps
             End If
         End Sub
 
@@ -755,6 +785,25 @@ Namespace Core.Models
         Public Property Efficiency As Double
 
         ''' <summary>
+        ''' Dimensionless static thrust coefficient.
+        ''' Equation: T = Ct × ρ × n² × D⁴
+        ''' where n is in rev/s, D in metres, ρ in kg/m³, T in Newtons.
+        ''' Source: APC propeller database or manufacturer test data.
+        ''' Fallback when not available: 0.115 (population average for 2-blade MR props).
+        ''' </summary>
+        <JsonProperty("ctStatic")>
+        Public Property CtStatic As Double
+
+        ''' <summary>
+        ''' Dimensionless static power coefficient.
+        ''' Equation: P = Cp × ρ × n³ × D⁵
+        ''' where n is in rev/s, D in metres, P in Watts.
+        ''' Fallback when not available: 0.044.
+        ''' </summary>
+        <JsonProperty("cpStatic")>
+        Public Property CpStatic As Double
+
+        ''' <summary>
         ''' Copies diameter, pitch, blade count, and bore from the nested Dimensions
         ''' object to top-level properties after JSON deserialisation.
         ''' </summary>
@@ -769,6 +818,8 @@ Namespace Core.Models
             If Efficiency = 0 AndAlso MassGrams > 0 Then
                 Efficiency = StaticThrustGrams / MassGrams
             End If
+            If CtStatic <= 0 Then CtStatic = 0.115
+            If CpStatic <= 0 Then CpStatic = 0.044
         End Sub
 
         Public Sub New()

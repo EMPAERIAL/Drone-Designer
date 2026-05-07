@@ -148,6 +148,16 @@ Partial Class MainForm
             UpdateStatus($"✔  Selection complete — {result.SelectedMotors.Count} motor(s) found. " &
                      $"Estimated MTOW: {result.EstimatedMtowGrams:N0} g.")
 
+            If result.Warnings IsNot Nothing Then
+                For Each w In result.Warnings
+                    If w.StartsWith("[SEVERE]") Then
+                        MessageBox.Show(w, "Design warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    Else
+                        lblStatus.Text &= " | " & w
+                    End If
+                Next
+            End If
+
             ' Show convergence popup (close any previous instance first)
             If _convergenceForm IsNot Nothing AndAlso Not _convergenceForm.IsDisposed Then
                 _convergenceForm.Close()
@@ -306,7 +316,17 @@ Partial Class MainForm
                 .RequiresTelemetry = True,
                 .RequiresVideoDownlink = True,
                 .VideoDownlinkRangeKm = rangeKm,
-                .ControlLinkRangeKm = rangeKm
+                .ControlLinkRangeKm = rangeKm,
+                .SizingPolicy = New SizingPolicy With {
+                    .KMotorTorque = CDbl(nudKMotor.Value),
+                    .KBatteryVoltage = CDbl(nudKBatVoltage.Value),
+                    .KBatteryCapacity = CDbl(nudKBatCapacity.Value),
+                    .KEscCurrent = CDbl(nudKEsc.Value)
+                },
+                .HoverTimeFraction = CDbl(nudHoverFraction.Value),
+                .ClimbTimeFraction = CDbl(nudClimbFraction.Value),
+                .CruiseTimeFraction = CDbl(nudCruiseFraction.Value),
+                .ClimbRateMs = CDbl(nudClimbRate.Value)
         }
 
     End Function
@@ -362,7 +382,8 @@ Partial Class MainForm
         UpdateSummary(
                 recommended.Sum(Function(r) r.MassGrams),
                 recommended.Sum(Function(r) r.MaxPowerWatts),
-                recommended.Count)
+                recommended.Count,
+                result.PowerBudget)
     End Sub
 
     ''' <summary>

@@ -43,6 +43,8 @@ Namespace Core.Services
     Friend Class PropCandidate
         Public Property Prop As PropellerSpec
         Public Property RequiredRpmAtAltitude As Double
+        Public Property HoverPowerPerMotorW As Double
+        Public Property PropTorqueNm As Double
         Public Property CellKvTable As List(Of (CellCount As Integer, KvRequired As Double))
     End Class
 
@@ -397,57 +399,55 @@ Namespace Core.Services
         '''   5.  Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
         '''
         ''' Each intermediate result is stored on SelectionResult so the UI can
-        ''' display a transparent breakdown of every sizing decision made.
+        ''' display a transparent breakdown.
         ''' </summary>
         Public Function SelectComponents(specs As MissionSpecs) As SelectionResult Implements IComponentSelector.SelectComponents
             ValidateMissionSpecs(specs)
 
-            ' ── Task 7 (propeller-first pipeline) ──────────────────────────────
-            Dim mtow As MtowEstimate = EstimateMtow(specs)
-            Dim thrust As ThrustRequirement = CalculateThrustRequirement(mtow, specs.MotorCount)
-            ' Step 3a: target prop diameter from disk loading (Yang et al. 2024)
-            Dim mtowKg As Double = mtow.TotalMassGrams / 1000.0
-            Dim targetPropDiameterIn As Double = ComputeTargetPropellerDiameter(mtowKg, mtow.MotorCount)
-            Dim frameClearanceIn As Double = EstimateMaxPropDiameter(mtow.MotorCount)
-            ' Step 3b: select propellers by target diameter (no motor dependency)
-            Dim propellers As List(Of ComponentSpecs) =
-                SelectPropellersByTargetDiameter(targetPropDiameterIn, frameClearanceIn, specs)
-            ' Step 3c: select motors matched to the chosen reference propeller
-            Dim refProp As PropellerSpec = CType(propellers.First(), PropellerSpec)
-            Dim motors As List(Of ComponentSpecs) =
-                SelectMotorsForPropeller(refProp, thrust, specs)
+            Dim mtowG = specs.MaxTakeoffMassGrams
+            Dim motorCount = NormaliseMotorCount(specs.MotorCount)
+            Dim twr = If(specs.TargetThrustToWeightRatio.HasValue, specs.TargetThrustToWeightRatio.Value, QuadThrustToWeightRatio)
+            Dim thrustPerMotorGf = mtowG * twr / motorCount
+            Dim armMm = specs.FrameSizeMm / 2.0
+            Dim rho = AirDensityKgM3(specs.MaxAltitudeMeters, specs.MaxOperatingTempCelsius)
 
-            ' ── Task 8 ─────────────────────────────────────────────────────────
-            Dim power As PowerBudget = CalculatePowerBudget(motors, thrust, specs)
-            Dim batteries As List(Of ComponentSpecs) = SelectBatteries(power, specs)
-            Dim escs As List(Of ComponentSpecs) = SelectEscs(motors, power, specs)
-            Dim pdbs As List(Of ComponentSpecs) = SelectPdb(power, specs)
+            Dim warnings = New List(Of String)
+            Dim ratio = GetPropToArmRatio(specs.Configuration, warnings)
+            Dim maxPropDiamIn = (ratio * armMm) / 25.4
+            Dim motorRpmCeiling = _repository.GetAllByCategory(ComponentCategory.Motor).Cast(Of MotorSpec)().Max(Function(m) m.KV * m.MaxVoltage)
+            Dim rejections = New List(Of String)
 
-            ' ── Task 9 ─────────────────────────────────────────────────────────
-            Dim avionics As AvionicsBudget = BuildAvionicsBudget(power, specs)
-            Dim fcs As List(Of ComponentSpecs) = SelectFlightController(power, avionics, specs)
-            Dim gpsModules As List(Of ComponentSpecs) = SelectGpsModule(avionics, specs)
-            Dim telemetryRadios As List(Of ComponentSpecs) = SelectTelemetryRadio(avionics, specs)
-            Dim receivers As List(Of ComponentSpecs) = SelectReceiver(avionics, specs)
-            Dim cameras As List(Of ComponentSpecs) = SelectCamera(avionics, specs)
+            Dim candidates = BuildPropCandidates(specs, maxPropDiamIn, thrustPerMotorGf, motorRpmCeiling, rho, rejections)
+            Dim picked = SelectPropellerAndMotor(candidates, thrustPerMotorGf, specs.SizingPolicy, rejections)
+            Dim motors = New List(Of ComponentSpecs) From {picked.Motor}
+            Dim propellers = New List(Of ComponentSpecs) From {picked.Prop}
+            Dim thrust = New ThrustRequirement With {.TotalThrustGf = thrustPerMotorGf * motorCount, .ThrustPerMotorGf = thrustPerMotorGf, .ThrustToWeightRatio = twr, .MotorCount = motorCount}
+            Dim power = CalculatePowerBudget(motors, thrust, specs, picked.Prop, picked.HoverPowerPerMotorW, rho)
+            Dim battery = SelectBatteryFromMassBudget(mtowG, motorCount, picked.Motor, picked.Prop, specs.PayloadMassGrams, picked.CellCount, power.TotalPeakCurrentA)
+            Dim batteries = New List(Of ComponentSpecs) From {battery}
+            Dim rangeReport = ComputeRangeAndEnduranceWarnings(battery, power.HoverSystemPowerW, specs.CruiseSpeedMs, specs)
+            warnings.AddRange(rangeReport.Warnings)
+            Dim escs = SelectEscs(motors, power, specs)
+            Dim pdbs = SelectPdb(power, specs)
+            Dim avionics = BuildAvionicsBudget(power, specs)
+            Dim fcs = SelectFlightController(power, avionics, specs)
+            Dim gpsModules = SelectGpsModule(avionics, specs)
+            Dim telemetryRadios = SelectTelemetryRadio(avionics, specs)
+            Dim receivers = SelectReceiver(avionics, specs)
+            Dim cameras = SelectCamera(avionics, specs)
             TallyRealizedAvionicsCurrent(avionics, fcs, gpsModules, telemetryRadios, receivers, cameras)
 
             Return New SelectionResult With {
-                .EstimatedMtowGrams = mtow.TotalMassGrams,
-                .RequiredThrustPerMotorGf = thrust.ThrustPerMotorGf,
-                .MtowIterationHistory = mtow.IterationHistory,
-                .SelectedMotors = motors,
-                .SelectedPropellers = propellers,
+                .EstimatedMtowGrams = mtowG,
+                .RequiredThrustPerMotorGf = thrustPerMotorGf,
+                .MtowIterationHistory = New List(Of MtowIterationPoint),
+                .SelectedMotors = motors, .SelectedPropellers = propellers,
                 .PowerBudget = power,
-                .SelectedBatteries = batteries,
-                .SelectedEscs = escs,
-                .SelectedPdbs = pdbs,
+                .SelectedBatteries = batteries, .SelectedEscs = escs, .SelectedPdbs = pdbs,
                 .AvionicsBudget = avionics,
-                .SelectedFlightControllers = fcs,
-                .SelectedGpsModules = gpsModules,
-                .SelectedTelemetryRadios = telemetryRadios,
-                .SelectedReceivers = receivers,
-                .SelectedCameras = cameras
+                .SelectedFlightControllers = fcs, .SelectedGpsModules = gpsModules,
+                .SelectedTelemetryRadios = telemetryRadios, .SelectedReceivers = receivers, .SelectedCameras = cameras,
+                .Warnings = warnings
             }
         End Function
 
@@ -460,7 +460,8 @@ Namespace Core.Services
         ''' Used as a fallback when MissionSpecs.BatterySpecificEnergyWhPerKgOverride is Nothing.
         ''' These are pack-level values (cells + wiring + BMS), matching LipoEnergyDensityWhPerKg.
         ''' </summary>
-        Private Shared Function GetDefaultSpecificEnergyWhPerKg(source As PowerSourceType) As Double
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
+        Private Function GetDefaultSpecificEnergyWhPerKg(source As PowerSourceType) As Double
             Select Case source
                 Case PowerSourceType.LiPo : Return 130.0
                 Case PowerSourceType.LiIon : Return 180.0
@@ -478,7 +479,8 @@ Namespace Core.Services
         ''' Reference baseline: LiPo at 130 Wh/kg pack-level.
         ''' Result clamped to [0.10, 0.60]. Returns 0 for tethered configurations.
         ''' </summary>
-        Private Shared Function EstimateInitialBatterySeedFraction(specs As MissionSpecs) As Double
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
+        Private Function EstimateInitialBatterySeedFraction(specs As MissionSpecs) As Double
             Dim specificEnergy As Double = If(specs.BatterySpecificEnergyWhPerKgOverride.HasValue,
                                                 specs.BatterySpecificEnergyWhPerKgOverride.Value,
                                                 GetDefaultSpecificEnergyWhPerKg(specs.PowerSource))
@@ -525,7 +527,8 @@ Namespace Core.Services
         ''' (mission is physically infeasible — divergence), or (b) iteration cap
         ''' is reached without satisfying the convergence tolerance.
         ''' </exception>
-        Public Function EstimateMtow(specs As MissionSpecs) As MtowEstimate  '# TODO: Hikaye burada
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
+        Public Function EstimateMtow(specs As MissionSpecs) As MtowEstimate
             Dim motorCount As Integer = NormaliseMotorCount(specs.MotorCount)
 
             Dim structuralMass As Double =
@@ -615,6 +618,7 @@ Namespace Core.Services
         ''' Motor datasheets rate static thrust in gf, so gf avoids unit conversion
         ''' when comparing against repository values.
         ''' </summary>
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
         Public Function CalculateThrustRequirement(mtow As MtowEstimate, motorCount As Integer) As ThrustRequirement
             Dim n As Integer = NormaliseMotorCount(motorCount)
             Dim totalThrustGf As Double = mtow.TotalMassGrams * QuadThrustToWeightRatio
@@ -637,13 +641,67 @@ Namespace Core.Services
         ''' using the static-thrust scaling law T ∝ RPM² (momentum theory, fixed pitch).
         '''   RPM_hover ≈ RPM_test × √(T_required / T_static_at_test)
         ''' </summary>
+        <Obsolete("Replaced by ComputePropellerAero, which uses Ct/Cp coefficients and is air-density-aware.")>
         Private Shared Function EstimatePropellerHoverRpm(prop As PropellerSpec, thrustRequiredGf As Double) As Double
             If prop.StaticThrustGrams <= 0.0 OrElse prop.StaticThrustTestRPM <= 0 Then
-                ' No test data — fall back to 70% of MaxRPM as a coarse estimate
                 Return prop.MaxRPM * 0.7
             End If
             Dim ratio As Double = thrustRequiredGf / prop.StaticThrustGrams
             Return prop.StaticThrustTestRPM * Math.Sqrt(Math.Max(0.0, ratio))
+        End Function
+
+        ''' <summary>
+        ''' Calculates air density using the International Standard Atmosphere (ISA) model
+        ''' corrected for user-specified altitude and ambient temperature.
+        '''
+        ''' Formula:
+        '''   ρ = ρ_sl × (1 − 2.25577×10⁻⁵ × h)^4.2559 × (T_ISA / T_ambient)
+        '''
+        ''' Parameters:
+        '''   altitudeM    — altitude above MSL in metres (use specs.MaxAltitudeMeters)
+        '''   ambientTempC — ambient air temperature in °C (use specs.MaxOperatingTempCelsius
+        '''                  for worst-case hot day; MinOperatingTempCelsius for cold)
+        ''' Returns: air density in kg/m³
+        ''' </summary>
+        Private Shared Function AirDensityKgM3(altitudeM As Double, ambientTempC As Double) As Double
+            Const RhoSeaLevel As Double = 1.225
+            Const TIsaK As Double = 288.15
+            Dim pressureRatio = Math.Pow(1.0 - 2.25577e-5 * altitudeM, 4.2559)
+            Dim tempRatio = TIsaK / (TIsaK + ambientTempC)
+            Return RhoSeaLevel * pressureRatio * tempRatio
+        End Function
+
+        ''' <summary>
+        ''' Computes hover RPM, shaft power, and propeller torque from aerodynamic first principles.
+        '''
+        ''' Governing equations:
+        '''   T = Ct × ρ × n² × D⁴   →   n = √(T / (Ct × ρ × D⁴))
+        '''   P = Cp × ρ × n³ × D⁵
+        '''   Q = P / (2π × n)
+        '''
+        ''' Parameters:
+        '''   prop            — propeller to evaluate (uses CtStatic, CpStatic, DiameterInches)
+        '''   requiredThrustN — per-motor thrust in Newtons (= requiredThrustGf × 0.00981)
+        '''   rho             — air density in kg/m³ (from AirDensityKgM3)
+        '''
+        ''' Returns named tuple: (HoverRpm, HoverPowerW, TorqueNm)
+        ''' </summary>
+        Private Shared Function ComputePropellerAero(
+                prop As PropellerSpec,
+                requiredThrustN As Double,
+                rho As Double) As (HoverRpm As Double, HoverPowerW As Double, TorqueNm As Double)
+
+            Dim D = prop.DiameterInches * 0.0254
+            Dim Ct = prop.CtStatic
+            Dim Cp = prop.CpStatic
+
+            Dim nSquared = requiredThrustN / (Ct * rho * D ^ 4)
+            Dim n = Math.Sqrt(Math.Max(0.0, nSquared))
+            Dim rpm = n * 60.0
+            Dim powerW = Cp * rho * (n ^ 3) * (D ^ 5)
+            Dim torqueNm = If(n > 0.0, powerW / (2.0 * Math.PI * n), 0.0)
+
+            Return (rpm, powerW, torqueNm)
         End Function
 
         ''' <summary>
@@ -661,6 +719,7 @@ Namespace Core.Services
         '''   • Then Mass ASC
         '''   • Take top 5
         ''' </summary>
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
         Private Function SelectMotorsForPropeller(
                 referenceProp As PropellerSpec,
                 thrust As ThrustRequirement,
@@ -707,6 +766,7 @@ Namespace Core.Services
         ''' Sorted by: thrust-per-watt DESC (efficiency priority), then mass ASC.
         ''' Returns up to 5 candidates; UI or user picks the final one.
         ''' </summary>
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
         Private Function SelectMotors(thrust As ThrustRequirement, specs As MissionSpecs) As List(Of ComponentSpecs)
             Dim nominalVoltage As Double = EstimateNominalVoltage(specs)
             Dim allMotors As IEnumerable(Of ComponentSpecs) = _repository.GetAllByCategory(ComponentCategory.Motor)
@@ -738,11 +798,12 @@ Namespace Core.Services
         ' =======================================================================
 
         ''' <summary>
-        ''' Builds a list of PropCandidate containing matching props, required RPMs, and Cell/KV mappings.
+        ''' Builds a list of PropCandidate containing matching props, required RPMs, hover power, torque, and Cell/KV mappings.
         ''' </summary>
-        Private Function BuildPropCandidates(specs As MissionSpecs, maxPropDiameterIn As Double, requiredThrustPerMotorGf As Double, motorRpmCeiling As Double, rejections As List(Of String)) As List(Of PropCandidate)
+        Private Function BuildPropCandidates(specs As MissionSpecs, maxPropDiameterIn As Double, requiredThrustPerMotorGf As Double, motorRpmCeiling As Double, rho As Double, rejections As List(Of String)) As List(Of PropCandidate)
             Dim allProps = _repository.GetAllByCategory(ComponentCategory.Propeller).Cast(Of PropellerSpec)()
             Dim candidates As New List(Of PropCandidate)
+            Dim requiredThrustN = requiredThrustPerMotorGf * 0.00981
 
             For Each prop In allProps
                 If prop.DiameterInches > maxPropDiameterIn Then
@@ -750,18 +811,15 @@ Namespace Core.Services
                     Continue For
                 End If
 
-                Dim rpmSeaLevel = EstimatePropellerHoverRpm(prop, requiredThrustPerMotorGf)
-                
-                ' Apply ISA altitude correction
-                Dim rho_ratio = Math.Pow(1.0 - 2.25577e-5 * specs.MaxAltitudeMeters, 4.2559)
-                Dim requiredRpmAtAltitude = rpmSeaLevel * Math.Sqrt(1.0 / rho_ratio)
+                Dim aero = ComputePropellerAero(prop, requiredThrustN, rho)
+                Dim requiredRpmAtAltitude = aero.HoverRpm
 
                 If requiredRpmAtAltitude > motorRpmCeiling Then
                     rejections.Add($"Prop {prop.Id}: Required RPM {requiredRpmAtAltitude:F0} exceeds motor RPM ceiling {motorRpmCeiling:F0}.")
                     Continue For
                 End If
 
-                If requiredRpmAtAltitude > prop.MaxRPM Then
+                If prop.MaxRPM > 0 AndAlso requiredRpmAtAltitude > prop.MaxRPM Then
                     rejections.Add($"Prop {prop.Id}: Required RPM {requiredRpmAtAltitude:F0} exceeds prop MaxRPM {prop.MaxRPM:F0}.")
                     Continue For
                 End If
@@ -769,13 +827,15 @@ Namespace Core.Services
                 Dim cellKvTable As New List(Of (CellCount As Integer, KvRequired As Double))
                 For Each cells In {3, 4, 6, 8}
                     Dim vNominal = cells * LipoCellNominalV
-                    Dim kvRequired = requiredRpmAtAltitude / (vNominal * 0.95)
+                    Dim kvRequired = requiredRpmAtAltitude * MotorRpmHeadroomFactor / vNominal
                     cellKvTable.Add((cells, kvRequired))
                 Next
 
                 candidates.Add(New PropCandidate With {
                     .Prop = prop,
                     .RequiredRpmAtAltitude = requiredRpmAtAltitude,
+                    .HoverPowerPerMotorW = aero.HoverPowerW,
+                    .PropTorqueNm = aero.TorqueNm,
                     .CellKvTable = cellKvTable
                 })
             Next
@@ -789,10 +849,21 @@ Namespace Core.Services
 
         ''' <summary>
         ''' Selects the best motor for a specific propeller candidate and cell count.
+        '''
+        ''' Hard gates (physics-based):
+        '''   1. MaxThrustGrams ≥ required thrust (manufacturer datasheet cross-check)
+        '''   2. Voltage range covers nominal pack voltage
+        '''   3. MaxTorqueNm ≥ prop hover torque × policy.KMotorTorque  (replaces KV headroom)
+        '''   4. Prop diameter within motor's designated range
+        '''   5. Shaft-bore fit within 0–0.5 mm
+        '''
+        ''' Ranking (soft, KV used only for ordering, not elimination):
+        '''   torque headroom ASC → KV closeness ASC → efficiency DESC → mass ASC
         ''' </summary>
-        Private Function SelectMotorForCandidate(candidate As PropCandidate, cellCount As Integer, kvRequired As Double, requiredThrustPerMotorGf As Double, rejections As List(Of String)) As MotorSpec
+        Private Function SelectMotorForCandidate(candidate As PropCandidate, cellCount As Integer, kvRequired As Double, requiredThrustPerMotorGf As Double, policy As SizingPolicy, rejections As List(Of String)) As MotorSpec
             Dim allMotors = _repository.GetAllByCategory(ComponentCategory.Motor).Cast(Of MotorSpec)()
             Dim vNominal As Double = cellCount * LipoCellNominalV
+            Dim requiredTorqueNm = candidate.PropTorqueNm * policy.KMotorTorque
             Dim validMotors As New List(Of MotorSpec)
 
             For Each motor In allMotors
@@ -806,8 +877,10 @@ Namespace Core.Services
                     Continue For
                 End If
 
-                If motor.KV * vNominal < candidate.RequiredRpmAtAltitude * MotorRpmHeadroomFactor Then
-                    rejections.Add($"Motor {motor.Id} rejected: No-load RPM {motor.KV * vNominal:F0} < required hover RPM {candidate.RequiredRpmAtAltitude:F0} with headroom.")
+                If motor.MaxTorqueNm < requiredTorqueNm Then
+                    rejections.Add($"Motor {motor.Id} rejected: MaxTorqueNm {motor.MaxTorqueNm:F3} N·m " &
+                                   $"< required {requiredTorqueNm:F3} N·m " &
+                                   $"(prop torque {candidate.PropTorqueNm:F3} × k={policy.KMotorTorque}).")
                     Continue For
                 End If
 
@@ -827,24 +900,12 @@ Namespace Core.Services
 
             If validMotors.Count = 0 Then Return Nothing
 
-            ' Soft constraint: KV within 15%
-            Dim softConstraintMotors = validMotors.Where(Function(m) Math.Abs(m.KV - kvRequired) / kvRequired <= 0.15).ToList()
-            
-            If softConstraintMotors.Count = 0 Then
-                rejections.Add($"No motors found within 15% KV band for {kvRequired:F0}KV. Falling back to 25% band.")
-                softConstraintMotors = validMotors.Where(Function(m) Math.Abs(m.KV - kvRequired) / kvRequired <= 0.25).ToList()
-            End If
-
-            If softConstraintMotors.Count = 0 Then
-                rejections.Add($"No motors found within 25% KV band for {kvRequired:F0}KV.")
-                Return Nothing
-            End If
-
-            Return softConstraintMotors.
-                OrderBy(Function(m) Math.Abs(m.KV - kvRequired)).
-                ThenByDescending(Function(m) m.Efficiency).
-                ThenBy(Function(m) m.MassGrams).
-                FirstOrDefault()
+            Return validMotors _
+                .OrderBy(Function(m) Math.Abs(m.MaxTorqueNm - requiredTorqueNm) / requiredTorqueNm) _
+                .ThenBy(Function(m) Math.Abs(m.KV - kvRequired) / kvRequired) _
+                .ThenByDescending(Function(m) m.Efficiency) _
+                .ThenBy(Function(m) m.MassGrams) _
+                .FirstOrDefault()
         End Function
 
 
@@ -852,12 +913,12 @@ Namespace Core.Services
         ''' Orchestrates propeller and motor selection by iterating candidates and cell counts.
         ''' First successful pairing wins.
         ''' </summary>
-        Private Function SelectPropellerAndMotor(candidates As List(Of PropCandidate), requiredThrustPerMotorGf As Double, rejections As List(Of String)) As (Prop As PropellerSpec, Motor As MotorSpec, CellCount As Integer, RequiredRpm As Double)
+        Private Function SelectPropellerAndMotor(candidates As List(Of PropCandidate), requiredThrustPerMotorGf As Double, policy As SizingPolicy, rejections As List(Of String)) As (Prop As PropellerSpec, Motor As MotorSpec, CellCount As Integer, RequiredRpm As Double, HoverPowerPerMotorW As Double)
             For Each candidate In candidates
                 For Each cellKv In candidate.CellKvTable.OrderBy(Function(c) c.CellCount)
-                    Dim motor = SelectMotorForCandidate(candidate, cellKv.CellCount, cellKv.KvRequired, requiredThrustPerMotorGf, rejections)
+                    Dim motor = SelectMotorForCandidate(candidate, cellKv.CellCount, cellKv.KvRequired, requiredThrustPerMotorGf, policy, rejections)
                     If motor IsNot Nothing Then
-                        Return (candidate.Prop, motor, cellKv.CellCount, candidate.RequiredRpmAtAltitude)
+                        Return (candidate.Prop, motor, cellKv.CellCount, candidate.RequiredRpmAtAltitude, candidate.HoverPowerPerMotorW)
                     End If
                 Next
             Next
@@ -969,6 +1030,7 @@ Namespace Core.Services
         '''   • Then by static thrust DESC (more capable preferred when distance ties)
         '''   • Take top 5
         ''' </summary>
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
         Private Function SelectPropellersByTargetDiameter(
                 targetDiameterIn As Double,
                 frameClearanceIn As Double,
@@ -1005,23 +1067,6 @@ Namespace Core.Services
             Return candidates
         End Function
 
-        ' ─── RecommendedKvRange status (TODO 33 audit) ────────────────────────
-        ' The JSON field "recommendedKvRange" (a 2-element integer array [min, max])
-        ' is present on ALL 7 propeller records in Resources/components.json.
-        ' Example: prop_001 has "recommendedKvRange": [2000, 2600].
-        '
-        '   - Property exists on PropellerSpec class: NO
-        '   - Property name: n/a
-        '   - JsonProperty / OnDeserialized mapping present: NO
-        '
-        ' The field is silently discarded by Json.NET at deserialisation time
-        ' because no matching VB property exists on PropellerSpec.
-        ' Adding RecommendedKvMin / RecommendedKvMax properties to PropellerSpec
-        ' is a Phase 4 data-model change and is out of scope for this phase.
-        ' TODO 39 must not reference RecommendedKvRange; use motor KV constraints
-        ' (MotorSpec.KV from the selected motor) as the matching axis instead.
-        ' ─────────────────────────────────────────────────────────────────────
-
         ''' <summary>
         ''' Selects propellers compatible with the top-ranked motor.
         '''
@@ -1033,6 +1078,7 @@ Namespace Core.Services
         '''       pitch DESC for racing (higher pitch = higher top speed).
         ''' Falls back to nearest-diameter match if no prop passes all filters.
         ''' </summary>
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
         Private Function SelectPropellers(selectedMotors As List(Of ComponentSpecs), specs As MissionSpecs) As List(Of ComponentSpecs)
             If selectedMotors.Count = 0 Then Return New List(Of ComponentSpecs)()
 
@@ -1096,7 +1142,10 @@ Namespace Core.Services
         ''' </summary>
         Public Function CalculatePowerBudget(selectedMotors As List(Of ComponentSpecs),
                                              thrust As ThrustRequirement,
-                                             specs As MissionSpecs) As PowerBudget
+                                             specs As MissionSpecs,
+                                             prop As PropellerSpec,
+                                             hoverPowerPerMotorW As Double,
+                                             rho As Double) As PowerBudget
             If selectedMotors Is Nothing OrElse selectedMotors.Count = 0 Then
                 Throw New ArgumentException("Motor list is empty; cannot calculate power budget.", NameOf(selectedMotors))
             End If
@@ -1137,10 +1186,13 @@ Namespace Core.Services
             Dim totalPeakCurrentA As Double = (motorPeakCurrentA * motorCount) + AvionicCurrentDrawA
             Dim totalAvgCurrentA As Double = (motorHoverCurrentA * motorCount) + AvionicCurrentDrawA
 
-            ' ── Capacity ────────────────────────────────────────────────────────
-            Dim enduranceH As Double = specs.FlightEnduranceMinutes / 60.0
-            Dim capacityMinMah As Double = (totalAvgCurrentA * enduranceH * 1000.0) / LipoMaxDod
-            Dim capacityReqMah As Double = capacityMinMah * (1.0 + CapacityMargin)
+            ' ── Capacity — three-phase mission energy model ─────────────────────
+            Dim thrustPerMotorN = thrust.ThrustPerMotorGf * 0.00981
+            Dim energy = CalculateMissionEnergy(hoverPowerPerMotorW, thrustPerMotorN,
+                                                prop.DiameterInches * 0.0254,
+                                                rho, motorCount, nominalVoltage, specs)
+            Dim capacityMinMah As Double = (energy.TotalRequiredWh / specs.SizingPolicy.KBatteryCapacity / nominalVoltage) * 1000.0
+            Dim capacityReqMah As Double = (energy.TotalRequiredWh / nominalVoltage) * 1000.0
 
             ' ── C-rating ────────────────────────────────────────────────────────
             Dim capacityReqAh As Double = capacityReqMah / 1000.0
@@ -1163,8 +1215,61 @@ Namespace Core.Services
                 .RequiredCRating = cRatingRequired,
                 .PeakSystemPowerW = peakSystemPowerW,
                 .HoverSystemPowerW = hoverSystemPowerW,
-                .MotorCount = motorCount
+                .MotorCount = motorCount,
+                .HoverPhaseEnergyWh = energy.HoverWh,
+                .ClimbPhaseEnergyWh = energy.ClimbWh,
+                .CruisePhaseEnergyWh = energy.CruiseWh,
+                .AvionicsEnergyWh = energy.AvionicsWh,
+                .TotalMissionEnergyWh = energy.TotalRequiredWh,
+                .EstimatedFlightRangeKm = energy.RangeKm
             }
+        End Function
+
+        ''' <summary>
+        ''' Computes per-phase mission energy using momentum-theory power scaling.
+        '''
+        ''' Climb power uses exact actuator-disc result: P_climb = P_hover × (μ + √(μ² + 1))
+        ''' where μ = V_climb / (2 × v_i) and v_i = √(T / (2ρA)).
+        '''
+        ''' Cruise power uses simplified momentum theory: P_cruise = P_hover × √(V_cruise / v_i).
+        '''
+        ''' Energy margin (KBatteryCapacity) is applied to the combined total.
+        ''' </summary>
+        Private Shared Function CalculateMissionEnergy(
+                hoverPowerPerMotorW As Double,
+                thrustPerMotorN As Double,
+                propDiamM As Double,
+                rho As Double,
+                motorCount As Integer,
+                nominalVoltageV As Double,
+                specs As MissionSpecs) As (HoverWh As Double, ClimbWh As Double, CruiseWh As Double, AvionicsWh As Double, TotalRequiredWh As Double, RangeKm As Double)
+
+            Dim aDisk = Math.PI * (propDiamM / 2.0) ^ 2
+            Dim vInduced = Math.Sqrt(thrustPerMotorN / Math.Max(0.001, 2.0 * rho * aDisk))
+
+            ' Climb power — exact momentum-theory axial climb correction
+            Dim mu = specs.ClimbRateMs / (2.0 * vInduced)
+            Dim climbPowerPerMotorW = hoverPowerPerMotorW * (mu + Math.Sqrt(mu ^ 2 + 1.0))
+
+            ' Cruise power — simplified momentum theory
+            Dim cruisePowerPerMotorW = hoverPowerPerMotorW * Math.Sqrt(specs.CruiseSpeedMs / Math.Max(0.001, vInduced))
+
+            ' Phase durations in hours
+            Dim tTotalH = specs.FlightEnduranceMinutes / 60.0
+            Dim tHoverH = tTotalH * specs.HoverTimeFraction
+            Dim tClimbH = tTotalH * specs.ClimbTimeFraction
+            Dim tCruiseH = tTotalH * specs.CruiseTimeFraction
+
+            ' Phase energies (Wh)
+            Dim hoverWh = motorCount * hoverPowerPerMotorW * tHoverH
+            Dim climbWh = motorCount * climbPowerPerMotorW * tClimbH
+            Dim cruiseWh = motorCount * cruisePowerPerMotorW * tCruiseH
+            Dim avionicsWh = AvionicCurrentDrawA * nominalVoltageV * tTotalH
+
+            Dim totalRequiredWh = (hoverWh + climbWh + cruiseWh + avionicsWh) * specs.SizingPolicy.KBatteryCapacity
+            Dim rangeKm = specs.CruiseSpeedMs * 3.6 * tCruiseH
+
+            Return (hoverWh, climbWh, cruiseWh, avionicsWh, totalRequiredWh, rangeKm)
         End Function
 
         ' =======================================================================
@@ -1944,16 +2049,17 @@ Namespace Core.Services
         ''' inset margin so SelectPropellersByTargetDiameter has flexibility
         ''' to pick a slightly smaller catalog match.
         ''' </summary>
-        ''' <param name="mtowKg">MTOW in kilograms (currently unused; kept on
+        ''' <param name="massKg">MTOW in kilograms (currently unused; kept on
         ''' the signature for future regime-dependent extension to UAM-class
         ''' vehicles where disk loading becomes the binding constraint).</param>
-        ''' <param name="motorCount">Number of rotors (must be ≥ 1).</param>
+        ''' <param name="numRotors">Number of rotors (must be ≥ 1).</param>
         ''' <returns>Target propeller diameter in inches.</returns>
-        Private Shared Function ComputeTargetPropellerDiameter(mtowKg As Double, motorCount As Integer) As Double
-            If mtowKg <= 0.0 Then Throw New ArgumentException("MTOW must be positive.", NameOf(mtowKg))
-            If motorCount < 1 Then Throw New ArgumentException("Motor count must be ≥ 1.", NameOf(motorCount))
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
+        Private Function ComputeTargetPropellerDiameter(massKg As Double, numRotors As Integer) As Double
+            If massKg <= 0.0 Then Throw New ArgumentException("MTOW must be positive.", NameOf(massKg))
+            If numRotors < 1 Then Throw New ArgumentException("Motor count must be ≥ 1.", NameOf(numRotors))
 
-            Dim frameMaxIn As Double = EstimateMaxPropDiameter(motorCount)
+            Dim frameMaxIn As Double = EstimateMaxPropDiameter(numRotors)
             Return Math.Max(2.0, frameMaxIn - TargetDiameterInsetIn)
         End Function
 
@@ -1968,7 +2074,8 @@ Namespace Core.Services
         ''' Frame diagonal sourced from FrameDiagonalTable keyed by motor count.
         ''' Falls back to the 4-motor entry (250 mm) for unrecognised counts.
         ''' </summary>
-        Private Shared Function EstimateMaxPropDiameter(motorCount As Integer) As Double
+        <Obsolete("Replaced by frame-first pipeline 2026-04. Retained for reference.")>
+        Private Function EstimateMaxPropDiameter(motorCount As Integer) As Double
             Dim n As Integer = NormaliseMotorCount(motorCount)
             Dim diagonalMm As Double = If(FrameDiagonalTable.ContainsKey(n),
                                           FrameDiagonalTable(n),
@@ -1989,6 +2096,12 @@ Namespace Core.Services
             End If
             If specs.PayloadWeightGrams < 0 Then
                 Throw New ArgumentException("PayloadWeightGrams cannot be negative.", NameOf(specs))
+            End If
+            Dim phaseSum = specs.HoverTimeFraction + specs.ClimbTimeFraction + specs.CruiseTimeFraction
+            If Math.Abs(phaseSum - 1.0) > 0.01 Then
+                Throw New ArgumentException(
+                    $"HoverTimeFraction + ClimbTimeFraction + CruiseTimeFraction must sum to 1.0 (got {phaseSum:F3}).",
+                    NameOf(specs))
             End If
         End Sub
 
@@ -2078,6 +2191,20 @@ Namespace Core.Services
 
         ''' <summary>Motor count used in all current calculations.</summary>
         Public Property MotorCount As Integer
+
+        ' Phase-resolved mission energy (Phase 3)
+        ''' <summary>All-motor energy during hover phase (Wh), before capacity margin.</summary>
+        Public Property HoverPhaseEnergyWh As Double
+        ''' <summary>All-motor energy during climb phase (Wh), before capacity margin.</summary>
+        Public Property ClimbPhaseEnergyWh As Double
+        ''' <summary>All-motor energy during cruise phase (Wh), before capacity margin.</summary>
+        Public Property CruisePhaseEnergyWh As Double
+        ''' <summary>Avionics energy for the full mission (Wh), before capacity margin.</summary>
+        Public Property AvionicsEnergyWh As Double
+        ''' <summary>Total required battery energy including SizingPolicy.KBatteryCapacity margin (Wh).</summary>
+        Public Property TotalMissionEnergyWh As Double
+        ''' <summary>Estimated flight range at cruise speed over the cruise time fraction (km).</summary>
+        Public Property EstimatedFlightRangeKm As Double
     End Class
 
     ''' <summary>

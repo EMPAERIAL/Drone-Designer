@@ -1,0 +1,9 @@
+# Web-Scrapper is its own separate repository
+Resources/Web-Scrapper/
+
+# Build outputs
+bin/
+obj/
+
+# Visual Studio
+.vs/
