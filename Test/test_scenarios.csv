@@ -1,0 +1,32 @@
+# Drone Designer — Test Scenarios
+# Load with Ctrl+Shift+L inside the app.
+#
+# Column index reference:
+#   OperatingEnvIdx  : 0=Urban  1=Sub-urban  2=Rural  3=Forested  4=Maritime  5=Desert  6=Arctic  7=Indoor
+#   IPRatingIdx      : 0=None   1=IP43       2=IP54   3=IP65      4=IP67      5=IP68
+#   MissionProfileIdx: 0=Survey 1=Inspection 2=SAR    3=Delivery  4=FPV       5=Photo   6=Agri    7=BVLOS  8=Scout  9=Research
+#   FrameTypeIdx     : 0=Multirotor  1=FixedWing  2=VTOL  3=SingleRotor  4=Coaxial
+#   MotorCountIdx    : 0=3-Tri  1=4-Quad  2=6-Hex  3=8-Octo  4=12-Dodeca  5=1-FW  6=2-Twin
+#   AutonomyIdx      : 0=Manual  1=Stabilised  2=GPSHold  3=Waypoint  4=FullAuto
+#   PayloadTypeIdx   : 0=None  1=Optical  2=Multispectral  3=Thermal  4=LiDAR  5=Package  6=Custom
+#
+Name,EnduranceHr,RangeKm,CruiseSpeedKmh,MaxAltitudeM,MaxWindSpeedKmh,MtowGrams,PayloadGrams,FrameSizeMm,OperatingEnvIdx,IPRatingIdx,TempMinC,TempMaxC,MissionProfileIdx,FrameTypeIdx,MotorCountIdx,AutonomyIdx,PayloadTypeIdx
+# ── Multirotors ───────────────────────────────────────────────────────────────
+Mini Racing Quad,0.1,1,120,100,10,450,0,200,0,0,-5,45,4,0,1,0,0
+Light Scout Quad,0.5,5,30,200,20,1200,100,250,2,0,-10,45,8,0,1,2,0
+Urban Inspection Quad,1.0,10,25,150,30,4000,600,450,0,1,-5,50,1,0,1,3,1
+Package Delivery Quad,0.4,3,40,120,25,6000,2000,500,1,2,-10,45,3,0,1,3,5
+Photo Hex,1.5,15,30,300,25,8000,1500,600,2,0,-10,45,5,0,2,3,1
+Mapping Survey Hex,2.0,40,60,400,30,9000,1000,700,2,0,-15,50,0,0,2,3,2
+Agricultural Hex,0.5,2,15,50,15,20000,8000,1000,2,3,0,45,6,0,2,2,6
+SAR Octo (Maritime),1.5,15,35,300,50,12000,2000,700,4,4,-20,40,2,0,3,3,3
+Heavy Lift Octo,0.5,5,20,200,20,25000,10000,900,2,2,-10,45,9,0,3,2,6
+Arctic Research Octo,1.0,10,25,500,40,15000,3000,800,6,2,-40,20,9,0,3,3,4
+# ── Fixed Wing ────────────────────────────────────────────────────────────────
+BVLOS Mapping FW,3.0,80,80,500,40,9000,500,1500,2,0,-15,50,7,1,5,4,2
+Long Endurance FW,5.0,150,90,1000,45,12000,800,2000,2,0,-20,50,0,1,5,4,2
+# ── Edge cases ────────────────────────────────────────────────────────────────
+Minimum Valid Quad,0.1,0.1,1,1,0,100,0,100,0,0,-10,45,9,0,1,0,0
+Near-Max MTOW Octo,2.0,30,40,800,35,30000,10000,1200,2,3,-20,55,9,0,3,3,6
+Desert High-Temp Quad,0.5,5,30,200,20,3000,500,400,5,0,0,70,1,0,1,2,1
+Indoor Micro Quad,0.3,0.1,10,10,0,300,50,150,7,0,15,35,9,0,1,1,0

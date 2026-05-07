@@ -325,6 +325,40 @@
       "maxThrustTestPropeller": "5.1x4.6",
       "recommendedUseCase": "5-inch sport and inspection quad on 4S",
       "notes": "Imaginary entry satisfying: 5.1x4.6 prop (designatedPropSizeInMin 4.5 <= 5.1 <= designatedPropSizeInMax 5.5), maxThrustG 520 >= 385 gf, voltageMinV 11.1 <= 14.8 <= voltageMaxV 16.8, motorMaxRpm 2400x14.8=35520 >= propHoverRpm 24500 x 1.4=34300."
+    },
+    {
+      "id": "mot_010",
+      "category": "Motor",
+      "name": "MN4010 KV430",
+      "manufacturer": "T-Motor",
+      "productUrl": "https://store.tmotor.com",
+      "targetClass": "MotorSpecs",
+      "massGrams": 112.0,
+      "dimensions": {
+        "outerDiameterMm": 50.0,
+        "heightMm": 27.0,
+        "shaftDiameterMm": 6.1,
+        "mountingPatternMm": 25.0
+      },
+      "operatingTempMinC": -15,
+      "operatingTempMaxC": 80,
+      "priceUSD": 82.00,
+      "motorKv": 430,
+      "statorDiameterMm": 40.0,
+      "statorHeightMm": 10.0,
+      "designatedPropSizeInMin": 9.0,
+      "designatedPropSizeInMax": 11.0,
+      "voltageMinV": 11.1,
+      "voltageMaxV": 22.2,
+      "maxContinuousCurrentA": 22.0,
+      "maxBurstCurrentA": 30.0,
+      "maxThrustG": 3500,
+      "maxPowerW": 560,
+      "efficiency": 0.9,
+      "resistance_mOhm": 82.0,
+      "noLoadCurrentA": 0.42,
+      "recommendedUseCase": "Survey/mapping quad, 800 mm frame",
+      "notes": "Guaranteed-passing pair with prop_008 (10x4.7). Shaft 6.1 mm fits bore 6.35 mm (fit = 0.25 mm). Design point: 4S, 1500 gf/motor, sea level. kvRequired (fixed code) = 4000*1.4/14.8 = 378; KV 430 is 13.6% away, within 15% band. Also passes on 4S up to ~2500 m altitude."
     }
   ],
 
@@ -792,6 +826,35 @@
       "isFolding": false,
       "recommendedUseCase": "Maximum endurance heavy-lift UAV",
       "notes": "Designed to pair with T-Motor U8 series. Fixed-pitch version for direct bolt-on to motor shaft."
+    },
+    {
+      "id": "prop_008",
+      "category": "Propeller",
+      "name": "T-Style 10x4.7 CF Survey",
+      "manufacturer": "T-Motor",
+      "productUrl": "https://store.tmotor.com",
+      "targetClass": "PropellerSpecs",
+      "massGrams": 28.0,
+      "dimensions": {
+        "diameterInches": 10.0,
+        "pitchInches": 4.7,
+        "bladesCount": 2,
+        "hubDiameterMm": 25.0,
+        "boreMm": 6.35
+      },
+      "operatingTempMinC": -20,
+      "operatingTempMaxC": 70,
+      "priceUSD": 18.00,
+      "material": "Carbon fiber",
+      "maxRPM": 12000,
+      "maxStaticThrustG": 6000,
+      "staticThrustTestRPM": 8000,
+      "isFolding": false,
+      "recommendedKvRange": [ 380, 500 ],
+      "recommendedVoltageRange": "4S",
+      "pitchVelocityMs": null,
+      "recommendedUseCase": "Survey/mapping quad, 800 mm frame",
+      "notes": "Guaranteed-passing pair with mot_010. Design point: 4S, MTOW 3000 g (1500 gf/motor), sea level to 2500 m. Hover RPM formula: rpmSeaLevel = 8000 * sqrt(thrustGf / 6000). At 1500 gf: rpmSeaLevel = 4000, kvRequired (fixed code, 4S) = 4000 * 1.4 / 14.8 = 378. Motor KV 430 is 13.6% from target, within 15% band."
     }
   ],
 

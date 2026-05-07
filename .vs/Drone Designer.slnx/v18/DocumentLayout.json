@@ -7,6 +7,10 @@
       "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:core\\services\\componentselectionengine.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\core\\models\\componentspecs.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
+      "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:core\\models\\componentspecs.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\ui\\forms\\mainform.logic.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}",
       "RelativeMoniker": "D:0:0:{FF9316DF-7FF7-40EE-A489-14F4DC6BB150}|Drone Designer.vbproj|solutionrelative:ui\\forms\\mainform.logic.vb||{2C015C70-C72C-11D0-88C3-00A0C9110049}"
     },
@@ -62,8 +66,20 @@
       "DocumentGroups": [
         {
           "DockedWidth": 149,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ComponentSpecs.vb",
+              "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Models\\ComponentSpecs.vb",
+              "RelativeDocumentMoniker": "Core\\Models\\ComponentSpecs.vb",
+              "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Models\\ComponentSpecs.vb",
+              "RelativeToolTip": "Core\\Models\\ComponentSpecs.vb",
+              "ViewState": "AgIAAJUBAAAAAAAAAAAewKEBAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
+              "WhenOpened": "2026-04-30T14:18:30.04Z"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -72,14 +88,14 @@
               "RelativeDocumentMoniker": "Core\\Services\\ComponentSelectionEngine.vb",
               "ToolTip": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Services\\ComponentSelectionEngine.vb",
               "RelativeToolTip": "Core\\Services\\ComponentSelectionEngine.vb",
-              "ViewState": "AgIAAHUBAAAAAAAAAAAUwK0BAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAJUBAAAAAAAAAAAqwKYBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003361|",
               "WhenOpened": "2026-04-24T15:38:31.044Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "ConfigManager.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Utilities\\ConfigManager.vb",
               "RelativeDocumentMoniker": "Utilities\\ConfigManager.vb",
@@ -91,7 +107,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "MotorMount_Test.swb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Resources\\Macros\\MotorMount_Test.swb",
               "RelativeDocumentMoniker": "Resources\\Macros\\MotorMount_Test.swb",
@@ -103,7 +119,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "MacroRunner.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Solidworks\\MacroRunner.vb",
               "RelativeDocumentMoniker": "Solidworks\\MacroRunner.vb",
@@ -115,7 +131,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "SolidWorksAutomation.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Solidworks\\SolidWorksAutomation.vb",
               "RelativeDocumentMoniker": "Solidworks\\SolidWorksAutomation.vb",
@@ -127,7 +143,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "PipelineResult.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Models\\PipelineResult.vb",
               "RelativeDocumentMoniker": "Core\\Models\\PipelineResult.vb",
@@ -139,7 +155,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "CadProgressForm.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\CadProgressForm.vb",
               "RelativeDocumentMoniker": "UI\\Forms\\CadProgressForm.vb",
@@ -151,7 +167,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "MainForm.Logic.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\MainForm.Logic.vb",
               "RelativeDocumentMoniker": "UI\\Forms\\MainForm.Logic.vb",
@@ -163,7 +179,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "ConvergenceForm.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\ConvergenceForm.vb",
               "RelativeDocumentMoniker": "UI\\Forms\\ConvergenceForm.vb",
@@ -175,7 +191,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "IComponentSelector.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Interfaces\\IComponentSelector.vb",
               "RelativeDocumentMoniker": "Core\\Interfaces\\IComponentSelector.vb",
@@ -187,7 +203,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "CadProgressForm.vb [Design]",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\CadProgressForm.vb",
               "RelativeDocumentMoniker": "UI\\Forms\\CadProgressForm.vb",
@@ -198,7 +214,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "PipelineOrchestrator.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\Core\\Services\\PipelineOrchestrator.vb",
               "RelativeDocumentMoniker": "Core\\Services\\PipelineOrchestrator.vb",
@@ -210,7 +226,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "MainForm.CAD.vb",
               "DocumentMoniker": "C:\\Users\\Ahmed Osman\\Desktop\\Teknofest\\THE DRONE DESIGNER\\Drone Designer\\UI\\Forms\\MainForm.CAD.vb",
               "RelativeDocumentMoniker": "UI\\Forms\\MainForm.CAD.vb",

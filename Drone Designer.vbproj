@@ -136,6 +136,9 @@
     <Compile Include="UI\Forms\MainForm.Logic.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\Forms\MainForm.Tests.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UI\Forms\MainForm.vb">
       <SubType>Form</SubType>
     </Compile>

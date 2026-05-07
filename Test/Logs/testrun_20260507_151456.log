@@ -1,0 +1,230 @@
+﻿Drone Designer — Test Run  (2026-05-07 15:14:56)
+Scenarios : 16
+════════════════════════════════════════════════════════════════════════
+
+▶  Mini Racing Quad
+   FAIL  No compatible propeller and motor combination found for 225 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Diameter 5,1 in exceeds max allowed 3,5 in.
+Prop prop_002: Diameter 9 in exceeds max allowed 3,5 in.
+Prop prop_003: Diameter 16 in exceeds max allowed 3,5 in.
+Prop prop_004: Diameter 10 in exceeds max allowed 3,5 in.
+Prop prop_005: Diameter 15 in exceeds max allowed 3,5 in.
+Prop prop_006: Required RPM 44192 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 3,5 in.
+Prop prop_008: Diameter 10 in exceeds max allowed 3,5 in.
+
+▶  Light Scout Quad
+   FAIL  No compatible propeller and motor combination found for 600 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Diameter 5,1 in exceeds max allowed 4,4 in.
+Prop prop_002: Diameter 9 in exceeds max allowed 4,4 in.
+Prop prop_003: Diameter 16 in exceeds max allowed 4,4 in.
+Prop prop_004: Diameter 10 in exceeds max allowed 4,4 in.
+Prop prop_005: Diameter 15 in exceeds max allowed 4,4 in.
+Prop prop_006: Required RPM 72514 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 4,4 in.
+Prop prop_008: Diameter 10 in exceeds max allowed 4,4 in.
+
+▶  Urban Inspection Quad
+   FAIL  No compatible propeller and motor combination found for 2000 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 46042 exceeds motor RPM ceiling 40320.
+Prop prop_002: Diameter 9 in exceeds max allowed 8,0 in.
+Prop prop_003: Diameter 16 in exceeds max allowed 8,0 in.
+Prop prop_004: Diameter 10 in exceeds max allowed 8,0 in.
+Prop prop_005: Diameter 15 in exceeds max allowed 8,0 in.
+Prop prop_006: Required RPM 133061 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 8,0 in.
+Prop prop_008: Diameter 10 in exceeds max allowed 8,0 in.
+
+▶  Package Delivery Quad
+   FAIL  No compatible propeller and motor combination found for 3000 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 55890 exceeds motor RPM ceiling 40320.
+Prop prop_002: Diameter 9 in exceeds max allowed 8,9 in.
+Prop prop_003: Diameter 16 in exceeds max allowed 8,9 in.
+Prop prop_004: Diameter 10 in exceeds max allowed 8,9 in.
+Prop prop_005: Diameter 15 in exceeds max allowed 8,9 in.
+Prop prop_006: Required RPM 161523 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 8,9 in.
+Prop prop_008: Diameter 10 in exceeds max allowed 8,9 in.
+
+▶  Photo Hex
+   FAIL  No compatible propeller and motor combination found for 2667 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 53153 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 17068 exceeds prop MaxRPM 16000.
+Prop prop_003: Diameter 16 in exceeds max allowed 10,6 in.
+Prop prop_004: Required RPM 12499 exceeds prop MaxRPM 12000.
+Prop prop_005: Diameter 15 in exceeds max allowed 10,6 in.
+Prop prop_006: Required RPM 153613 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 10,6 in.
+Prop prop_008: Required RPM 13825 exceeds prop MaxRPM 12000.
+
+▶  Mapping Survey Hex
+   FAIL  No compatible propeller and motor combination found for 3000 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 57075 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 18327 exceeds prop MaxRPM 16000.
+Prop prop_003: Diameter 16 in exceeds max allowed 12,4 in.
+Prop prop_004: Required RPM 13421 exceeds prop MaxRPM 12000.
+Prop prop_005: Diameter 15 in exceeds max allowed 12,4 in.
+Prop prop_006: Required RPM 164946 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 12,4 in.
+Prop prop_008: Required RPM 14845 exceeds prop MaxRPM 12000.
+
+▶  Agricultural Hex
+   FAIL  No compatible propeller and motor combination found for 6667 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 83036 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 26664 exceeds prop MaxRPM 16000.
+Prop prop_003: Required RPM 8437 exceeds prop MaxRPM 7000.
+Prop prop_004: Required RPM 19526 exceeds prop MaxRPM 12000.
+Prop prop_005: Required RPM 9599 exceeds prop MaxRPM 8000.
+Prop prop_006: Required RPM 239975 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 17,7 in.
+Prop prop_008: Required RPM 21598 exceeds prop MaxRPM 12000.
+
+▶  SAR Octo (Maritime)
+   FAIL  No compatible propeller and motor combination found for 3000 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 55953 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 17967 exceeds prop MaxRPM 16000.
+Prop prop_003: Diameter 16 in exceeds max allowed 12,4 in.
+Prop prop_004: Required RPM 13157 exceeds prop MaxRPM 12000.
+Prop prop_005: Diameter 15 in exceeds max allowed 12,4 in.
+Prop prop_006: Required RPM 161704 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 12,4 in.
+Prop prop_008: Required RPM 14553 exceeds prop MaxRPM 12000.
+
+▶  Heavy Lift Octo
+   FAIL  No compatible propeller and motor combination found for 6250 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 80982 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 26004 exceeds prop MaxRPM 16000.
+Prop prop_003: Diameter 16 in exceeds max allowed 15,9 in.
+Prop prop_004: Required RPM 19043 exceeds prop MaxRPM 12000.
+Prop prop_005: Required RPM 9362 exceeds prop MaxRPM 8000.
+Prop prop_006: Required RPM 234039 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 15,9 in.
+Prop prop_008: Required RPM 21064 exceeds prop MaxRPM 12000.
+
+▶  Arctic Research Octo
+   FAIL  No compatible propeller and motor combination found for 3750 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 61211 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 19656 exceeds prop MaxRPM 16000.
+Prop prop_003: Diameter 16 in exceeds max allowed 14,2 in.
+Prop prop_004: Required RPM 14394 exceeds prop MaxRPM 12000.
+Prop prop_005: Diameter 15 in exceeds max allowed 14,2 in.
+Prop prop_006: Required RPM 176900 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 14,2 in.
+Prop prop_008: Required RPM 15921 exceeds prop MaxRPM 12000.
+
+▶  BVLOS Mapping FW
+   FAIL  No compatible propeller and motor combination found for 4500 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 70242 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 22555 exceeds prop MaxRPM 16000.
+Prop prop_003: Diameter 16 in exceeds max allowed 14,8 in.
+Prop prop_004: Required RPM 16517 exceeds prop MaxRPM 12000.
+Prop prop_005: Diameter 15 in exceeds max allowed 14,8 in.
+Prop prop_006: Required RPM 202999 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 14,8 in.
+Prop prop_008: Required RPM 18270 exceeds prop MaxRPM 12000.
+
+▶  Long Endurance FW
+   FAIL  No compatible propeller and motor combination found for 6000 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 83113 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 26688 exceeds prop MaxRPM 16000.
+Prop prop_003: Diameter 16 in exceeds max allowed 14,8 in.
+Prop prop_004: Required RPM 19544 exceeds prop MaxRPM 12000.
+Prop prop_005: Diameter 15 in exceeds max allowed 14,8 in.
+Prop prop_006: Required RPM 240196 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 14,8 in.
+Prop prop_008: Required RPM 21618 exceeds prop MaxRPM 12000.
+
+▶  Minimum Valid Quad
+   FAIL  No compatible propeller and motor combination found for 50 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Diameter 5,1 in exceeds max allowed 1,8 in.
+Prop prop_002: Diameter 9 in exceeds max allowed 1,8 in.
+Prop prop_003: Diameter 16 in exceeds max allowed 1,8 in.
+Prop prop_004: Diameter 10 in exceeds max allowed 1,8 in.
+Prop prop_005: Diameter 15 in exceeds max allowed 1,8 in.
+Prop prop_006: Diameter 3 in exceeds max allowed 1,8 in.
+Prop prop_007: Diameter 18 in exceeds max allowed 1,8 in.
+Prop prop_008: Diameter 10 in exceeds max allowed 1,8 in.
+
+▶  Near-Max MTOW Octo
+   FAIL  No compatible propeller and motor combination found for 7500 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 92695 exceeds motor RPM ceiling 40320.
+Prop prop_002: Required RPM 29765 exceeds prop MaxRPM 16000.
+Prop prop_003: Required RPM 9418 exceeds prop MaxRPM 7000.
+Prop prop_004: Required RPM 21797 exceeds prop MaxRPM 12000.
+Prop prop_005: Required RPM 10715 exceeds prop MaxRPM 8000.
+Prop prop_006: Required RPM 267887 exceeds motor RPM ceiling 40320.
+Prop prop_007: Required RPM 7441 exceeds prop MaxRPM 5500.
+Prop prop_008: Required RPM 24110 exceeds prop MaxRPM 12000.
+
+▶  Desert High-Temp Quad
+   FAIL  No compatible propeller and motor combination found for 1500 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Required RPM 41135 exceeds motor RPM ceiling 40320.
+Prop prop_002: Diameter 9 in exceeds max allowed 7,1 in.
+Prop prop_003: Diameter 16 in exceeds max allowed 7,1 in.
+Prop prop_004: Diameter 10 in exceeds max allowed 7,1 in.
+Prop prop_005: Diameter 15 in exceeds max allowed 7,1 in.
+Prop prop_006: Required RPM 118879 exceeds motor RPM ceiling 40320.
+Prop prop_007: Diameter 18 in exceeds max allowed 7,1 in.
+Prop prop_008: Diameter 10 in exceeds max allowed 7,1 in.
+
+▶  Indoor Micro Quad
+   FAIL  No compatible propeller and motor combination found for 150 gf/motor.
+Consider relaxing the design parameters or expanding the component database.
+
+Rejection Log:
+Prop prop_001: Diameter 5,1 in exceeds max allowed 2,7 in.
+Prop prop_002: Diameter 9 in exceeds max allowed 2,7 in.
+Prop prop_003: Diameter 16 in exceeds max allowed 2,7 in.
+Prop prop_004: Diameter 10 in exceeds max allowed 2,7 in.
+Prop prop_005: Diameter 15 in exceeds max allowed 2,7 in.
+Prop prop_006: Diameter 3 in exceeds max allowed 2,7 in.
+Prop prop_007: Diameter 18 in exceeds max allowed 2,7 in.
+Prop prop_008: Diameter 10 in exceeds max allowed 2,7 in.
+
+────────────────────────────────────────────────────────────────────────
+Results: 0 passed, 16 failed out of 16 scenarios.

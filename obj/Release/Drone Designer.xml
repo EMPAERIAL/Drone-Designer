@@ -2240,7 +2240,7 @@ Drone Designer
    5.  Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
 
  Each intermediate result is stored on SelectionResult so the UI can
- display a transparent breakdown of every sizing decision made.
+ display a transparent breakdown.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.GetDefaultSpecificEnergyWhPerKg(Drone_Designer.Core.Models.PowerSourceType)">
@@ -2344,6 +2344,16 @@ Drone Designer
  <summary>
  Orchestrates propeller and motor selection by iterating candidates and cell counts.
  First successful pairing wins.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectBatteryFromMassBudget(System.Double,System.Int32,Drone_Designer.Core.Models.MotorSpec,Drone_Designer.Core.Models.PropellerSpec,System.Double,System.Int32,System.Double)">
+ <summary>
+ Selects a battery pack using a mass budget derived from the MTOW and selected components.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.ComputeRangeAndEnduranceWarnings(Drone_Designer.Core.Models.BatterySpec,System.Double,System.Double,Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Computes flight endurance and range, generating warnings based on requested specs.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellersByTargetDiameter(System.Double,System.Double,Drone_Designer.Core.Models.MissionSpecs)">
@@ -2717,10 +2727,10 @@ Drone Designer
  inset margin so SelectPropellersByTargetDiameter has flexibility
  to pick a slightly smaller catalog match.
  </summary>
- <param name="mtowKg">MTOW in kilograms (currently unused; kept on
+ <param name="massKg">MTOW in kilograms (currently unused; kept on
  the signature for future regime-dependent extension to UAM-class
  vehicles where disk loading becomes the binding constraint).</param>
- <param name="motorCount">Number of rotors (must be ≥ 1).</param>
+ <param name="numRotors">Number of rotors (must be ≥ 1).</param>
  <returns>Target propeller diameter in inches.</returns>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimateMaxPropDiameter(System.Int32)">

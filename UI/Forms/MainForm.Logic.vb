@@ -82,6 +82,7 @@ Partial Class MainForm
         AddHandler btnSelectComponents.Click, AddressOf OnSelectComponentsAsync
         AddHandler btnExportCSV.Click, AddressOf OnExportExcel
         WireCADControls()
+        WireTestControls()
     End Sub
 
     ''' <summary>

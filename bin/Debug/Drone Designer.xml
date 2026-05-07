@@ -671,6 +671,25 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.MotorSpec.Efficiency">
  <summary>Thrust per Watt in gf/W.</summary>
 </member>
+<member name="P:Drone_Designer.Core.Models.MotorSpec.KtNmPerA">
+ <summary>
+ Motor torque constant (N·m/A).
+ Relationship to KV: Kt = 1 / Kv_SI where Kv_SI = KV × (2π/60).
+ Derived automatically if not provided: KtNmPerA = 60 / (2π × KV).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MotorSpec.MaxTorqueNm">
+ <summary>
+ Maximum continuous torque the motor can produce (N·m).
+ Derived automatically if not provided: MaxTorqueNm = KtNmPerA × MaxCurrentAmps.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MotorSpec.WindingResistanceOhm">
+ <summary>
+ Winding resistance in Ohms. Used for copper-loss efficiency checks.
+ Derived automatically from InternalResistanceMilliOhm / 1000 if not provided.
+ </summary>
+</member>
 <member name="M:Drone_Designer.Core.Models.MotorSpec.OnDeserialized(System.Runtime.Serialization.StreamingContext)">
  <summary>
  Copies nested dimension fields to top-level properties after JSON deserialisation.
@@ -785,6 +804,23 @@ Drone Designer
 </member>
 <member name="P:Drone_Designer.Core.Models.PropellerSpec.Efficiency">
  <summary>Efficiency proxy (StaticThrustGrams / mass) — computed.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.PropellerSpec.CtStatic">
+ <summary>
+ Dimensionless static thrust coefficient.
+ Equation: T = Ct × ρ × n² × D⁴
+ where n is in rev/s, D in metres, ρ in kg/m³, T in Newtons.
+ Source: APC propeller database or manufacturer test data.
+ Fallback when not available: 0.115 (population average for 2-blade MR props).
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.PropellerSpec.CpStatic">
+ <summary>
+ Dimensionless static power coefficient.
+ Equation: P = Cp × ρ × n³ × D⁵
+ where n is in rev/s, D in metres, P in Watts.
+ Fallback when not available: 0.044.
+ </summary>
 </member>
 <member name="M:Drone_Designer.Core.Models.PropellerSpec.OnDeserialized(System.Runtime.Serialization.StreamingContext)">
  <summary>
@@ -1506,20 +1542,10 @@ Drone Designer
 </member>
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.MaxTakeoffMassGrams">
  <summary>
- Regulatory / structural ceiling on take-off mass in grams, including
- battery and payload. This is a HARD UPPER LIMIT the design must not
- exceed — NOT a target the engine sizes to.
+ Target / design maximum take-off mass in grams, including battery and payload.
+ This is the design MTOW used for sizing thrust and estimating overall performance.
 
- The component selection engine derives its own MTOW iteratively from
- payload + airframe + avionics + battery (see <c>EstimateMtow</c> in
- <c>ComponentSelectionEngine.vb</c>). This property is currently NOT
- read by the engine.
-
- TODO (engine-side, future task): <c>SelectComponents</c> should
- compare its calculated MTOW against this field and raise
- <c>ComponentSelectionException</c> if the design exceeds the limit.
-
- Common ceilings:
+ Common values:
    •   250 g — sub-registration recreational class (FAA / EASA A1)
    •  2,000 g — typical commercial quadcopter
    • 25,000 g — EASA Specific Category / Italian regulatory cap
@@ -1861,6 +1887,32 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Models.MissionSpecs.RequiredIPRating">
  <summary>Required IP rating string (e.g. "IP54"). Empty = no requirement.</summary>
 </member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.FrameSizeMm">
+ <summary>
+ The physical size of the UAV frame in millimetres (mm).
+ Determines structural dimensions.
+ ArmLength is assumed to be FrameSizeMm / 2.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.HoverTimeFraction">
+ <summary>
+ Fraction of total endurance spent hovering (takeoff loiter + landing).
+ Default 0.3. Must satisfy: HoverTimeFraction + ClimbTimeFraction + CruiseTimeFraction = 1.0.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.ClimbTimeFraction">
+ <summary>Fraction of endurance spent climbing. Default 0.1.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.CruiseTimeFraction">
+ <summary>Fraction of endurance spent in level cruise. Default 0.6.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.MissionSpecs.SizingPolicy">
+ <summary>
+ Safety-margin policy applied during component sizing.
+ Default-constructed so existing callers require no changes.
+ Tune via the "Advanced Sizing Margins" panel or use SizingPolicy presets.
+ </summary>
+</member>
 <member name="M:Drone_Designer.Core.Models.MissionSpecs.#ctor">
  <summary>
  Initialises a MissionSpecs instance with all default values.
@@ -1922,7 +1974,51 @@ Drone Designer
  <param name="durationSeconds">Segment duration (s).</param>
  <param name="airspeedMs">Segment airspeed (m/s); 0 for hover.</param>
 </member>
-<member name="T:Drone_Designer.Core.Services.ComponentSelectionEngine">
+<member name="T:Drone_Designer.Core.Models.SizingPolicy">
+ <summary>
+ Safety-margin multipliers (k-factors) applied during component sizing.
+ Each factor adds headroom above the minimum calculated requirement.
+
+ Defaults match FAST-UAV reference values for a general-purpose multirotor.
+ Increase margins for harsh environments or safety-critical missions.
+ Decrease for minimum-weight racing builds.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.SizingPolicy.KMotorTorque">
+ <summary>
+ Motor must produce at least (k × propeller hover torque) as max continuous torque.
+ Range: 1.5 (racing, short bursts) to 3.0 (heavy-lift, sustained climb).
+ Default 2.0 — motor runs at 50% torque at hover, leaving headroom for gusts.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.SizingPolicy.KBatteryVoltage">
+ <summary>
+ Battery pack voltage = motor nominal operating voltage × k.
+ Range: 1.1 to 1.5.
+ Default 1.3 — ensures cell sag under load does not drop below motor minimum.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.SizingPolicy.KBatteryCapacity">
+ <summary>
+ Battery usable capacity = calculated mission energy requirement × k.
+ Range: 1.1 (calm conditions, known route) to 1.5 (wind, unknowns).
+ Default 1.2 — 20% reserve covers throttle spikes, headwind, and capacity aging.
+ </summary>
+</member>
+<member name="P:Drone_Designer.Core.Models.SizingPolicy.KEscCurrent">
+ <summary>
+ ESC continuous current rating ≥ motor peak current × k.
+ Range: 1.1 to 1.5.
+ Default 1.25 — 25% thermal headroom for sustained full-throttle flight.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.SizingPolicy.RacingPreset">
+ <summary>Returns a SizingPolicy preset tuned for minimum-weight racing builds.</summary>
+</member>
+<member name="M:Drone_Designer.Core.Models.SizingPolicy.HarshEnvironmentPreset">
+ <summary>Returns a SizingPolicy preset tuned for harsh-environment / safety-critical missions.</summary>
+</member>
+<member name="T:Drone_Designer.Core.Services.PropCandidate">
  <summary>
  Core component selection engine — Tasks 7, 8, and 9.
 
@@ -1954,6 +2050,9 @@ Drone Designer
      passed between steps so SelectComponents() reads as a linear pipeline.
    - All constants and empirical factors are named and documented so future
      chats can tune them without hunting through arithmetic.
+ </summary>
+ <summary>
+ Candidate propeller matched with required RPM and cell/KV targets.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.#ctor(Drone_Designer.ComponentRepository)">
@@ -2037,6 +2136,12 @@ Drone Designer
 <member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.MtowConvergenceToleranceGrams">
  <summary>
  Convergence tolerance in grams. Loop exits when |MTOW_i − MTOW_{i−1}| ≤ this value.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.GetPropToArmRatio(Drone_Designer.Core.Models.UAVConfiguration,System.Collections.Generic.List{System.String})">
+ <summary>
+ Prop-diameter-to-arm-length ratio table.
+ Computed as MaxPropDiameter = ratio × ArmLength.
  </summary>
 </member>
 <member name="F:Drone_Designer.Core.Services.ComponentSelectionEngine.LipoCellNominalV">
@@ -2234,7 +2339,7 @@ Drone Designer
    5.  Avionics budget -> FC -> GPS -> Telemetry -> Receiver -> Camera.
 
  Each intermediate result is stored on SelectionResult so the UI can
- display a transparent breakdown of every sizing decision made.
+ display a transparent breakdown.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.GetDefaultSpecificEnergyWhPerKg(Drone_Designer.Core.Models.PowerSourceType)">
@@ -2265,8 +2370,8 @@ Drone Designer
  Per-iteration formula:
    initial guess: endurance-scaled fraction (see EstimateInitialBatterySeedFraction)
    MTOW_i         = (structural_mass + battery_mass_i) x SafetyFactor
-   P_hover        = MTOW_i x 10 W / 100 g            [empirical for 5"-7" quads]
-   E_total        = P_hover x endurance_h x 1.20     [+20% non-hover overhead]
+   P_hover        = MTOW_i x 10 W / 100 g            [empirical for 5"-7" quads]  # TODO: We're not only doing 5"-7" quads
+   E_total        = P_hover x endurance_h x 1.10     [+10% non-hover overhead]
    usable_density = LipoEnergyDensityWhPerKg x DoD   [Wh/kg usable]
    battery_mass_{i+1} = (E_total / usable_density) x 1000  [Wh -> g]
  </summary>
@@ -2296,6 +2401,38 @@ Drone Designer
    RPM_hover ≈ RPM_test × √(T_required / T_static_at_test)
  </summary>
 </member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.AirDensityKgM3(System.Double,System.Double)">
+ <summary>
+ Calculates air density using the International Standard Atmosphere (ISA) model
+ corrected for user-specified altitude and ambient temperature.
+
+ Formula:
+   ρ = ρ_sl × (1 − 2.25577×10⁻⁵ × h)^4.2559 × (T_ISA / T_ambient)
+
+ Parameters:
+   altitudeM    — altitude above MSL in metres (use specs.MaxAltitudeMeters)
+   ambientTempC — ambient air temperature in °C (use specs.MaxOperatingTempCelsius
+                  for worst-case hot day; MinOperatingTempCelsius for cold)
+ Returns: air density in kg/m³
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.ComputePropellerAero(Drone_Designer.Core.Models.PropellerSpec,System.Double,System.Double)">
+ <summary>
+ Computes hover RPM, shaft power, and propeller torque from aerodynamic first principles.
+
+ Governing equations:
+   T = Ct × ρ × n² × D⁴   →   n = √(T / (Ct × ρ × D⁴))
+   P = Cp × ρ × n³ × D⁵
+   Q = P / (2π × n)
+
+ Parameters:
+   prop            — propeller to evaluate (uses CtStatic, CpStatic, DiameterInches)
+   requiredThrustN — per-motor thrust in Newtons (= requiredThrustGf × 0.00981)
+   rho             — air density in kg/m³ (from AirDensityKgM3)
+
+ Returns named tuple: (HoverRpm, HoverPowerW, TorqueNm)
+ </summary>
+</member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectMotorsForPropeller(Drone_Designer.Core.Models.PropellerSpec,Drone_Designer.Core.Services.ThrustRequirement,Drone_Designer.Core.Models.MissionSpecs)">
  <summary>
  Selects motors compatible with a chosen reference propeller and the
@@ -2322,6 +2459,42 @@ Drone Designer
 
  Sorted by: thrust-per-watt DESC (efficiency priority), then mass ASC.
  Returns up to 5 candidates; UI or user picks the final one.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.BuildPropCandidates(Drone_Designer.Core.Models.MissionSpecs,System.Double,System.Double,System.Double,System.Double,System.Collections.Generic.List{System.String})">
+ <summary>
+ Builds a list of PropCandidate containing matching props, required RPMs, hover power, torque, and Cell/KV mappings.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectMotorForCandidate(Drone_Designer.Core.Services.PropCandidate,System.Int32,System.Double,System.Double,Drone_Designer.Core.Models.SizingPolicy,System.Collections.Generic.List{System.String})">
+ <summary>
+ Selects the best motor for a specific propeller candidate and cell count.
+
+ Hard gates (physics-based):
+   1. MaxThrustGrams ≥ required thrust (manufacturer datasheet cross-check)
+   2. Voltage range covers nominal pack voltage
+   3. MaxTorqueNm ≥ prop hover torque × policy.KMotorTorque  (replaces KV headroom)
+   4. Prop diameter within motor's designated range
+   5. Shaft-bore fit within 0–0.5 mm
+
+ Ranking (soft, KV used only for ordering, not elimination):
+   torque headroom ASC → KV closeness ASC → efficiency DESC → mass ASC
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellerAndMotor(System.Collections.Generic.List{Drone_Designer.Core.Services.PropCandidate},System.Double,Drone_Designer.Core.Models.SizingPolicy,System.Collections.Generic.List{System.String})">
+ <summary>
+ Orchestrates propeller and motor selection by iterating candidates and cell counts.
+ First successful pairing wins.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectBatteryFromMassBudget(System.Double,System.Int32,Drone_Designer.Core.Models.MotorSpec,Drone_Designer.Core.Models.PropellerSpec,System.Double,System.Int32,System.Double)">
+ <summary>
+ Selects a battery pack using a mass budget derived from the MTOW and selected components.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.ComputeRangeAndEnduranceWarnings(Drone_Designer.Core.Models.BatterySpec,System.Double,System.Double,Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Computes flight endurance and range, generating warnings based on requested specs.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectPropellersByTargetDiameter(System.Double,System.Double,Drone_Designer.Core.Models.MissionSpecs)">
@@ -2353,7 +2526,7 @@ Drone Designer
  Falls back to nearest-diameter match if no prop passes all filters.
  </summary>
 </member>
-<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.CalculatePowerBudget(System.Collections.Generic.List{Drone_Designer.Core.Models.ComponentSpecs},Drone_Designer.Core.Services.ThrustRequirement,Drone_Designer.Core.Models.MissionSpecs)">
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.CalculatePowerBudget(System.Collections.Generic.List{Drone_Designer.Core.Models.ComponentSpecs},Drone_Designer.Core.Services.ThrustRequirement,Drone_Designer.Core.Models.MissionSpecs,Drone_Designer.Core.Models.PropellerSpec,System.Double,System.Double)">
  <summary>
  Calculates the complete power and current budget for the UAV.
  All downstream power-system selections (battery, ESC, PDB) derive from this object.
@@ -2381,6 +2554,18 @@ Drone Designer
  After Task 9 runs, AvionicsBudget.RealizedCurrentA contains the actual
  summed figure. For a tighter power budget, call CalculatePowerBudget()
  a second time substituting RealizedCurrentA for AvionicCurrentDrawA.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.CalculateMissionEnergy(System.Double,System.Double,System.Double,System.Double,System.Int32,System.Double,Drone_Designer.Core.Models.MissionSpecs)">
+ <summary>
+ Computes per-phase mission energy using momentum-theory power scaling.
+
+ Climb power uses exact actuator-disc result: P_climb = P_hover × (μ + √(μ² + 1))
+ where μ = V_climb / (2 × v_i) and v_i = √(T / (2ρA)).
+
+ Cruise power uses simplified momentum theory: P_cruise = P_hover × √(V_cruise / v_i).
+
+ Energy margin (KBatteryCapacity) is applied to the combined total.
  </summary>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.SelectBatteries(Drone_Designer.Core.Services.PowerBudget,Drone_Designer.Core.Models.MissionSpecs)">
@@ -2695,10 +2880,10 @@ Drone Designer
  inset margin so SelectPropellersByTargetDiameter has flexibility
  to pick a slightly smaller catalog match.
  </summary>
- <param name="mtowKg">MTOW in kilograms (currently unused; kept on
+ <param name="massKg">MTOW in kilograms (currently unused; kept on
  the signature for future regime-dependent extension to UAM-class
  vehicles where disk loading becomes the binding constraint).</param>
- <param name="motorCount">Number of rotors (must be ≥ 1).</param>
+ <param name="numRotors">Number of rotors (must be ≥ 1).</param>
  <returns>Target propeller diameter in inches.</returns>
 </member>
 <member name="M:Drone_Designer.Core.Services.ComponentSelectionEngine.EstimateMaxPropDiameter(System.Int32)">
@@ -2809,6 +2994,24 @@ Drone Designer
 <member name="P:Drone_Designer.Core.Services.PowerBudget.MotorCount">
  <summary>Motor count used in all current calculations.</summary>
 </member>
+<member name="P:Drone_Designer.Core.Services.PowerBudget.HoverPhaseEnergyWh">
+ <summary>All-motor energy during hover phase (Wh), before capacity margin.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.PowerBudget.ClimbPhaseEnergyWh">
+ <summary>All-motor energy during climb phase (Wh), before capacity margin.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.PowerBudget.CruisePhaseEnergyWh">
+ <summary>All-motor energy during cruise phase (Wh), before capacity margin.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.PowerBudget.AvionicsEnergyWh">
+ <summary>Avionics energy for the full mission (Wh), before capacity margin.</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.PowerBudget.TotalMissionEnergyWh">
+ <summary>Total required battery energy including SizingPolicy.KBatteryCapacity margin (Wh).</summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.PowerBudget.EstimatedFlightRangeKm">
+ <summary>Estimated flight range at cruise speed over the cruise time fraction (km).</summary>
+</member>
 <member name="T:Drone_Designer.Core.Services.AvionicsBudget">
  <summary>
  Avionics power and range context produced by Task 9 (Step 9).
@@ -2846,6 +3049,9 @@ Drone Designer
  <summary>
  Complete output of the selection pipeline (Tasks 7, 8, and 9).
  </summary>
+</member>
+<member name="P:Drone_Designer.Core.Services.SelectionResult.Warnings">
+ <summary>List of warnings generated during selection (e.g., component constraints not met).</summary>
 </member>
 <member name="P:Drone_Designer.Core.Services.SelectionResult.EstimatedMtowGrams">
  <summary>Final MTOW estimate with safety margin (g).</summary>
@@ -3955,6 +4161,9 @@ Drone Designer
 <member name="F:Drone_Designer.MainForm.lblStatus">
  <summary>Main status label. Write to this from any module.</summary>
 </member>
+<member name="F:Drone_Designer.MainForm.nudFrameSize">
+<summary>UAV frame size.</summary>
+</member>
 <member name="F:Drone_Designer.MainForm.nudEndurance">
  <summary>Mission endurance in decimal hours (e.g. 1.5 = 90 min).</summary>
 </member>
@@ -4030,6 +4239,12 @@ Drone Designer
 <member name="M:Drone_Designer.MainForm.BuildGroupMission(System.Int32)">
  <summary>Builds the Mission Type group and returns next Y offset.</summary>
 </member>
+<member name="M:Drone_Designer.MainForm.BuildGroupSizingMargins(System.Int32)">
+ <summary>Builds the Advanced Sizing Margins + Mission Phase Profile group and returns next Y offset.</summary>
+</member>
+<member name="M:Drone_Designer.MainForm.OnSizingPresetChanged(System.Object,System.EventArgs)">
+ <summary>Populates all four k-factor NUDs from the selected preset.</summary>
+</member>
 <member name="M:Drone_Designer.MainForm.MakeColumn(System.String,System.String,System.Int32,System.Windows.Forms.DataGridViewContentAlignment,System.Boolean)">
  <summary>Convenience factory for a DataGridView column.</summary>
 </member>
@@ -4058,7 +4273,7 @@ Drone Designer
  Called by the selection engine after populating the grid.
  </summary>
 </member>
-<member name="M:Drone_Designer.MainForm.UpdateSummary(System.Double,System.Double,System.Int32)">
+<member name="M:Drone_Designer.MainForm.UpdateSummary(System.Double,System.Double,System.Int32,Drone_Designer.Core.Services.PowerBudget)">
  <summary>
  Updates the summary footer labels.
  Called by the service layer after binding the DataGridView.

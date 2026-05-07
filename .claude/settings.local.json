@@ -22,5 +22,6 @@
       "PowerShell(&\"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\\\\2019\\\\BuildTools\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"C:\\\\Users\\\\Ahmed Osman\\\\Desktop\\\\Teknofest\\\\THE DRONE DESIGNER\\\\Drone Designer\\\\Drone Designer.vbproj\" /p:Configuration=Debug /t:Build /v:minimal 2>&1 | Select-Object -Last 15)",
       "PowerShell(&\"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\\\\2019\\\\BuildTools\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"C:\\\\Users\\\\Ahmed Osman\\\\Desktop\\\\Teknofest\\\\THE DRONE DESIGNER\\\\Drone Designer\\\\Drone Designer.vbproj\" /p:Configuration=Debug /t:Build /v:minimal 2>&1 | Select-Object -Last 12)"
     ]
-  }
+  },
+  "outputStyle": "Explanatory"
 }
