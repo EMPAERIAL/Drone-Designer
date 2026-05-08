@@ -174,22 +174,28 @@ Namespace Core.Services
         ''' Computed as MaxPropDiameter = ratio × ArmLength.
         ''' </summary>
         Private Shared Function GetPropToArmRatio(config As UAVConfiguration, Optional warnings As List(Of String) = Nothing) As Double
-            ' MaxPropDiameter = ratio × ArmLength × 2, where ArmLength = FrameSizeMm / 2.
-            ' The ×2 converts arm (= prop-clearance radius) to a diameter-comparable value.
+            ' MaxPropDiameter = ratio × ArmLength, where ArmLength = FrameSizeMm / 2.
             '
-            ' Derivation (adjacent-motor clearance geometry):
-            '   Quad (square X):  adjacent spacing = arm × √2 ≈ 1.414 arm → ratio 0.90
-            '   Tri  (equilateral): similar to quad → ratio 0.90
-            '   Hex  (regular hex): adjacent spacing = arm (circumradius = side) → ratio 0.85
-            '   Octo (regular oct): adjacent spacing = arm × 2sin(22.5°) ≈ 0.765 arm → ratio 0.65
+            ' Each ratio encodes BOTH the adjacent-motor spacing geometry AND a ~10–15 %
+            ' prop-tip clearance margin, so the formula stays a single multiplication.
             '
-            ' Values include ~10–20 % prop-tip clearance margin.
-            ' Example: 250 mm quad → arm 125 mm → max 0.90 × 125 × 2 / 25.4 = 8.86".
+            '   Quad (square X):
+            '     adjacent spacing = arm × √2 ≈ 1.414 arm
+            '     ratio = 0.90 × √2 ≈ 1.27  →  250 mm quad: 1.27 × 125 / 25.4 ≈ 6.25"
+            '
+            '   Tri (similar arm geometry to quad):
+            '     ratio = 0.90 × √2 ≈ 1.27
+            '
+            '   Hex (regular hex, adjacent spacing = arm exactly since circumradius = side):
+            '     ratio = 0.85 × 1.00 = 0.85  →  600 mm hex: 0.85 × 300 / 25.4 ≈ 10.0"
+            '
+            '   Octo (regular oct, adjacent spacing = arm × 2sin(22.5°) ≈ 0.765 arm):
+            '     ratio = 0.85 × 0.765 ≈ 0.65  →  900 mm octo: 0.65 × 450 / 25.4 ≈ 11.5"
             Select Case config
                 Case UAVConfiguration.Quadcopter
-                    Return 0.9
+                    Return 0.9 * Math.Sqrt(2)   ' ≈ 1.273
                 Case UAVConfiguration.Tricopter
-                    Return 0.9
+                    Return 0.9 * Math.Sqrt(2)   ' ≈ 1.273
                 Case UAVConfiguration.Hexacopter
                     Return 0.85
                 Case UAVConfiguration.Octocopter
@@ -424,7 +430,7 @@ Namespace Core.Services
 
             Dim warnings = New List(Of String)
             Dim ratio = GetPropToArmRatio(specs.Configuration, warnings)
-            Dim maxPropDiamIn = (ratio * armMm * 2) / 25.4
+            Dim maxPropDiamIn = (ratio * armMm) / 25.4
             Dim motorRpmCeiling = _repository.GetAllByCategory(ComponentCategory.Motor).Cast(Of MotorSpec)().Max(Function(m) m.KV * m.MaxVoltage)
             Dim rejections = New List(Of String)
 
