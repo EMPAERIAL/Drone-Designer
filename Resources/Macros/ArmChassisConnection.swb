@@ -1,0 +1,111 @@
+Attribute VB_Name = "ArmChassisConnection"
+Option Explicit
+
+'  File:    ArmChassisConnection.swb
+'  Purpose: Sets DD_ global variables in ArmChassisConnection_Template.SLDPRT
+'           using parameters injected by MacroRunner as custom document
+'           properties, then forces a full rebuild.
+'
+'  Called by MacroRunner.RunMacroOnTemplate via RunMacro2.
+'  Module name: ArmChassisConnection   (verify in VBA editor project tree)
+'  Entry point: BuildArmChassisConnection
+'
+'  REQUIREMENT: SolidWorks type library must be referenced.
+'  In VBA editor: Tools > References > check "SldWorks 20XX Type Library".
+'
+'  Parameter keys read from custom document properties (injected by MacroRunner):
+'    ARM_OD_MM                -> DD_ArmOdMm
+'    CLAMP_LENGTH_MM          -> DD_ClampLengthMm
+'    CLAMP_BOLT_MM            -> DD_ClampBoltMm
+'    CLAMP_BOLT_SPACING_MM    -> DD_ClampBoltSpacingMm
+'    CHASSIS_ATTACH_SPACING_MM-> DD_ChassisAttachSpacingMm
+'    CHASSIS_ATTACH_BOLT_MM   -> DD_ChassisAttachBoltMm
+'    WALL_THICKNESS_MM        -> DD_WallThicknessMm
+
+Sub BuildArmChassisConnection()
+
+    Dim swApp As SldWorks.SldWorks
+    Set swApp = Application.SldWorks
+
+    Dim swDoc As ModelDoc2
+    Set swDoc = swApp.ActiveDoc
+
+    If swDoc Is Nothing Then
+        Call swApp.SendMsgToUser2("ArmChassisConnection macro: no active document.", 0, 0)
+        Exit Sub
+    End If
+
+    Dim eqMgr As EquationMgr
+    Set eqMgr = swDoc.GetEquationMgr()
+
+    If eqMgr Is Nothing Then
+        Call swApp.SendMsgToUser2("ArmChassisConnection macro: GetEquationMgr returned Nothing.", 0, 0)
+        Exit Sub
+    End If
+
+    Dim armOdMm               As Double
+    Dim clampLengthMm         As Double
+    Dim clampBoltMm           As Double
+    Dim clampBoltSpacingMm    As Double
+    Dim chassisAttachSpacingMm As Double
+    Dim chassisAttachBoltMm   As Double
+    Dim wallThicknessMm       As Double
+
+    armOdMm                = ReadProp(swDoc, "ARM_OD_MM",                 16.0)
+    clampLengthMm          = ReadProp(swDoc, "CLAMP_LENGTH_MM",           40.0)
+    clampBoltMm            = ReadProp(swDoc, "CLAMP_BOLT_MM",              3.0)
+    clampBoltSpacingMm     = ReadProp(swDoc, "CLAMP_BOLT_SPACING_MM",     20.0)
+    chassisAttachSpacingMm = ReadProp(swDoc, "CHASSIS_ATTACH_SPACING_MM", 30.0)
+    chassisAttachBoltMm    = ReadProp(swDoc, "CHASSIS_ATTACH_BOLT_MM",     3.0)
+    wallThicknessMm        = ReadProp(swDoc, "WALL_THICKNESS_MM",          2.5)
+
+    SetGlobalVar eqMgr, "DD_ArmOdMm",                armOdMm
+    SetGlobalVar eqMgr, "DD_ClampLengthMm",          clampLengthMm
+    SetGlobalVar eqMgr, "DD_ClampBoltMm",            clampBoltMm
+    SetGlobalVar eqMgr, "DD_ClampBoltSpacingMm",     clampBoltSpacingMm
+    SetGlobalVar eqMgr, "DD_ChassisAttachSpacingMm", chassisAttachSpacingMm
+    SetGlobalVar eqMgr, "DD_ChassisAttachBoltMm",    chassisAttachBoltMm
+    SetGlobalVar eqMgr, "DD_WallThicknessMm",        wallThicknessMm
+
+    eqMgr.EvaluateAll
+    swDoc.ForceRebuild3 True
+
+End Sub
+
+Private Function ReadProp(swDoc As ModelDoc2, propName As String, defaultVal As Double) As Double
+    Dim raw As String
+    raw = swDoc.CustomInfo2("", propName)
+    If Len(Trim(raw)) = 0 Then
+        ReadProp = defaultVal
+    Else
+        ReadProp = Val(raw)
+    End If
+End Function
+
+Private Sub SetGlobalVar(eqMgr As EquationMgr, varName As String, newValue As Double)
+    Dim searchToken As String
+    searchToken = Chr(34) & varName & Chr(34)
+    Dim i As Integer
+    For i = 0 To eqMgr.GetCount() - 1
+        If InStr(1, eqMgr.Equation(i), searchToken, vbTextCompare) > 0 Then
+            eqMgr.Equation(i) = searchToken & "= " & FormatInvariant(newValue)
+            Exit Sub
+        End If
+    Next i
+End Sub
+
+Private Function FormatInvariant(value As Double) As String
+    Dim probe As String
+    probe = Format(1.5, "0.0")
+    Dim localSep As String
+    localSep = Mid(probe, 2, 1)
+    Dim s As String
+    s = Format(value, "0.##########")
+    If localSep <> "." Then
+        s = Replace(s, localSep, ".")
+    End If
+    If Right(s, 1) = "." Then
+        s = Left(s, Len(s) - 1)
+    End If
+    FormatInvariant = s
+End Function

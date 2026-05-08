@@ -1,0 +1,95 @@
+Attribute VB_Name = "CarbonFiberArm"
+Option Explicit
+
+'  File:    CarbonFiberArm.swb
+'  Purpose: Sets DD_ global variables in CarbonFiberArm_Template.SLDPRT
+'           using parameters injected by MacroRunner as custom document
+'           properties, then forces a full rebuild.
+'
+'  Called by MacroRunner.RunMacroOnTemplate via RunMacro2.
+'  Module name: CarbonFiberArm   (verify in VBA editor project tree)
+'  Entry point: BuildCarbonFiberArm
+'
+'  REQUIREMENT: SolidWorks type library must be referenced.
+'  In VBA editor: Tools > References > check "SldWorks 20XX Type Library".
+'
+'  Parameter keys read from custom document properties (injected by MacroRunner):
+'    ARM_LENGTH_MM  -> DD_ArmLengthMm
+'    ARM_OD_MM      -> DD_ArmOdMm
+'    ARM_ID_MM      -> DD_ArmIdMm
+
+Sub BuildCarbonFiberArm()
+
+    Dim swApp As SldWorks.SldWorks
+    Set swApp = Application.SldWorks
+
+    Dim swDoc As ModelDoc2
+    Set swDoc = swApp.ActiveDoc
+
+    If swDoc Is Nothing Then
+        Call swApp.SendMsgToUser2("CarbonFiberArm macro: no active document.", 0, 0)
+        Exit Sub
+    End If
+
+    Dim eqMgr As EquationMgr
+    Set eqMgr = swDoc.GetEquationMgr()
+
+    If eqMgr Is Nothing Then
+        Call swApp.SendMsgToUser2("CarbonFiberArm macro: GetEquationMgr returned Nothing.", 0, 0)
+        Exit Sub
+    End If
+
+    Dim armLengthMm As Double
+    Dim armOdMm     As Double
+    Dim armIdMm     As Double
+
+    armLengthMm = ReadProp(swDoc, "ARM_LENGTH_MM", 200.0)
+    armOdMm     = ReadProp(swDoc, "ARM_OD_MM",      16.0)
+    armIdMm     = ReadProp(swDoc, "ARM_ID_MM",      13.0)
+
+    SetGlobalVar eqMgr, "DD_ArmLengthMm", armLengthMm
+    SetGlobalVar eqMgr, "DD_ArmOdMm",     armOdMm
+    SetGlobalVar eqMgr, "DD_ArmIdMm",     armIdMm
+
+    eqMgr.EvaluateAll
+    swDoc.ForceRebuild3 True
+
+End Sub
+
+Private Function ReadProp(swDoc As ModelDoc2, propName As String, defaultVal As Double) As Double
+    Dim raw As String
+    raw = swDoc.CustomInfo2("", propName)
+    If Len(Trim(raw)) = 0 Then
+        ReadProp = defaultVal
+    Else
+        ReadProp = Val(raw)
+    End If
+End Function
+
+Private Sub SetGlobalVar(eqMgr As EquationMgr, varName As String, newValue As Double)
+    Dim searchToken As String
+    searchToken = Chr(34) & varName & Chr(34)
+    Dim i As Integer
+    For i = 0 To eqMgr.GetCount() - 1
+        If InStr(1, eqMgr.Equation(i), searchToken, vbTextCompare) > 0 Then
+            eqMgr.Equation(i) = searchToken & "= " & FormatInvariant(newValue)
+            Exit Sub
+        End If
+    Next i
+End Sub
+
+Private Function FormatInvariant(value As Double) As String
+    Dim probe As String
+    probe = Format(1.5, "0.0")
+    Dim localSep As String
+    localSep = Mid(probe, 2, 1)
+    Dim s As String
+    s = Format(value, "0.##########")
+    If localSep <> "." Then
+        s = Replace(s, localSep, ".")
+    End If
+    If Right(s, 1) = "." Then
+        s = Left(s, Len(s) - 1)
+    End If
+    FormatInvariant = s
+End Function

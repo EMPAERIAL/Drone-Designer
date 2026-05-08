@@ -1,0 +1,107 @@
+Attribute VB_Name = "LandingGearConnection"
+Option Explicit
+
+'  File:    LandingGearConnection.swb
+'  Purpose: Sets DD_ global variables in LandingGearConnectionPart_Template.SLDPRT
+'           using parameters injected by MacroRunner as custom document
+'           properties, then forces a full rebuild.
+'
+'  Called by MacroRunner.RunMacroOnTemplate via RunMacro2.
+'  Module name: LandingGearConnection   (verify in VBA editor project tree)
+'  Entry point: BuildLandingGearConnection
+'
+'  REQUIREMENT: SolidWorks type library must be referenced.
+'  In VBA editor: Tools > References > check "SldWorks 20XX Type Library".
+'
+'  Parameter keys read from custom document properties (injected by MacroRunner):
+'    LG_TUBE_OD_MM      -> DD_LgTubeOdMm
+'    LG_TUBE_ID_MM      -> DD_LgTubeIdMm
+'    LG_ANGLE_DEG       -> DD_LgAngleDeg
+'    LG_MOUNT_SPACING_MM-> DD_LgMountSpacingMm
+'    LG_MOUNT_BOLT_MM   -> DD_LgMountBoltMm
+'    WALL_THICKNESS_MM  -> DD_WallThicknessMm
+
+Sub BuildLandingGearConnection()
+
+    Dim swApp As SldWorks.SldWorks
+    Set swApp = Application.SldWorks
+
+    Dim swDoc As ModelDoc2
+    Set swDoc = swApp.ActiveDoc
+
+    If swDoc Is Nothing Then
+        Call swApp.SendMsgToUser2("LandingGearConnection macro: no active document.", 0, 0)
+        Exit Sub
+    End If
+
+    Dim eqMgr As EquationMgr
+    Set eqMgr = swDoc.GetEquationMgr()
+
+    If eqMgr Is Nothing Then
+        Call swApp.SendMsgToUser2("LandingGearConnection macro: GetEquationMgr returned Nothing.", 0, 0)
+        Exit Sub
+    End If
+
+    Dim lgTubeOdMm      As Double
+    Dim lgTubeIdMm      As Double
+    Dim lgAngleDeg      As Double
+    Dim lgMountSpacingMm As Double
+    Dim lgMountBoltMm   As Double
+    Dim wallThicknessMm As Double
+
+    lgTubeOdMm       = ReadProp(swDoc, "LG_TUBE_OD_MM",       16.0)
+    lgTubeIdMm       = ReadProp(swDoc, "LG_TUBE_ID_MM",       13.0)
+    lgAngleDeg       = ReadProp(swDoc, "LG_ANGLE_DEG",         20.0)
+    lgMountSpacingMm = ReadProp(swDoc, "LG_MOUNT_SPACING_MM",  30.0)
+    lgMountBoltMm    = ReadProp(swDoc, "LG_MOUNT_BOLT_MM",      3.0)
+    wallThicknessMm  = ReadProp(swDoc, "WALL_THICKNESS_MM",     2.5)
+
+    SetGlobalVar eqMgr, "DD_LgTubeOdMm",      lgTubeOdMm
+    SetGlobalVar eqMgr, "DD_LgTubeIdMm",      lgTubeIdMm
+    SetGlobalVar eqMgr, "DD_LgAngleDeg",      lgAngleDeg
+    SetGlobalVar eqMgr, "DD_LgMountSpacingMm", lgMountSpacingMm
+    SetGlobalVar eqMgr, "DD_LgMountBoltMm",   lgMountBoltMm
+    SetGlobalVar eqMgr, "DD_WallThicknessMm", wallThicknessMm
+
+    eqMgr.EvaluateAll
+    swDoc.ForceRebuild3 True
+
+End Sub
+
+Private Function ReadProp(swDoc As ModelDoc2, propName As String, defaultVal As Double) As Double
+    Dim raw As String
+    raw = swDoc.CustomInfo2("", propName)
+    If Len(Trim(raw)) = 0 Then
+        ReadProp = defaultVal
+    Else
+        ReadProp = Val(raw)
+    End If
+End Function
+
+Private Sub SetGlobalVar(eqMgr As EquationMgr, varName As String, newValue As Double)
+    Dim searchToken As String
+    searchToken = Chr(34) & varName & Chr(34)
+    Dim i As Integer
+    For i = 0 To eqMgr.GetCount() - 1
+        If InStr(1, eqMgr.Equation(i), searchToken, vbTextCompare) > 0 Then
+            eqMgr.Equation(i) = searchToken & "= " & FormatInvariant(newValue)
+            Exit Sub
+        End If
+    Next i
+End Sub
+
+Private Function FormatInvariant(value As Double) As String
+    Dim probe As String
+    probe = Format(1.5, "0.0")
+    Dim localSep As String
+    localSep = Mid(probe, 2, 1)
+    Dim s As String
+    s = Format(value, "0.##########")
+    If localSep <> "." Then
+        s = Replace(s, localSep, ".")
+    End If
+    If Right(s, 1) = "." Then
+        s = Left(s, Len(s) - 1)
+    End If
+    FormatInvariant = s
+End Function

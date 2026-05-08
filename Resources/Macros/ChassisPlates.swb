@@ -1,0 +1,159 @@
+Attribute VB_Name = "ChassisPlates"
+Option Explicit
+
+'  File:    ChassisPlates.swb
+'  Purpose: Sets DD_ global variables in ChassisPlates_Template.SLDPRT
+'           using parameters injected by MacroRunner as custom document
+'           properties, then forces a full rebuild.
+'
+'  Called by MacroRunner.RunMacroOnTemplate via RunMacro2.
+'  Module name: ChassisPlates   (verify in VBA editor project tree)
+'  Entry point: BuildChassisPlates
+'
+'  REQUIREMENT: SolidWorks type library must be referenced.
+'  In VBA editor: Tools > References > check "SldWorks 20XX Type Library".
+'
+'  Parameter keys read from custom document properties (injected by MacroRunner):
+'    FC_MOUNT_PATTERN_MM   -> DD_FcMountPatternMm
+'    FC_LENGTH_MM          -> DD_FcLengthMm
+'    FC_WIDTH_MM           -> DD_FcWidthMm
+'    FC_HOLE_MM            -> DD_FcHoleMm
+'    OC_LENGTH_MM          -> DD_OcLengthMm
+'    OC_WIDTH_MM           -> DD_OcWidthMm
+'    OC_MOUNT_PATTERN_MM   -> DD_OcMountPatternMm
+'    OC_HOLE_MM            -> DD_OcHoleMm
+'    GPS_DIAM_MM           -> DD_GpsDiamMm
+'    GPS_LENGTH_MM         -> DD_GpsLengthMm
+'    GPS_WIDTH_MM          -> DD_GpsWidthMm
+'    GPS_HOLE_MM           -> DD_GpsHoleMm
+'    BATT_LENGTH_MM        -> DD_BattLengthMm
+'    BATT_WIDTH_MM         -> DD_BattWidthMm
+'    BATT_HEIGHT_MM        -> DD_BattHeightMm
+'    ARM_COUNT             -> DD_ArmCount
+'    CHASSIS_RADIUS_MM     -> DD_ChassisRadiusMm
+'    PLATE_THICKNESS_MM    -> DD_PlateThicknessMm
+'    ARM_ATTACH_SPACING_MM -> DD_ArmAttachSpacingMm
+
+Sub BuildChassisPlates()
+
+    Dim swApp As SldWorks.SldWorks
+    Set swApp = Application.SldWorks
+
+    Dim swDoc As ModelDoc2
+    Set swDoc = swApp.ActiveDoc
+
+    If swDoc Is Nothing Then
+        Call swApp.SendMsgToUser2("ChassisPlates macro: no active document.", 0, 0)
+        Exit Sub
+    End If
+
+    Dim eqMgr As EquationMgr
+    Set eqMgr = swDoc.GetEquationMgr()
+
+    If eqMgr Is Nothing Then
+        Call swApp.SendMsgToUser2("ChassisPlates macro: GetEquationMgr returned Nothing.", 0, 0)
+        Exit Sub
+    End If
+
+    Dim fcMountPatternMm  As Double
+    Dim fcLengthMm        As Double
+    Dim fcWidthMm         As Double
+    Dim fcHoleMm          As Double
+    Dim ocLengthMm        As Double
+    Dim ocWidthMm         As Double
+    Dim ocMountPatternMm  As Double
+    Dim ocHoleMm          As Double
+    Dim gpsDiamMm         As Double
+    Dim gpsLengthMm       As Double
+    Dim gpsWidthMm        As Double
+    Dim gpsHoleMm         As Double
+    Dim battLengthMm      As Double
+    Dim battWidthMm       As Double
+    Dim battHeightMm      As Double
+    Dim armCount          As Double
+    Dim chassisRadiusMm   As Double
+    Dim plateThicknessMm  As Double
+    Dim armAttachSpacingMm As Double
+
+    fcMountPatternMm   = ReadProp(swDoc, "FC_MOUNT_PATTERN_MM",   30.5)
+    fcLengthMm         = ReadProp(swDoc, "FC_LENGTH_MM",           36.5)
+    fcWidthMm          = ReadProp(swDoc, "FC_WIDTH_MM",            36.5)
+    fcHoleMm           = ReadProp(swDoc, "FC_HOLE_MM",              3.2)
+    ocLengthMm         = ReadProp(swDoc, "OC_LENGTH_MM",           36.5)
+    ocWidthMm          = ReadProp(swDoc, "OC_WIDTH_MM",            36.5)
+    ocMountPatternMm   = ReadProp(swDoc, "OC_MOUNT_PATTERN_MM",   30.5)
+    ocHoleMm           = ReadProp(swDoc, "OC_HOLE_MM",              3.2)
+    gpsDiamMm          = ReadProp(swDoc, "GPS_DIAM_MM",            50.0)
+    gpsLengthMm        = ReadProp(swDoc, "GPS_LENGTH_MM",          50.0)
+    gpsWidthMm         = ReadProp(swDoc, "GPS_WIDTH_MM",           50.0)
+    gpsHoleMm          = ReadProp(swDoc, "GPS_HOLE_MM",             3.2)
+    battLengthMm       = ReadProp(swDoc, "BATT_LENGTH_MM",        135.0)
+    battWidthMm        = ReadProp(swDoc, "BATT_WIDTH_MM",          35.0)
+    battHeightMm       = ReadProp(swDoc, "BATT_HEIGHT_MM",         45.0)
+    armCount           = ReadProp(swDoc, "ARM_COUNT",               4.0)
+    chassisRadiusMm    = ReadProp(swDoc, "CHASSIS_RADIUS_MM",     100.0)
+    plateThicknessMm   = ReadProp(swDoc, "PLATE_THICKNESS_MM",      2.0)
+    armAttachSpacingMm = ReadProp(swDoc, "ARM_ATTACH_SPACING_MM",  20.0)
+
+    SetGlobalVar eqMgr, "DD_FcMountPatternMm",  fcMountPatternMm
+    SetGlobalVar eqMgr, "DD_FcLengthMm",        fcLengthMm
+    SetGlobalVar eqMgr, "DD_FcWidthMm",         fcWidthMm
+    SetGlobalVar eqMgr, "DD_FcHoleMm",          fcHoleMm
+    SetGlobalVar eqMgr, "DD_OcLengthMm",        ocLengthMm
+    SetGlobalVar eqMgr, "DD_OcWidthMm",         ocWidthMm
+    SetGlobalVar eqMgr, "DD_OcMountPatternMm",  ocMountPatternMm
+    SetGlobalVar eqMgr, "DD_OcHoleMm",          ocHoleMm
+    SetGlobalVar eqMgr, "DD_GpsDiamMm",         gpsDiamMm
+    SetGlobalVar eqMgr, "DD_GpsLengthMm",       gpsLengthMm
+    SetGlobalVar eqMgr, "DD_GpsWidthMm",        gpsWidthMm
+    SetGlobalVar eqMgr, "DD_GpsHoleMm",         gpsHoleMm
+    SetGlobalVar eqMgr, "DD_BattLengthMm",      battLengthMm
+    SetGlobalVar eqMgr, "DD_BattWidthMm",       battWidthMm
+    SetGlobalVar eqMgr, "DD_BattHeightMm",      battHeightMm
+    SetGlobalVar eqMgr, "DD_ArmCount",          armCount
+    SetGlobalVar eqMgr, "DD_ChassisRadiusMm",   chassisRadiusMm
+    SetGlobalVar eqMgr, "DD_PlateThicknessMm",  plateThicknessMm
+    SetGlobalVar eqMgr, "DD_ArmAttachSpacingMm", armAttachSpacingMm
+
+    eqMgr.EvaluateAll
+    swDoc.ForceRebuild3 True
+
+End Sub
+
+Private Function ReadProp(swDoc As ModelDoc2, propName As String, defaultVal As Double) As Double
+    Dim raw As String
+    raw = swDoc.CustomInfo2("", propName)
+    If Len(Trim(raw)) = 0 Then
+        ReadProp = defaultVal
+    Else
+        ReadProp = Val(raw)
+    End If
+End Function
+
+Private Sub SetGlobalVar(eqMgr As EquationMgr, varName As String, newValue As Double)
+    Dim searchToken As String
+    searchToken = Chr(34) & varName & Chr(34)
+    Dim i As Integer
+    For i = 0 To eqMgr.GetCount() - 1
+        If InStr(1, eqMgr.Equation(i), searchToken, vbTextCompare) > 0 Then
+            eqMgr.Equation(i) = searchToken & "= " & FormatInvariant(newValue)
+            Exit Sub
+        End If
+    Next i
+End Sub
+
+Private Function FormatInvariant(value As Double) As String
+    Dim probe As String
+    probe = Format(1.5, "0.0")
+    Dim localSep As String
+    localSep = Mid(probe, 2, 1)
+    Dim s As String
+    s = Format(value, "0.##########")
+    If localSep <> "." Then
+        s = Replace(s, localSep, ".")
+    End If
+    If Right(s, 1) = "." Then
+        s = Left(s, Len(s) - 1)
+    End If
+    FormatInvariant = s
+End Function
