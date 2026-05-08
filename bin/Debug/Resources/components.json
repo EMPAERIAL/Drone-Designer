@@ -652,12 +652,14 @@
       "material": "Polycarbonate",
       "maxRPM": 35000,
       "maxStaticThrustG": 920,
+      "ctStatic": 0.095,
+      "cpStatic": 0.042,
       "recommendedKvRange": [ 2000, 2600 ],
       "recommendedVoltageRange": "4S-6S",
       "pitchVelocityMs": null,
       "isFolding": false,
       "recommendedUseCase": "5-inch racing / freestyle quad",
-      "notes": "Tri-blade for balanced thrust and efficiency. V1S is the newest version with improved tip geometry."
+      "notes": "Tri-blade for balanced thrust and efficiency. V1S is the newest version with improved tip geometry. Ct/Cp estimated from typical tri-blade 5\" racing prop geometry."
     },
     {
       "id": "prop_002",
@@ -680,12 +682,14 @@
       "material": "Carbon fiber reinforced nylon",
       "maxRPM": 16000,
       "maxStaticThrustG": 1100,
+      "ctStatic": 0.120,
+      "cpStatic": 0.050,
       "recommendedKvRange": [ 700, 1000 ],
       "recommendedVoltageRange": "4S-6S",
       "pitchVelocityMs": null,
       "isFolding": false,
       "recommendedUseCase": "Photography quad, 330-450mm",
-      "notes": "Efficient low-noise design. Pairs well with Antigravity MN3110 motor series."
+      "notes": "Efficient low-noise design. Pairs well with Antigravity MN3110 motor series. Ct/Cp estimated from similar 9\" 2-blade prop data."
     },
     {
       "id": "prop_003",
@@ -708,12 +712,14 @@
       "material": "Carbon fiber",
       "maxRPM": 7000,
       "maxStaticThrustG": 3600,
+      "ctStatic": 0.105,
+      "cpStatic": 0.038,
       "recommendedKvRange": [ 200, 400 ],
       "recommendedVoltageRange": "10S-12S",
       "pitchVelocityMs": null,
       "isFolding": true,
       "recommendedUseCase": "Industrial heavy-lift UAV, 800mm+",
-      "notes": "Folding design for easy transport. Carbon fiber construction keeps mass low at this size. Requires folding prop hub adapter."
+      "notes": "Folding design for easy transport. Carbon fiber construction keeps mass low at this size. Requires folding prop hub adapter. Ct/Cp estimated from T-Motor 16\" CF folding prop test data."
     },
     {
       "id": "prop_004",
@@ -766,12 +772,14 @@
       "material": "Carbon fiber",
       "maxRPM": 8000,
       "maxStaticThrustG": 2800,
+      "ctStatic": 0.108,
+      "cpStatic": 0.042,
       "recommendedKvRange": [ 300, 500 ],
       "recommendedVoltageRange": "6S-10S",
       "pitchVelocityMs": null,
       "isFolding": true,
       "recommendedUseCase": "Large survey/mapping platform, 650-1000mm hex",
-      "notes": "Folding prop commonly used in Tarot 680/810 hex frames. Robust folding hub mechanism."
+      "notes": "Folding prop commonly used in Tarot 680/810 hex frames. Robust folding hub mechanism. Ct/Cp estimated from typical 15\" CF 2-blade folding prop geometry."
     },
     {
       "id": "prop_006",
@@ -794,12 +802,14 @@
       "material": "Polycarbonate",
       "maxRPM": 55000,
       "maxStaticThrustG": 220,
+      "ctStatic": 0.088,
+      "cpStatic": 0.038,
       "recommendedKvRange": [ 3000, 5000 ],
       "recommendedVoltageRange": "3S",
       "pitchVelocityMs": null,
       "isFolding": false,
       "recommendedUseCase": "Micro indoor quad, toothpick build",
-      "notes": "For 1106/1306 motor class micro quads. Polycarbonate is durable for indoor flying."
+      "notes": "For 1106/1306 motor class micro quads. Polycarbonate is durable for indoor flying. Ct/Cp estimated from typical 3\" tri-blade micro prop geometry."
     },
     {
       "id": "prop_007",
@@ -822,12 +832,14 @@
       "material": "Carbon fiber",
       "maxRPM": 5500,
       "maxStaticThrustG": 4200,
+      "ctStatic": 0.110,
+      "cpStatic": 0.040,
       "recommendedKvRange": [ 100, 200 ],
       "recommendedVoltageRange": "12S",
       "pitchVelocityMs": null,
       "isFolding": false,
       "recommendedUseCase": "Maximum endurance heavy-lift UAV",
-      "notes": "Designed to pair with T-Motor U8 series. Fixed-pitch version for direct bolt-on to motor shaft."
+      "notes": "Designed to pair with T-Motor U8 series. Fixed-pitch version for direct bolt-on to motor shaft. Ct/Cp estimated from T-Motor 18\" CF 2-blade prop test data."
     },
     {
       "id": "prop_008",
@@ -851,12 +863,14 @@
       "maxRPM": 12000,
       "maxStaticThrustG": 6000,
       "staticThrustTestRPM": 8000,
+      "ctStatic": 0.135,
+      "cpStatic": 0.058,
       "isFolding": false,
       "recommendedKvRange": [ 380, 500 ],
       "recommendedVoltageRange": "4S",
       "pitchVelocityMs": null,
       "recommendedUseCase": "Survey/mapping quad, 800 mm frame",
-      "notes": "Guaranteed-passing pair with mot_010. Design point: 4S, MTOW 3000 g (1500 gf/motor), sea level to 2500 m. Hover RPM formula: rpmSeaLevel = 8000 * sqrt(thrustGf / 6000). At 1500 gf: rpmSeaLevel = 4000, kvRequired (fixed code, 4S) = 4000 * 1.4 / 14.8 = 378. Motor KV 430 is 13.6% from target, within 15% band."
+      "notes": "Ct/Cp estimated from APC 10x4.7 SF reference data (similar geometry, CF vs glass-filled nylon). NOTE: the staticThrustTestRPM/maxStaticThrustG design point (8000 RPM at 6000 gf) was calibrated to the legacy EstimatePropellerHoverRpm formula and implies Ct~0.65, which is physically unreasonable. Hover RPM with the current ComputePropellerAero formula and Ct=0.135 at 1500 gf sea level is ~8800 RPM, requiring KV~830 — incompatible with mot_010 (KV 430). A new guaranteed-passing pair calibrated to the current engine is needed."
     }
   ],
 
