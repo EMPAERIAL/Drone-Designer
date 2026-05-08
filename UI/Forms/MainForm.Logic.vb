@@ -300,7 +300,7 @@ Partial Class MainForm
                 .RequiresWaterproofing = (cboIPRating.SelectedIndex > 0),
                 .RequiredIPRating = MapIPRating(cboIPRating.SelectedIndex),
                 .Profile = MapMissionProfileCategory(cboMissionProfile.SelectedIndex),   ' legacy enum
-                .Configuration = MapUAVConfiguration(cboFrameType.SelectedIndex),
+                .Configuration = MapUAVConfiguration(cboFrameType.SelectedIndex, cboMotorCount.SelectedIndex),
                 .PowerSource = PowerSourceType.LiPo,
                 .Regulatory = If(autoLevel >= 3,
                                     RegulatoryClass.BVLOS,
@@ -507,17 +507,23 @@ Partial Class MainForm
     End Function
 
     ''' <summary>
-    ''' Maps Airframe Type combo SelectedIndex to <see cref="UAVConfiguration"/>.
-    ''' "Coaxial" has no dedicated enum value; it is mapped to Quadcopter as the
-    ''' closest structural equivalent. Update if Coaxial is added to UAVConfiguration.
+    ''' Maps frame type and motor count combo indices to <see cref="UAVConfiguration"/>.
+    ''' Fixed wing / VTOL / Helicopter are driven by <paramref name="frameTypeIdx"/>.
+    ''' Multirotor topology is derived from <paramref name="motorCountIdx"/> so that
+    ''' Hex and Octo receive the correct prop-diameter ratios.
     ''' </summary>
-    Private Shared Function MapUAVConfiguration(idx As Integer) As UAVConfiguration
-        Select Case idx
-            Case 0 : Return UAVConfiguration.Quadcopter   ' Multirotor → default quad
+    Private Shared Function MapUAVConfiguration(frameTypeIdx As Integer, motorCountIdx As Integer) As UAVConfiguration
+        Select Case frameTypeIdx
             Case 1 : Return UAVConfiguration.FixedWing
             Case 2 : Return UAVConfiguration.VTOL
             Case 3 : Return UAVConfiguration.Helicopter
-            Case 4 : Return UAVConfiguration.Quadcopter   ' Coaxial — best available match
+        End Select
+        ' Multirotor (index 0) and Coaxial (index 4): derive topology from motor count.
+        Select Case motorCountIdx
+            Case 0 : Return UAVConfiguration.Tricopter    ' 3-motor
+            Case 1 : Return UAVConfiguration.Quadcopter   ' 4-motor
+            Case 2 : Return UAVConfiguration.Hexacopter   ' 6-motor
+            Case 3 : Return UAVConfiguration.Octocopter   ' 8-motor
             Case Else : Return UAVConfiguration.Quadcopter
         End Select
     End Function
