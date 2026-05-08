@@ -87,9 +87,23 @@ Namespace Drone_Designer.Core.Services
         Private ReadOnly _config As ConfigManager
         Private ReadOnly _logger As Action(Of String)      ' thin logging hook
 
-        ''' <summary>Path to the motor mount macro file (.swb).</summary>
         Private ReadOnly _motorMountMacroPath As String
         Private ReadOnly _motorMountTemplatePath As String
+
+        Private ReadOnly _carbonFiberArmMacroPath As String
+        Private ReadOnly _carbonFiberArmTemplatePath As String
+
+        Private ReadOnly _armChassisConnectionMacroPath As String
+        Private ReadOnly _armChassisConnectionTemplatePath As String
+
+        Private ReadOnly _chassisPlatesMacroPath As String
+        Private ReadOnly _chassisPlatesTemplatePath As String
+
+        Private ReadOnly _landingGearConnectionMacroPath As String
+        Private ReadOnly _landingGearConnectionTemplatePath As String
+
+        Private ReadOnly _landingGearTubeMacroPath As String
+        Private ReadOnly _landingGearTubeTemplatePath As String
 
         ' ------------------------------------------------------------------
         ' Constructor
@@ -119,13 +133,29 @@ Namespace Drone_Designer.Core.Services
             _macroRunner = macroRunner
             _logger = If(logger, Sub(msg) System.Diagnostics.Debug.WriteLine($"[Pipeline] {msg}"))
 
-            ' Macro path read from config; fall back to a path relative to the executable.
-            _motorMountMacroPath = Path.Combine(
-                        AppDomain.CurrentDomain.BaseDirectory,
-                        "Resources", "Macros", "MotorMount.swp")
-            _motorMountTemplatePath = Path.Combine(
-                        ConfigManager.Settings.ResolvedTemplatePartsDirectory,
-                        "MotorMount_Template.SLDPRT")
+            ' Macro paths relative to the executable. Corresponding .swb source files live
+            ' in Resources/Macros/. Each .swp must be compiled in SolidWorks 2026 before use;
+            ' missing .swp files produce graceful per-part failures (not pipeline crashes).
+            Dim macroBase As String = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Macros")
+            Dim templateBase As String = ConfigManager.Settings.ResolvedTemplatePartsDirectory
+
+            _motorMountMacroPath = Path.Combine(macroBase, "MotorMount.swp")
+            _motorMountTemplatePath = Path.Combine(templateBase, "MotorMount_Template.SLDPRT")
+
+            _carbonFiberArmMacroPath = Path.Combine(macroBase, "CarbonFiberArm.swp")
+            _carbonFiberArmTemplatePath = Path.Combine(templateBase, "CarbonFiberArm_Template.SLDPRT")
+
+            _armChassisConnectionMacroPath = Path.Combine(macroBase, "ArmChassisConnection.swp")
+            _armChassisConnectionTemplatePath = Path.Combine(templateBase, "ArmChassisConnection_Template.SLDPRT")
+
+            _chassisPlatesMacroPath = Path.Combine(macroBase, "ChassisPlates.swp")
+            _chassisPlatesTemplatePath = Path.Combine(templateBase, "ChassisPlates_Template.SLDPRT")
+
+            _landingGearConnectionMacroPath = Path.Combine(macroBase, "LandingGearConnection.swp")
+            _landingGearConnectionTemplatePath = Path.Combine(templateBase, "LandingGearConnectionPart_Template.SLDPRT")
+
+            _landingGearTubeMacroPath = Path.Combine(macroBase, "LandingGearTube.swp")
+            _landingGearTubeTemplatePath = Path.Combine(templateBase, "LandingGearTube_Template.SLDPRT")
         End Sub
 
         ' ------------------------------------------------------------------
@@ -461,6 +491,160 @@ Namespace Drone_Designer.Core.Services
             End If
         End Function
 
+        ' Inner diameter for standard CF tube stock: 1.5 mm wall on each side.
+        Private Shared Function ComputeArmTubeIdMm(odMm As Double) As Double
+            Return Math.Max(odMm - 3.0, 1.0)
+        End Function
+
+        ' Extracts the first decimal number from strings like "30.5x30.5mm stack" or "38x38mm".
+        Private Shared Function ParseMountPatternMm(raw As String, defaultVal As Double) As Double
+            If String.IsNullOrWhiteSpace(raw) Then Return defaultVal
+            Dim m As Text.RegularExpressions.Match =
+                Text.RegularExpressions.Regex.Match(raw, "\d+(?:\.\d+)?")
+            Dim val As Double
+            If m.Success AndAlso Double.TryParse(m.Value, Globalization.NumberStyles.Number,
+                                                  Globalization.CultureInfo.InvariantCulture, val) AndAlso val > 0 Then
+                Return val
+            End If
+            Return defaultVal
+        End Function
+
+        Private Shared Function BuildArmParams(specs As MissionSpecs, armOdMm As Double, armIdMm As Double) As MacroParameters
+            Dim p As New MacroParameters()
+            p.Add("ARM_LENGTH_MM", specs.FrameSizeMm / 2.0)
+            p.Add("ARM_OD_MM", armOdMm)
+            p.Add("ARM_ID_MM", armIdMm)
+            Return p
+        End Function
+
+        Private Shared Function BuildArmChassisConnectionParams(armOdMm As Double) As MacroParameters
+            Const DefaultClampBoltMm As Double = 3.0
+            Const DefaultWallMm As Double = 2.5
+            Dim p As New MacroParameters()
+            p.Add("ARM_OD_MM", armOdMm)
+            p.Add("CLAMP_LENGTH_MM", Math.Round(armOdMm * 2.5))
+            p.Add("CLAMP_BOLT_MM", DefaultClampBoltMm)
+            p.Add("CLAMP_BOLT_SPACING_MM", 20.0)
+            p.Add("CHASSIS_ATTACH_SPACING_MM", 30.0)
+            p.Add("CHASSIS_ATTACH_BOLT_MM", DefaultClampBoltMm)
+            p.Add("WALL_THICKNESS_MM", DefaultWallMm)
+            Return p
+        End Function
+
+        Private Shared Function BuildChassisPlatesParams(
+                result As SelectionResult,
+                specs As MissionSpecs,
+                motorCount As Integer) As MacroParameters
+
+            Const DefaultHoleMm As Double = 3.2   ' M3 bolt clearance
+            Const DefaultPlateMm As Double = 2.0
+            Const DefaultArmAttachMm As Double = 20.0
+
+            Dim p As New MacroParameters()
+
+            ' Flight controller
+            Dim fc As FlightControllerSpec = TryCast(result.SelectedFlightControllers?.FirstOrDefault(), FlightControllerSpec)
+            Dim fcPattern As Double = If(fc IsNot Nothing, ParseMountPatternMm(fc.MountingPatternMm, 30.5), 30.5)
+            Dim fcLength As Double = If(fc IsNot Nothing AndAlso fc.Dimensions.Length > 0, fc.Dimensions.Length, 36.5)
+            Dim fcWidth As Double = If(fc IsNot Nothing AndAlso fc.Dimensions.Width > 0, fc.Dimensions.Width, 36.5)
+            p.Add("FC_MOUNT_PATTERN_MM", fcPattern)
+            p.Add("FC_LENGTH_MM", fcLength)
+            p.Add("FC_WIDTH_MM", fcWidth)
+            p.Add("FC_HOLE_MM", DefaultHoleMm)
+
+            ' On-board computer (use FC dims as fallback — same board in typical setups)
+            p.Add("OC_LENGTH_MM", fcLength)
+            p.Add("OC_WIDTH_MM", fcWidth)
+            p.Add("OC_MOUNT_PATTERN_MM", fcPattern)
+            p.Add("OC_HOLE_MM", DefaultHoleMm)
+
+            ' GPS module
+            Dim gps As GPSModuleSpec = TryCast(result.SelectedGpsModules?.FirstOrDefault(), GPSModuleSpec)
+            Dim gpsDiam As Double = If(gps IsNot Nothing AndAlso gps.PCBDiameterMm > 0, gps.PCBDiameterMm, 50.0)
+            p.Add("GPS_DIAM_MM", gpsDiam)
+            p.Add("GPS_LENGTH_MM", gpsDiam)
+            p.Add("GPS_WIDTH_MM", gpsDiam)
+            p.Add("GPS_HOLE_MM", DefaultHoleMm)
+
+            ' Battery
+            Dim bat As BatterySpec = TryCast(result.SelectedBatteries?.FirstOrDefault(), BatterySpec)
+            p.Add("BATT_LENGTH_MM", If(bat IsNot Nothing AndAlso bat.Dimensions.Length > 0, bat.Dimensions.Length, 135.0))
+            p.Add("BATT_WIDTH_MM", If(bat IsNot Nothing AndAlso bat.Dimensions.Width > 0, bat.Dimensions.Width, 50.0))
+            p.Add("BATT_HEIGHT_MM", If(bat IsNot Nothing AndAlso bat.Dimensions.Height > 0, bat.Dimensions.Height, 45.0))
+
+            ' Frame geometry
+            p.Add("ARM_COUNT", CDbl(motorCount))
+            p.Add("CHASSIS_RADIUS_MM", specs.FrameSizeMm / 2.0)
+            p.Add("PLATE_THICKNESS_MM", DefaultPlateMm)
+            p.Add("ARM_ATTACH_SPACING_MM", DefaultArmAttachMm)
+
+            Return p
+        End Function
+
+        Private Shared Function BuildLandingGearConnectionParams(armOdMm As Double, armIdMm As Double) As MacroParameters
+            Dim p As New MacroParameters()
+            p.Add("LG_TUBE_OD_MM", armOdMm)
+            p.Add("LG_TUBE_ID_MM", armIdMm)
+            p.Add("LG_ANGLE_DEG", 20.0)
+            p.Add("LG_MOUNT_SPACING_MM", 30.0)
+            p.Add("LG_MOUNT_BOLT_MM", 3.0)
+            p.Add("WALL_THICKNESS_MM", 2.5)
+            Return p
+        End Function
+
+        Private Shared Function BuildLandingGearTubeParams(specs As MissionSpecs, armOdMm As Double, armIdMm As Double) As MacroParameters
+            Dim p As New MacroParameters()
+            p.Add("LG_LENGTH_MM", Math.Round(specs.FrameSizeMm / 4.0))
+            p.Add("LG_OD_MM", armOdMm)
+            p.Add("LG_ID_MM", armIdMm)
+            Return p
+        End Function
+
+        ''' <summary>
+        ''' Runs a single macro job, reporting progress, and records success or failure in <paramref name="parts"/>.
+        ''' </summary>
+        Private Sub RunSinglePart(
+                progress As IProgress(Of PipelineProgressReport),
+                parts As List(Of GeneratedPartRecord),
+                jobIndex As Integer,
+                partWindowStart As Integer,
+                pointsPerJob As Double,
+                partType As String,
+                outputFilename As String,
+                templatePath As String,
+                macroPath As String,
+                moduleName As String,
+                entryPoint As String,
+                parameters As MacroParameters,
+                outputDirectory As String)
+
+            Dim pctStart As Integer = partWindowStart + CInt(jobIndex * pointsPerJob)
+            Dim pctMid As Integer = partWindowStart + CInt((jobIndex + 0.5) * pointsPerJob)
+            Dim outputPath As String = Path.Combine(outputDirectory, outputFilename)
+
+            Report(progress, PipelineStage.GeneratingPart, pctStart, $"Generating {partType}…")
+            _logger($"Starting {partType}")
+
+            Try
+                Dim macroResult As MacroRunResult = _macroRunner.RunMacroOnTemplate(
+                    templatePath, macroPath, moduleName, entryPoint, parameters, outputPath)
+
+                If macroResult.Success Then
+                    Report(progress, PipelineStage.SavingFile, pctMid, $"Saved {partType}", outputFilename)
+                    parts.Add(New GeneratedPartRecord(outputFilename, outputFilename, partType, outputPath))
+                    _logger($"  ✓ Saved: {outputPath}")
+                Else
+                    Dim errMsg = macroResult.ErrorMessage
+                    parts.Add(GeneratedPartRecord.Failure(outputFilename, outputFilename, partType, errMsg))
+                    _logger($"  ✗ Macro failed for {partType}: {errMsg}")
+                End If
+
+            Catch ex As Exception
+                parts.Add(GeneratedPartRecord.Failure(outputFilename, outputFilename, partType, ex.Message))
+                _logger($"  ✗ Exception for {partType}: {ex}")
+            End Try
+        End Sub
+
         ''' <summary>
         ''' Executes all SolidWorks-dependent pipeline stages (3-6) synchronously.
         ''' Always call this via RunOnStaAsync so that Connect, RunMacro2, and
@@ -500,29 +684,38 @@ Namespace Drone_Designer.Core.Services
             cancellationToken.ThrowIfCancellationRequested()
 
             ' ----------------------------------------------------------------
-            ' STAGE 4 — Generate motor mounts (one per selected motor)
+            ' STAGE 4 — Generate all frame parts
             ' ----------------------------------------------------------------
             Dim motors As IReadOnlyList(Of ComponentSpecs) = selectionResult.SelectedMotors
             Dim motorCount As Integer = motors.Count
 
-            ' Percentage window for all part generation: 30 → 90 = 60 points
+            ' Total jobs: N motor mounts + 5 representative frame parts.
+            ' Percentage window for all part generation: 30 → 90 = 60 points.
+            Const FramePartCount As Integer = 5
+            Dim totalJobs As Integer = motorCount + FramePartCount
             Dim partWindowStart As Integer = 30
             Dim partWindowEnd As Integer = 90
-            Dim pointsPerPart As Double = (partWindowEnd - partWindowStart) /
-                                           Math.Max(motorCount, 1)
+            Dim pointsPerJob As Double = (partWindowEnd - partWindowStart) /
+                                          Math.Max(totalJobs, 1)
+            Dim jobIndex As Integer = 0
 
+            ' Resolve arm tube dimensions from the first motor's max thrust.
+            Dim primaryMotorSpec As MotorSpec = TryCast(selectionResult.SelectedMotors.FirstOrDefault(), MotorSpec)
+            Dim armOdMm As Double = ComputeArmTubeOdMm(If(primaryMotorSpec IsNot Nothing, primaryMotorSpec.MaxThrustGrams, 1000))
+            Dim armIdMm As Double = ComputeArmTubeIdMm(armOdMm)
+
+            ' --- Motor mounts (one per selected motor) ---
             For i As Integer = 0 To motorCount - 1
                 cancellationToken.ThrowIfCancellationRequested()
 
                 Dim motor As MotorSpec = motors(i)
-                Dim partIndex As Integer = i + 1
-                Dim pctStart As Integer = partWindowStart + CInt(i * pointsPerPart)
-                Dim pctMid As Integer = partWindowStart + CInt((i + 0.5) * pointsPerPart)
+                Dim pctStart As Integer = partWindowStart + CInt(jobIndex * pointsPerJob)
+                Dim pctMid As Integer = partWindowStart + CInt((jobIndex + 0.5) * pointsPerJob)
+                jobIndex += 1
 
                 Report(progress, PipelineStage.GeneratingPart, pctStart,
-                       $"Generating motor mount {partIndex} of {motorCount}…",
+                       $"Generating motor mount {i + 1} of {motorCount}…",
                        GetMotorDisplayName(motor))
-
                 _logger($"Starting motor mount for {GetMotorDisplayName(motor)}")
 
                 Try
@@ -534,11 +727,7 @@ Namespace Drone_Designer.Core.Services
                     motorParams.Add("MOTOR_SHAFT_DIAMETER_MM", motor.Dimensions.ShaftDiameterMm)
                     motorParams.Add("MOTOR_MOUNT_PATTERN_MM", motor.Dimensions.MountingPatternMm)
                     motorParams.Add("MOTOR_OUTER_DIAMETER_MM", motor.Dimensions.OuterDiameterMm)
-
-                    Dim motorSpec As MotorSpec = TryCast(motor, MotorSpec)
-                    If motorSpec IsNot Nothing Then
-                        motorParams.Add("ARM_TUBE_OD_MM", ComputeArmTubeOdMm(motorSpec.MaxThrustGrams))
-                    End If
+                    motorParams.Add("ARM_TUBE_OD_MM", armOdMm)
 
                     Dim macroResult As MacroRunResult = _macroRunner.RunMacroOnTemplate(
                         _motorMountTemplatePath,
@@ -550,13 +739,9 @@ Namespace Drone_Designer.Core.Services
 
                     If macroResult.Success Then
                         Report(progress, PipelineStage.SavingFile, pctMid,
-                               $"Saved motor mount {partIndex} of {motorCount}",
-                               outputFilename)
-                        parts.Add(New GeneratedPartRecord(
-                                      motor.Id,
-                                      GetMotorDisplayName(motor),
-                                      "Motor Mount",
-                                      outputPath))
+                               $"Saved motor mount {i + 1} of {motorCount}",
+                               Path.GetFileName(outputPath))
+                        parts.Add(New GeneratedPartRecord(motor.Id, GetMotorDisplayName(motor), "Motor Mount", outputPath))
                         _logger($"  ✓ Saved: {outputPath}")
                     Else
                         _logger($"  ✗ Macro failed for {GetMotorDisplayName(motor)}: {macroResult.ErrorMessage}")
@@ -566,16 +751,65 @@ Namespace Drone_Designer.Core.Services
                 Catch ex As OperationCanceledException
                     Throw
                 Catch ex As Exception
-                    Dim detail = ex.Message
-                    parts.Add(GeneratedPartRecord.Failure(
-                                  motor.Id,
-                                  GetMotorDisplayName(motor),
-                                  "Motor Mount",
-                                  detail))
+                    parts.Add(GeneratedPartRecord.Failure(motor.Id, GetMotorDisplayName(motor), "Motor Mount", ex.Message))
                     _logger($"  ✗ Exception for {GetMotorDisplayName(motor)}: {ex}")
                 End Try
-
             Next i
+
+            ' --- Carbon fiber arm (one representative — all arms are identical on symmetric frames) ---
+            cancellationToken.ThrowIfCancellationRequested()
+            RunSinglePart(
+                progress, parts, jobIndex, partWindowStart, pointsPerJob,
+                "Carbon Fiber Arm", "CarbonFiberArm.SLDPRT",
+                _carbonFiberArmTemplatePath, _carbonFiberArmMacroPath,
+                "CarbonFiberArm", "BuildCarbonFiberArm",
+                BuildArmParams(specs, armOdMm, armIdMm),
+                outputDirectory)
+            jobIndex += 1
+
+            ' --- Arm-chassis connection (one representative) ---
+            cancellationToken.ThrowIfCancellationRequested()
+            RunSinglePart(
+                progress, parts, jobIndex, partWindowStart, pointsPerJob,
+                "Arm-Chassis Connection", "ArmChassisConnection.SLDPRT",
+                _armChassisConnectionTemplatePath, _armChassisConnectionMacroPath,
+                "ArmChassisConnection", "BuildArmChassisConnection",
+                BuildArmChassisConnectionParams(armOdMm),
+                outputDirectory)
+            jobIndex += 1
+
+            ' --- Chassis plates (one) ---
+            cancellationToken.ThrowIfCancellationRequested()
+            RunSinglePart(
+                progress, parts, jobIndex, partWindowStart, pointsPerJob,
+                "Chassis Plates", "ChassisPlates.SLDPRT",
+                _chassisPlatesTemplatePath, _chassisPlatesMacroPath,
+                "ChassisPlates", "BuildChassisPlates",
+                BuildChassisPlatesParams(selectionResult, specs, motorCount),
+                outputDirectory)
+            jobIndex += 1
+
+            ' --- Landing gear connection (one representative) ---
+            cancellationToken.ThrowIfCancellationRequested()
+            RunSinglePart(
+                progress, parts, jobIndex, partWindowStart, pointsPerJob,
+                "Landing Gear Connection", "LandingGearConnection.SLDPRT",
+                _landingGearConnectionTemplatePath, _landingGearConnectionMacroPath,
+                "LandingGearConnection", "BuildLandingGearConnection",
+                BuildLandingGearConnectionParams(armOdMm, armIdMm),
+                outputDirectory)
+            jobIndex += 1
+
+            ' --- Landing gear tube (one representative) ---
+            cancellationToken.ThrowIfCancellationRequested()
+            RunSinglePart(
+                progress, parts, jobIndex, partWindowStart, pointsPerJob,
+                "Landing Gear Tube", "LandingGearTube.SLDPRT",
+                _landingGearTubeTemplatePath, _landingGearTubeMacroPath,
+                "LandingGearTube", "BuildLandingGearTube",
+                BuildLandingGearTubeParams(specs, armOdMm, armIdMm),
+                outputDirectory)
+            jobIndex += 1
 
             ' ----------------------------------------------------------------
             ' STAGE 5 — Write component manifest
@@ -602,7 +836,7 @@ Namespace Drone_Designer.Core.Services
                 If p.Success Then successCount += 1
             Next
             Report(progress, PipelineStage.Finalising, 100,
-                   $"Complete — {successCount} of {motorCount} part(s) generated",
+                   $"Complete — {successCount} of {totalJobs} part(s) generated",
                    $"Output: {outputDirectory}")
 
             Return New PipelineResult(parts, outputDirectory, manifestPath, startedAt)
