@@ -1,4 +1,6 @@
 """Generate MTOW Iterator & Selection Logic reference PDF."""
+from pathlib import Path
+
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
@@ -9,7 +11,8 @@ from reportlab.platypus import (
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 
-OUT = r"C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\MTOW_Selection_Logic.pdf"
+ROOT = Path(__file__).resolve().parents[1]
+OUT = str(ROOT / "docs" / "reports" / "MTOW_Selection_Logic.pdf")
 
 W, H = A4
 MARGIN = 2.0 * cm

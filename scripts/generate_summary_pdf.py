@@ -1,5 +1,7 @@
 """Generate a PDF summary of the Drone Designer project."""
 
+from pathlib import Path
+
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.colors import HexColor
@@ -10,7 +12,8 @@ from reportlab.platypus import (
     PageBreak, HRFlowable, KeepTogether
 )
 
-OUTPUT = "Drone_Designer_Project_Summary.pdf"
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = str(ROOT / "docs" / "reports" / "Drone_Designer_Project_Summary.pdf")
 
 BLUE = HexColor("#1a56db")
 DARK = HexColor("#1e293b")
