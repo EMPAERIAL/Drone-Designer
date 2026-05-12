@@ -1,9 +1,45 @@
-# Web-Scrapper is its own separate repository
-Resources/Web-Scrapper/
-
 # Build outputs
-bin/
-obj/
+[Bb]in/
+[Oo]bj/
+app.publish/
 
-# Visual Studio
+# Visual Studio and IDE state
 .vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.dtbcache.json
+
+# Local tool settings
+.claude/
+.archives/
+
+# Test outputs and temporary Office files
+Test/Logs/
+Test/Components/
+~$*.xlsx
+~$*.xls
+~$*.docx
+~$*.pptx
+
+# Python caches and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Nested repositories and their local metadata
+Resources/Web-Scrapper/.git/
+Resources/Web-Scrapper/.claude/
+Resources/FAST-UAV/.git/
+Resources/FAST-UAV/.claude/
+Resources/FAST-UAV/.vscode/
+
+# Nested repository worktrees
+Resources/Web-Scrapper/
