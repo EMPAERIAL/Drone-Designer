@@ -158,10 +158,10 @@ Namespace Utilities
 
         ''' <summary>
         ''' Path to the components database file (JSON).
-        ''' Example: "Resources\components.json"
+        ''' Example: "Resources\AppData\components.json"
         ''' </summary>
         <DataMember(Name:="componentsDatabasePath", Order:=1)>
-        Public Property ComponentsDatabasePath As String = "Resources\components.json"
+        Public Property ComponentsDatabasePath As String = "Resources\AppData\components.json"
 
         ''' <summary>
         ''' Root installation directory of SolidWorks.
@@ -174,10 +174,10 @@ Namespace Utilities
         ''' <summary>
         ''' Directory containing parametric SolidWorks template parts (.SLDPRT / .SLDASM).
         ''' Module 2 reads from here when editing pre-designed templates.
-        ''' Example: "C:\DroneDesigner\Templates"
+        ''' Example: "C:\DroneDesigner\Resources\SolidWorks\Templates"
         ''' </summary>
         <DataMember(Name:="templatePartsDirectory", Order:=3)>
-        Public Property TemplatePartsDirectory As String = "Resources\Templates"
+        Public Property TemplatePartsDirectory As String = "Resources\SolidWorks\Templates"
 
         ''' <summary>
         ''' Directory where generated CAD files (parts and assemblies) are written.

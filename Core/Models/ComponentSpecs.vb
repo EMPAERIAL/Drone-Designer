@@ -9,7 +9,7 @@
 '   - ComponentSelectionEngine.vb reads and returns instances of these types.
 '   - Module 2 (SolidWorks automation) consumes the mechanical properties
 '     (Mass, Dimensions, MountingPattern, ShaftDiameter, etc.) to drive CAD.
-'   - The JSON in Resources/components.json should map 1-to-1 to these classes;
+'   - The JSON in Resources/AppData/components.json should map 1-to-1 to these classes;
 '     ComponentRepository.vb is responsible for deserialisation.
 '
 ' Naming convention:  every property uses PascalCase.

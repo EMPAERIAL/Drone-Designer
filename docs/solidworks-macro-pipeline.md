@@ -97,7 +97,7 @@ binary. Recreate it:
 4. Paste in the new macro code
 5. Add the correct type library: **Tools → References → check "SOLIDWORKS 2026 Type Library"**
 6. Save — SolidWorks rewrites the binary with correct 2026 references
-7. Rebuild the Drone Designer project so the updated `.swp` is copied to `bin\Debug\Resources\Macros\`
+7. Rebuild the Drone Designer project so the updated `.swp` is copied to `bin\Debug\Resources\SolidWorks\Macros\`
 
 Any time the project moves to a new SolidWorks version, the `.swp` files must be
 regenerated this way.
@@ -148,7 +148,7 @@ as a module name.
    - Add the type library: Tools → References → check "SOLIDWORKS [year] Type Library"
    - Save
 3. **Check the module name** in the VBA Project Explorer — write it down.
-4. **Rebuild the Drone Designer project** so the `.swp` is copied to `bin\Debug\Resources\Macros\`.
+4. **Rebuild the Drone Designer project** so the `.swp` is copied to `bin\Debug\Resources\SolidWorks\Macros\`.
 5. **Wire up the pipeline call** using the exact module name from step 3 and the exact
    Sub name as the procedure name.
 6. **All SolidWorks COM calls go inside `RunOnStaAsync` as one block** — Connect through

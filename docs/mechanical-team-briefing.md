@@ -60,7 +60,7 @@ For each part, two things:
 **B. A macro** (`.swb` text file, then converted to `.swp`)
 - Reads the component parameters and writes them into the equation manager variables
 - Forces a rebuild
-- The reference implementation is `Resources/Macros/MotorMount1.swb` — read it,
+- The reference implementation is `Resources/SolidWorks/Macros/MotorMount1.swb` — read it,
   it is short and the pattern is always the same
 
 ---
@@ -79,8 +79,8 @@ For each part, two things:
 |---|---|
 | `docs/parts-parameter-reference.md` | All DD_ variable names and parameter sources for every part |
 | `docs/solidworks-macro-pipeline.md` | Step-by-step guide for creating the .swp and wiring it up |
-| `Resources/Macros/MotorMount1.swb` | Reference macro — copy this pattern for every new part |
-| `Resources/Templates/MotorMount_Template.SLDPRT` | Reference template — shows how the equations are set up |
+| `Resources/SolidWorks/Macros/MotorMount1.swb` | Reference macro — copy this pattern for every new part |
+| `Resources/SolidWorks/Templates/MotorMount_Template.SLDPRT` | Reference template — shows how the equations are set up |
 
 ---
 

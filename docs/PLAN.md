@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-06  
 **Scope:** Integrate FAST-UAV aerodynamic physics and component selection improvements into the existing VB.NET WinForms application.  
-**Prerequisite reading:** `Core/Services/ComponentSelectionEngine.vb`, `Core/Models/ComponentSpecs.vb`, `Resources/components.json`
+**Prerequisite reading:** `Core/Services/ComponentSelectionEngine.vb`, `Core/Models/ComponentSpecs.vb`, `Resources/AppData/components.json`
 
 ---
 
@@ -45,7 +45,7 @@ Future Work  (independent — wire in when catalogue is large enough)
 
 **Files:**
 - `Core/Models/ComponentSpecs.vb` — `PropellerSpec` class
-- `Resources/components.json` — all propeller entries
+- `Resources/AppData/components.json` — all propeller entries
 
 **What to do:**
 
@@ -810,7 +810,7 @@ The hard-constraint checks (voltage range, shaft fit) remain as pre-filters befo
 | `Core/Models/PipelineResult.vb` | 3 | Add phase energy breakdown fields to `PowerBudget` |
 | `Core/Services/ComponentSelectionEngine.vb` | 1, 2, 3 | Add `AirDensityKgM3`; replace `EstimatePropellerHoverRpm` with `ComputePropellerAero`; replace KV filter with torque filter; replace single-phase energy with `CalculateMissionEnergy` |
 | `Core/Services/SizingOptimizer.vb` | 4 | New file — k-factor grid sweep |
-| `Resources/components.json` | 1, 2 | Add `ctStatic`, `cpStatic` to propellers; add `maxTorqueNm`, `ktNmPerA`, `windingResistanceOhm`, `noLoadCurrentA` to motors |
+| `Resources/AppData/components.json` | 1, 2 | Add `ctStatic`, `cpStatic` to propellers; add `maxTorqueNm`, `ktNmPerA`, `windingResistanceOhm`, `noLoadCurrentA` to motors |
 | `UI/Forms/MainForm.vb` | 2, 3, 4 | Add "Advanced Sizing" panel; add mission phase fraction inputs; add optimizer toggle |
 | `UI/Forms/MainForm.Logic.vb` | 2, 4 | Wire `SizingPolicy` inputs into `BuildMissionSpecs`; wire optimizer into `OnSelectComponentsAsync` |
 | `Core/Services/Catalogues/StandardScaler.vb` | Future | New file |

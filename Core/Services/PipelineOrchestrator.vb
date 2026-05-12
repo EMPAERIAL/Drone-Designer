@@ -134,9 +134,9 @@ Namespace Drone_Designer.Core.Services
             _logger = If(logger, Sub(msg) System.Diagnostics.Debug.WriteLine($"[Pipeline] {msg}"))
 
             ' Macro paths relative to the executable. Corresponding .swb source files live
-            ' in Resources/Macros/. Each .swp must be compiled in SolidWorks 2026 before use;
+            ' in Resources/SolidWorks/Macros/. Each .swp must be compiled in SolidWorks 2026 before use;
             ' missing .swp files produce graceful per-part failures (not pipeline crashes).
-            Dim macroBase As String = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "Macros")
+            Dim macroBase As String = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "SolidWorks", "Macros")
             Dim templateBase As String = ConfigManager.Settings.ResolvedTemplatePartsDirectory
 
             _motorMountMacroPath = Path.Combine(macroBase, "MotorMount.swp")

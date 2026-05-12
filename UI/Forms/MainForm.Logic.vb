@@ -92,17 +92,17 @@ Partial Class MainForm
     ''' </summary>
     Private Sub InitialiseEngine()
         Try
-            Dim repo As New ComponentRepository()   ' reads Resources/components.json
+            Dim repo As New ComponentRepository()   ' reads Resources/AppData/components.json
             _engine = New ComponentSelectionEngine(repo)
             _cadGen = New SolidWorksAutomation()
             UpdateStatus("Ready — enter mission parameters and click 'Select Components'.")
         Catch ex As Exception
-            UpdateStatus("⚠  Component database failed to load — check Resources/components.json.")
+            UpdateStatus("⚠  Component database failed to load — check Resources/AppData/components.json.")
             MessageBox.Show(
                     "The component database could not be loaded:" &
                     Environment.NewLine & ex.Message &
                     Environment.NewLine & Environment.NewLine &
-                    "Ensure 'components.json' is present in the Resources folder. " &
+                    "Ensure 'components.json' is present in Resources\AppData. " &
                     "Component selection will not be available until this is fixed.",
                     "Database Load Error",
                     MessageBoxButtons.OK,

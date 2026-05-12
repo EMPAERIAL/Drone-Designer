@@ -94,7 +94,7 @@
 ' ---------------------------------------------------------------
 ' DEPLOYMENT CHECKLIST (run before first use)
 '
-'  [1] Copy MotorMount.swb to <AppDir>\Resources\Macros\
+'  [1] Copy MotorMount.swb to <AppDir>\Resources\SolidWorks\Macros\
 '  [2] Ensure SolidWorks is installed and licensed on the same machine
 '  [3] Set the default part template in SolidWorks:
 '        Tools > Options > File Locations > Document Templates

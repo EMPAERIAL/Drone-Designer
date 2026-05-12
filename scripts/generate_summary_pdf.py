@@ -163,9 +163,13 @@ def build_pdf():
         I + I + "ConfigManager.vb",
         "",
         I + "Resources/",
-        I + I + "components.json",
-        I + I + "Macros/",
-        I + I + I + "MotorMount.swb",
+        I + I + "AppData/",
+        I + I + I + "components.json",
+        I + I + "SolidWorks/",
+        I + I + I + "Macros/",
+        I + I + I + I + "MotorMount.swb",
+        I + I + I + "Templates/",
+        I + I + "Submodules/",
         "",
         I + "packages/",
         I + I + "Newtonsoft.Json.13.0.4/",
@@ -329,7 +333,7 @@ def build_pdf():
             "lines": "~304 lines",
             "purpose": "Read-only data access layer. Loads and indexes components from JSON.",
             "details": [
-                "Loads Resources/components.json on construction; builds category and ID indexes.",
+                "Loads Resources/AppData/components.json on construction; builds category and ID indexes.",
                 "Typed accessors: GetMotors(), GetBatteries(), GetESCs(), GetFlightControllers(), etc.",
                 "Filter methods: GetMotorsWithMinThrust(), GetBatteriesWithMinCapacity(), GetComponentsUnderMass().",
                 "Uses Newtonsoft.Json for flexible deserialization. Warns on duplicate IDs without crashing.",
@@ -457,7 +461,7 @@ def build_pdf():
         },
         {
             "name": "MotorMount.swb",
-            "path": "Resources/Macros/MotorMount.swb",
+            "path": "Resources/SolidWorks/Macros/MotorMount.swb",
             "lines": "~399 lines",
             "purpose": "SolidWorks VBA macro that generates a parametric motor-mount part.",
             "details": [
@@ -482,7 +486,7 @@ def build_pdf():
         },
         {
             "name": "components.json",
-            "path": "Resources/components.json",
+            "path": "Resources/AppData/components.json",
             "lines": "~1,829 lines",
             "purpose": "Component database. JSON array of real-world drone hardware.",
             "details": [
@@ -594,7 +598,7 @@ def build_pdf():
     story.append(Paragraph("6. Extension Points", sH1))
     story.append(hr())
     extensions = [
-        "<b>Additional CAD Parts</b> - New .swb macros can be added to Resources/Macros/ and wired into PipelineOrchestrator for propeller mounts, battery trays, etc.",
+        "<b>Additional CAD Parts</b> - New .swb macros can be added to Resources/SolidWorks/Macros/ and wired into PipelineOrchestrator for propeller mounts, battery trays, etc.",
         "<b>Module 3 (Cost / Supply Chain)</b> - SelectionResult exposes up to 5 candidates per category for trade-off analysis.",
         "<b>Web Migration</b> - IComponentSelector interface and plain data types enable a REST API without UI changes.",
     ]

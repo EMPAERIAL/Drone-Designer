@@ -15,7 +15,7 @@ setup steps.
 3. The macro writes the values into the equation manager as global variables (`DD_` names).
 4. The macro calls `eqMgr.EvaluateAll` then `swDoc.ForceRebuild3 True`.
 
-See `Resources/Macros/MotorMount1.swb` for the reference implementation.
+See `Resources/SolidWorks/Macros/MotorMount1.swb` for the reference implementation.
 
 ---
 
@@ -209,7 +209,7 @@ LgLengthMm = BattHeightMm + (PropDiameterMm × sin(MaxTiltAngleDeg)) + ground_cl
 4. **Note the exact module name** shown in the VBA Project Explorer — this is what
    goes into the pipeline call as the third argument to `RunMacroOnTemplate`.
 
-5. **Rebuild the project** so the `.swp` is copied to `bin\Debug\Resources\Macros\`.
+5. **Rebuild the project** so the `.swp` is copied to `bin\Debug\Resources\SolidWorks\Macros\`.
 
 6. **Tell the pipeline lead** (Ahmed) the macro file name, module name, and
    procedure name so the orchestrator call can be wired up.

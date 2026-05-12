@@ -602,7 +602,7 @@ packages/
 |---|---|
 | MainForm.CAD.vb | **YES** — `UI/Forms/MainForm.CAD.vb` |
 | CadProgressForm.vb | **YES** — `UI/Forms/CadProgressForm.vb` |
-| MotorMount.swb | **YES** — `Resources/Macros/MotorMount.swb` |
+| MotorMount.swb | **YES** — `Resources/SolidWorks/Macros/MotorMount.swb` |
 
 All three files previously reported as missing are now present.
 
