@@ -17,6 +17,8 @@ You are ready for this workflow when:
 - the design recommendation looks acceptable
 - you want a saved file or generated output folder
 
+In the normal flow, you arrive here from the `Selected Components` tab after a successful `Select Components` run.
+
 If you have not run `Select Components` yet, go back to [Design A UAV From Requirements](workflow-design-a-uav-from-requirements.md) first.
 
 ## Output Types
@@ -67,6 +69,8 @@ Expect to see:
 - the selected component list, with recommended rows distinguished from alternatives
 
 If you rerun the design with different mission inputs, export again. The workbook reflects the current design run, not every run from the whole session.
+
+If you changed mission inputs after the last successful run, go back and run `Select Components` again before exporting. Export reflects the current in-memory design recommendation, not whatever inputs are currently typed into the form.
 
 ## Workflow 2: Generate CAD
 

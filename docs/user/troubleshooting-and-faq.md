@@ -2,6 +2,12 @@
 
 Use this page when the normal Drone Designer workflow breaks down. It focuses on operator-facing problems and the first checks you can do without digging into the codebase.
 
+Use it as the recovery page for the rest of the user doc set:
+
+- startup and packaging problems after [Installation And Prerequisites](installation-and-prerequisites.md)
+- design-run failures after [Design A UAV From Requirements](workflow-design-a-uav-from-requirements.md)
+- export or CAD failures after [Export And Generate Outputs](workflow-export-and-generate-outputs.md)
+
 ## Quick Triage
 
 Start with the symptom that matches what you see:
