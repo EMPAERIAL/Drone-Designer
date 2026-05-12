@@ -32,4 +32,4 @@ Go to [Maintainer Documentation](maintainers/index.md) if you need to:
 
 ## Current State
 
-The documentation system is being built in phases from [DOCUMENTATION_PLAN.md](DOCUMENTATION_PLAN.md). Some linked pages are still placeholders while Phase 1 establishes the structure and entry points.
+The documentation system now lives in this tree. [DOCUMENTATION_PLAN.md](DOCUMENTATION_PLAN.md) remains the planning record, but the maintained documentation surface is `docs/user/`, `docs/maintainers/`, `docs/reference/`, and `docs/assets/`.
