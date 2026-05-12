@@ -190,8 +190,6 @@ This is the single biggest selection-policy shortcut in the current engine. It k
 - early prop ordering strongly influences the final answer
 - feasible smaller-prop or higher-cell alternatives may never be compared once an earlier pairing passes
 
-The older `docs/calibrated-survey-quad-selection-trace.md` remains useful mainly because it captures this first-success behavior clearly, even though some surrounding details in that note are now stale.
-
 ## Step 8: Power Budget
 
 `CalculatePowerBudget()` uses the chosen propulsion pair to build `PowerBudget`.
@@ -325,5 +323,3 @@ That path mirrors the actual execution order and is usually faster than starting
 - `UI/Forms/MainForm.Export.vb`
 - `UI/Forms/MainForm.CAD.vb`
 - `Resources/AppData/components.json`
-- `docs/calibrated-survey-quad-selection-trace.md`
-- `docs/PLAN.md`
