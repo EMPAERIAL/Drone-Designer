@@ -21,4 +21,4 @@ C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Deb
 C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Debug\Drone Designer.pdb
 C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Debug\Resources\Macros\MotorMount.swp
 C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\bin\Debug\Resources\Macros\MotorMount1.swb
-C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Debug\Drone Designer.vbproj.CopyComplete
+C:\Users\Ahmed Osman\Desktop\Teknofest\THE DRONE DESIGNER\Drone Designer\obj\Debug\Drone De.5C2C6CBA.Up2Date

@@ -3303,9 +3303,6 @@ Drone Designer
  </para>
  </summary>
 </member>
-<member name="F:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator._motorMountMacroPath">
- <summary>Path to the motor mount macro file (.swb).</summary>
-</member>
 <member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.#ctor(Drone_Designer.Core.Interfaces.IComponentSelector,Drone_Designer.SolidWorks.SolidWorksAutomation,Drone_Designer.Drone_Designer.SolidWorks.MacroRunner,System.Action{System.String})">
  <summary>
  Initialises the orchestrator with all required services.
@@ -3389,6 +3386,11 @@ Drone Designer
  Returns the appropriate carbon round tube outer diameter for a drone arm,
  based on the maximum thrust the motor produces.
  Sizes map to common carbon fibre tube stock: 10, 12, 16, 20, 25 mm.
+ </summary>
+</member>
+<member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunSinglePart(System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord},System.Int32,System.Int32,System.Double,System.String,System.String,System.String,System.String,System.String,System.String,Drone_Designer.Drone_Designer.SolidWorks.MacroParameters,System.String)">
+ <summary>
+ Runs a single macro job, reporting progress, and records success or failure in <paramref name="parts"/>.
  </summary>
 </member>
 <member name="M:Drone_Designer.Drone_Designer.Core.Services.PipelineOrchestrator.RunSolidWorksStages(Drone_Designer.Core.Services.SelectionResult,Drone_Designer.Core.Models.MissionSpecs,System.String,System.Collections.Generic.List{Drone_Designer.Drone_Designer.Core.Models.GeneratedPartRecord},System.Boolean,System.IProgress{Drone_Designer.Drone_Designer.Core.Models.PipelineProgressReport},System.Threading.CancellationToken,System.DateTime)">
@@ -4145,11 +4147,12 @@ Drone Designer
  Used to populate the detailed <see cref="P:Drone_Designer.Core.Models.MissionSpecs.Environment"/> property.
  </summary>
 </member>
-<member name="M:Drone_Designer.MainForm.MapUAVConfiguration(System.Int32)">
+<member name="M:Drone_Designer.MainForm.MapUAVConfiguration(System.Int32,System.Int32)">
  <summary>
- Maps Airframe Type combo SelectedIndex to <see cref="T:Drone_Designer.Core.Models.UAVConfiguration"/>.
- "Coaxial" has no dedicated enum value; it is mapped to Quadcopter as the
- closest structural equivalent. Update if Coaxial is added to UAVConfiguration.
+ Maps frame type and motor count combo indices to <see cref="T:Drone_Designer.Core.Models.UAVConfiguration"/>.
+ Fixed wing / VTOL / Helicopter are driven by <paramref name="frameTypeIdx"/>.
+ Multirotor topology is derived from <paramref name="motorCountIdx"/> so that
+ Hex and Octo receive the correct prop-diameter ratios.
  </summary>
 </member>
 <member name="M:Drone_Designer.MainForm.MapIPRating(System.Int32)">
