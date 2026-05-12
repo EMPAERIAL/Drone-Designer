@@ -40,6 +40,3 @@ Resources/Web-Scrapper/.claude/
 Resources/FAST-UAV/.git/
 Resources/FAST-UAV/.claude/
 Resources/FAST-UAV/.vscode/
-
-# Nested repository worktrees
-Resources/Web-Scrapper/

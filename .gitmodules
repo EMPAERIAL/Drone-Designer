@@ -1,0 +1,3 @@
+[submodule "Resources/Web-Scrapper"]
+	path = Resources/Web-Scrapper
+	url = https://github.com/armesis/Web-Scrapper.git
