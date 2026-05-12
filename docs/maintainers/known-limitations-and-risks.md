@@ -17,6 +17,24 @@ Risk:
 - a maintainer may add UI options or doc claims that imply broader support than the engine can actually deliver
 - non-multirotor behavior may look superficially valid while still being wrong in sizing details
 
+## Propulsion Selection Is Feasibility-First, Not Globally Optimized
+
+The current propulsion path does not compare every feasible propeller, motor, and cell-count combination globally.
+
+Current evidence in code:
+
+- [`Core/Services/ComponentSelectionEngine.vb`](../../Core/Services/ComponentSelectionEngine.vb) builds prop candidates first, ranks them, and then iterates cell counts in ascending order.
+- `SelectPropellerAndMotor()` returns the first passing combination instead of collecting all feasible combinations and ranking them globally.
+- Non-racing missions sort prop candidates by larger diameter first, so prop ordering has a direct effect on the final recommendation.
+
+Risk:
+
+- an earlier valid large-prop combination can hide later lighter or otherwise better combinations
+- maintainers may tune one ranking rule and accidentally shift final recommendations more than expected
+- bug reports about "why did it pick this motor?" often come from early-exit behavior, not from one bad component record
+
+Treat the selector as a fast local policy, not as a search over the full feasible design space.
+
 ## UI And Engine Contracts Are Coupled Through Alias Properties
 
 `MissionSpecs` currently carries both legacy UI-facing properties and engine-facing alias properties.
@@ -71,6 +89,24 @@ Risk:
 - maintainers may add new mission fields without updating all validation touchpoints
 
 This is especially important when changing mission inputs, defaults, or sizing-policy behavior.
+
+## Battery Recommendation Still Uses A Mass Budget Shortcut
+
+The engine computes a detailed phased `PowerBudget`, but the final battery pick is still driven by `SelectBatteryFromMassBudget()`.
+
+Current evidence:
+
+- the method subtracts airframe, propulsion, and payload mass from `MaxTakeoffMassGrams` to derive a battery mass budget
+- it hard-filters by exact cell count, battery mass, and discharge capability
+- it then picks the highest-capacity passing pack
+
+Risk:
+
+- a maintainer can assume `PowerBudget.RequiredCapacityMah` is the sole driver of battery choice when it is not
+- propulsion or MTOW changes can make the pack recommendation look inconsistent with the displayed power budget
+- downstream warnings may be the only sign that the chosen pack is a compromise forced by mass limits rather than an ideal match
+
+When a battery result looks wrong, inspect both the power budget and the battery mass-budget filter before changing catalogue data.
 
 ## CAD Generation Depends On Precompiled SolidWorks Macros
 
@@ -148,6 +184,24 @@ Risk:
 - useful facts may still live in older deep-dive notes instead of the intended destination doc
 
 Treat the new docs tree as the preferred entry point, but verify whether the destination page is complete before assuming the migration is finished.
+
+## CAD Automation Is Sensitive To COM Threading And Macro Format
+
+The CAD path is not just "SolidWorks installed or not." It also depends on fragile runtime assumptions that came out of the older macro-pipeline debugging notes.
+
+Current evidence:
+
+- [`Core/Services/PipelineOrchestrator.vb`](../../Core/Services/PipelineOrchestrator.vb) wraps the SolidWorks session so automation runs as one STA-thread block
+- the orchestrator points to compiled `.swp` macros, while the repo also carries `.swb` source files and version-specific template assets
+- SolidWorks macro binaries are version-sensitive and may need regeneration when the target SolidWorks version changes
+
+Risk:
+
+- a maintainer can change async control flow and accidentally break COM execution without touching any CAD logic directly
+- source-controlled macro files may look present while the actual runtime `.swp` artifacts are stale, missing, or compiled against the wrong SolidWorks version
+- CAD failures can appear to be application regressions when they are really environment or macro-artifact mismatches
+
+Treat the CAD path as both code-sensitive and asset-sensitive.
 
 ## Primary Related Files
 

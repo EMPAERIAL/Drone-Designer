@@ -98,6 +98,11 @@ The CAD path is a second pipeline layered on top of a completed design run.
 
 This path is optional from the operator perspective but architecturally important because it pulls UI state, engine outputs, config paths, COM automation, and template assets into one workflow.
 
+Two implementation details from the older SolidWorks deep-dive notes are worth keeping in mind because they affect real maintainer behavior:
+
+- the pipeline depends on compiled `.swp` macros, not just the `.swb` source files stored beside them
+- the SolidWorks COM session must run as one STA-thread block, which is why `PipelineOrchestrator` wraps the automation stages instead of scattering COM calls across unrelated async continuations
+
 ## End-To-End Flows
 
 ## Flow 1: Design Recommendation

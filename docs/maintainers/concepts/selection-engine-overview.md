@@ -20,6 +20,8 @@ That includes:
 
 The engine returns a `SelectionResult`, not a rendered UI or exported artifact.
 
+One current implementation detail matters enough to call out here: the engine is prop-first and first-success, not an exhaustive optimizer. `BuildPropCandidates()` ranks propellers, `SelectPropellerAndMotor()` tries cell counts in ascending order for each candidate, and the first passing propeller-motor-cell combination wins. That means ordering heuristics materially affect the final recommendation.
+
 ## What The Selection Engine Does Not Own
 
 The engine does not own:
@@ -110,15 +112,15 @@ The UI consumes this result to populate the grid and summary view. The CAD pipel
 At a high level, the engine currently runs in this order:
 
 1. validate the incoming mission specs
-2. estimate MTOW
-3. derive thrust requirements
-4. select motors and propellers
+2. derive thrust requirements from the current MTOW input
+3. build and rank propeller candidates
+4. select the first passing propeller and motor combination
 5. build the power budget and choose battery, ESC, and PDB candidates
 6. build the avionics budget and choose flight controller, GPS, telemetry, receiver, and camera candidates
 7. compute range and endurance warnings
 8. assemble the final `SelectionResult`
 
-The detailed heuristic rationale belongs in the deeper pipeline doc. This overview is about subsystem ownership and navigation.
+The file still contains an older iterative `EstimateMtow()` implementation for reference, but the main live path now uses `MaxTakeoffMassGrams` directly when running the selector. The detailed heuristic rationale belongs in the deeper pipeline doc. This overview is about subsystem ownership and navigation.
 
 ## Boundary With The UI
 
