@@ -88,3 +88,28 @@ Before making a documentation change:
 ## Current Constraint
 
 The repository still contains older documentation outside the new tree. Treat those files as source material during migration, not as the long-term home for new documentation work.
+
+## Legacy Doc Transition Map
+
+Phase 6 treats the new tree under `docs/user/`, `docs/maintainers/`, `docs/reference/`, and `docs/assets/` as the long-term system of record.
+
+The remaining out-of-tree docs have these dispositions:
+
+| Legacy path | Decision | New system-of-record destination |
+|---|---|---|
+| `docs/ONBOARDING.md` | delete after migration | this page plus `docs/maintainers/architecture-overview.md` |
+| `docs/SCHEMA.md` | delete after migration | `docs/reference/component-database-and-schema.md` |
+| `docs/PLAN.md` | delete after migration | `docs/maintainers/concepts/selection-engine-pipeline-and-rationale.md` |
+| `docs/solidworks-macro-pipeline.md` | delete after migration | `docs/maintainers/workflows/changing-cad-generation.md` |
+| `docs/calibrated-survey-quad-selection-trace.md` | delete after migration | `docs/maintainers/concepts/selection-engine-pipeline-and-rationale.md` |
+| `docs/codebase_audit_2026-04-26.md` | delete after migration | `docs/maintainers/architecture-overview.md` and `docs/maintainers/known-limitations-and-risks.md` |
+| `docs/parts-parameter-reference.md` | delete after migration | `docs/maintainers/workflows/changing-cad-generation.md` |
+| `docs/mechanical-team-briefing.md` | delete after migration | `docs/maintainers/workflows/changing-cad-generation.md` |
+| `docs/mechanical-team-briefing.pdf` | delete after migration | none; superseded by maintainer workflow docs |
+| `docs/okay-now-what-i-drifting-dahl.md` | delete | none; not part of the maintained documentation system |
+
+Keep these as active docs:
+
+- `docs/DOCUMENTATION_PLAN.md`
+- `docs/index.md`
+- the new `docs/user/`, `docs/maintainers/`, `docs/reference/`, and `docs/assets/` trees
