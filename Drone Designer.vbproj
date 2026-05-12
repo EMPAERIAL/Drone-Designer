@@ -169,7 +169,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include=".readthedocs.yaml" />
     <None Include="Drone Designer_TemporaryKey.pfx" />
+    <None Include="mkdocs.yml" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
