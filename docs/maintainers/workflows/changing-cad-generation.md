@@ -15,7 +15,7 @@ Read this page together with:
 
 - [Configuration And Runtime Dependencies](../../reference/configuration-and-runtime-dependencies.md)
 - [Testing And Validation](../../reference/testing-and-validation.md)
-- [`docs/solidworks-macro-pipeline.md`](../../solidworks-macro-pipeline.md)
+- the legacy SolidWorks pipeline notes only as already-migrated source material, not as a maintained destination
 
 ## Read First
 
@@ -25,7 +25,7 @@ Before editing code or macros, read in this order:
 2. [`Core/Services/PipelineOrchestrator.vb`](../../Core/Services/PipelineOrchestrator.vb) for the end-to-end CAD workflow and path building.
 3. [`Solidworks/SolidWorksAutomation.vb`](../../Solidworks/SolidWorksAutomation.vb) for COM connection rules and install/version checks.
 4. [`Solidworks/MacroRunner.vb`](../../Solidworks/MacroRunner.vb) for macro invocation and error handling.
-5. [`docs/solidworks-macro-pipeline.md`](../../solidworks-macro-pipeline.md) for the repo's hard-won notes about STA threading, `.swp` requirements, and module naming.
+5. this workflow's own notes on STA threading, `.swp` requirements, and module naming before changing macros or templates.
 
 Do not start by editing only the macro files. In this repo, CAD failures are often in the orchestration or runtime-asset path rather than the macro body itself.
 
@@ -51,6 +51,25 @@ Useful current signal from the existing SolidWorks pipeline notes:
 - a source asset being present under `Resources\SolidWorks\` does not guarantee that it is copied into `bin\Debug` or `bin\Release`.
 
 Those are not historical trivia. They are active maintenance constraints.
+
+## When Adding A New Generated Part
+
+The surviving repo pattern for a new generated part is:
+
+1. create a parametric `.SLDPRT` template
+2. define the changing dimensions as `DD_` global variables in the equation manager
+3. create a macro that reads the injected document properties and writes those `DD_` variables
+4. compile and validate the `.swp`
+5. wire the new macro and template into `PipelineOrchestrator`
+
+Current repo conventions worth preserving:
+
+- `MacroRunner` injects part parameters as custom document properties before the macro runs
+- the macro reads those properties and writes equation-manager globals
+- `MotorMount1.swb` remains the reference macro pattern in the source tree
+- part-specific parameter names should stay explicit and unit-bearing so the pipeline and template remain readable
+
+This is the useful signal that used to be spread across the legacy parameter-reference and mechanical-briefing docs. The maintained source of truth is now this workflow plus the live macro and template assets.
 
 ## Files That Usually Change Together
 
@@ -110,6 +129,5 @@ These failures often surface late and look like generic CAD errors unless you in
 - `UI/Forms/MainForm.Logic.vb`
 - `Utilities/ConfigManager.vb`
 - `Resources/SolidWorks/`
-- `docs/solidworks-macro-pipeline.md`
 - `docs/reference/configuration-and-runtime-dependencies.md`
 - `docs/reference/testing-and-validation.md`
