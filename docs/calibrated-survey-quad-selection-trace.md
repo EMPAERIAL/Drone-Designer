@@ -1,6 +1,6 @@
 # Calibrated Survey Quad Selection Trace
 
-This note traces the current `ComponentSelectionEngine` behavior for the `Calibrated Survey Quad (Pass)` row in [Test/test_scenarios.csv](../Test/test_scenarios.csv).
+This note traces the current `ComponentSelectionEngine` behavior for the `Calibrated Survey Quad (Pass)` row in [Test/Scenarios/test_scenarios.csv](../Test/Scenarios/test_scenarios.csv).
 
 It also records the main limitation of the current MVP selector and outlines a clean path for introducing alternative prop/motor pairings once the component database is widened and cleaned up.
 

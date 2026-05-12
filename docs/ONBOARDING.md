@@ -53,7 +53,10 @@ bin/Debug/Resources/
   components.json           — The live component database. Edit this to add parts.
 
 Test/
-  test_scenarios.csv        — 16 test scenarios loaded with Ctrl+Shift+L.
+  Scenarios/
+    test_scenarios.csv      — 16 test scenarios loaded with Ctrl+Shift+L.
+    test_scenarios.xlsx     — Spreadsheet companion to the CSV scenarios.
+  Fixtures/                 — Kept manual reference artifacts.
   Logs/                     — Auto-saved test run logs (testrun_YYYYMMDD_HHmmss.log).
 ```
 
@@ -192,12 +195,12 @@ Located at `bin/Debug/Resources/components.json` (and `bin/Release/...`). Both c
 ## 6. The Test Harness
 
 **Ctrl+Shift+T** — runs the 6 hardcoded scenarios in `GetTestScenarios()`.  
-**Ctrl+Shift+L** — opens a file picker, loads `Test/test_scenarios.csv` (16 scenarios), runs all.
+**Ctrl+Shift+L** — opens a file picker, loads `Test/Scenarios/test_scenarios.csv` (16 scenarios), runs all.
 
 Both paths call `LoadScenario(s)` → `BuildMissionSpecs()` → `engine.SelectComponents(specs)`.  
 Logs are saved to `Test/Logs/testrun_YYYYMMDD_HHmmss.log` automatically.
 
-**To add a scenario**: append a row to `test_scenarios.csv`. Column order is:
+**To add a scenario**: append a row to `Test/Scenarios/test_scenarios.csv`. Column order is:
 ```
 Name, EnduranceHr, RangeKm, CruiseSpeedKmh, MaxAltitudeM, MaxWindSpeedKmh,
 MtowGrams, PayloadGrams, FrameSizeMm,
@@ -258,4 +261,4 @@ The fix is to add real measured Ct/Cp values to more props in the database, or t
 2. Add an entry under the appropriate array (`propellers`, `motors`, `batteries`, etc.).
 3. For **propellers**: include real `CtStatic`/`CpStatic` values if possible; the fallback Ct=0.115 will overestimate hover RPM for props with larger blades.
 4. For **motors**: if `MaxTorqueNm` is omitted, `OnDeserialized` will compute it from `KV × MaxCurrentAmps` — verify the result is physically plausible.
-5. Re-run the test harness (Ctrl+Shift+L with `Test/test_scenarios.csv`) to verify.
+5. Re-run the test harness (Ctrl+Shift+L with `Test/Scenarios/test_scenarios.csv`) to verify.
