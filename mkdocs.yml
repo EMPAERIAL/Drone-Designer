@@ -1,0 +1,28 @@
+  site_name: Drone Designer Documentation
+  docs_dir: docs
+  site_url: ""
+
+  nav:
+    - Home: index.md
+    - User:
+        - Overview: user/index.md
+        - Installation And Prerequisites: user/installation-and-prerequisites.md
+        - Design A UAV From Requirements: user/workflow-design-a-uav-from-requirements.md
+        - Export And Generate Outputs: user/workflow-export-and-generate-outputs.md
+        - Troubleshooting And FAQ: user/troubleshooting-and-faq.md
+    - Maintainers:
+        - Overview: maintainers/index.md
+        - Agent Onboarding: maintainers/agent-onboarding.md
+        - Glossary: maintainers/glossary.md
+        - Architecture Overview: maintainers/architecture-overview.md
+        - Known Limitations And Risks: maintainers/known-limitations-and-risks.md
+        - Selection Engine Overview: maintainers/concepts/selection-engine-overview.md
+        - Selection Engine Pipeline And Rationale: maintainers/concepts/selection-engine-pipeline-and-rationale.md
+    - Reference:
+        - Overview: reference/index.md
+        - Component Database And Schema: reference/component-database-and-schema.md
+        - Configuration And Runtime Dependencies: reference/configuration-and-runtime-dependencies.md
+        - Testing And Validation: reference/testing-and-validation.md
+
+  theme:
+    name: readthedocs
