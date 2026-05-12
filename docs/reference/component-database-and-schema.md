@@ -9,6 +9,11 @@ Use this page when you need to know:
 - which schema conventions the runtime depends on
 - which fields are derived or normalized in code instead of being stored directly
 
+Use the other reference pages alongside this one when the change also affects runtime path assumptions or validation:
+
+- [Configuration And Runtime Dependencies](configuration-and-runtime-dependencies.md) for where the component database is expected to live at runtime
+- [Testing And Validation](testing-and-validation.md) for what to re-check after data or schema changes
+
 ## Source Of Truth
 
 The live catalogue is the JSON file at [`Resources/AppData/components.json`](../../Resources/AppData/components.json).
@@ -354,9 +359,12 @@ The goal here is to preserve the stable contract maintainers actually need.
 - `Core/Models/ComponentSpecs.vb`
 - `Core/Data/ComponentRepository.vb`
 - `Utilities/ConfigManager.vb`
+- `docs/maintainers/workflows/changing-the-component-database-and-schema.md`
 
 ## Secondary Related Files
 
 - `Core/Services/ComponentSelectionEngine.vb`
 - `Core/Models/ComponentDisplayRow.vb`
 - `docs/SCHEMA.md`
+- `docs/reference/configuration-and-runtime-dependencies.md`
+- `docs/reference/testing-and-validation.md`
