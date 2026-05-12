@@ -46,6 +46,8 @@ If `components.json` is missing or moved, the app can open but component selecti
 
 After launch, confirm the app opens normally and reaches the main input form.
 
+The normal operator starting point is the `Mission Specifications` tab. That is the screen used by the next workflow guide.
+
 On a healthy first launch:
 
 - the main window opens without a startup error
@@ -76,6 +78,8 @@ In the normal MVP release flow, you should be able to:
 - export the result to Excel
 
 These steps should work from the packaged release without manual config editing.
+
+If the app launches and reaches the mission-input screen, continue directly to the design workflow instead of trying to configure anything else first.
 
 ## What This Guide Does Not Cover
 

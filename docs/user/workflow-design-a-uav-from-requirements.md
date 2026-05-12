@@ -14,6 +14,8 @@ In one normal design run, you will:
 6. review the design recommendation
 7. adjust mission inputs and run again if needed
 
+The app opens on the mission-input screen first. Work top to bottom through the input groups, then use `Select Components` to move into the result-review stage.
+
 ## Step 1: Define The Flight Envelope
 
 Start in the `Flight Parameters` group.
@@ -96,6 +98,7 @@ During the design run:
 - the app validates the mission inputs first
 - the selection engine processes the mission specs
 - the status bar updates as the run progresses
+- a successful run switches you to the `Selected Components` tab
 
 If the inputs are invalid, Drone Designer stops before the run and tells you what must be corrected. Typical examples include impossible temperature ranges, too little endurance, or payload mass that is too large relative to maximum takeoff weight.
 
@@ -113,6 +116,8 @@ Second, check the summary information and warnings:
 - severe warnings or constraint warnings
 
 Drone Designer may also open an `MTOW Convergence` window. Use it as a sanity check on how the battery mass and total mass settled during the run. You do not need to interpret it like an engineer to use the app, but it is useful when a result looks marginal or unstable.
+
+If the component table stays empty or the run ends with a warning dialog instead of a populated result view, stop here and use [Troubleshooting And FAQ](troubleshooting-and-faq.md) before trying export actions.
 
 ## Step 7: Iterate On Mission Inputs
 
