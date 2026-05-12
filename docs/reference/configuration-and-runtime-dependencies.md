@@ -9,6 +9,11 @@ Use this page when you need to answer questions like:
 - what a source checkout assumes that a release ZIP should already package
 - whether SolidWorks is required for a given workflow
 
+Use the other reference pages alongside this one when the change also affects the component database contract or the validation plan:
+
+- [Component Database And Schema](component-database-and-schema.md) for the stable component-data contract
+- [Testing And Validation](testing-and-validation.md) for the checks to run after config, packaging, or runtime-path changes
+
 ## Runtime Model
 
 Drone Designer is a single Windows desktop executable targeting `.NET Framework 4.7.2`.
@@ -212,6 +217,8 @@ Check:
 - `Core/Services/PipelineOrchestrator.vb`
 - `Solidworks/SolidWorksAutomation.vb`
 - `Drone Designer.vbproj`
+- `docs/maintainers/workflows/changing-the-component-database-and-schema.md`
+- `docs/maintainers/workflows/preparing-a-release-package.md`
 
 ## Secondary Related Files
 
@@ -220,3 +227,5 @@ Check:
 - `docs/user/installation-and-prerequisites.md`
 - `Resources/AppData/components.json`
 - `Resources/SolidWorks/`
+- `docs/reference/component-database-and-schema.md`
+- `docs/reference/testing-and-validation.md`

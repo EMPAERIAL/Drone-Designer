@@ -10,6 +10,11 @@ The repository does not currently expose one large external automated suite. Val
 - the in-app scenario harness
 - output-path checks for Excel and optional CAD generation
 
+Use the other reference pages alongside this one when a validation run depends on data or runtime-path assumptions:
+
+- [Component Database And Schema](component-database-and-schema.md) for schema-sensitive component-data changes
+- [Configuration And Runtime Dependencies](configuration-and-runtime-dependencies.md) for output-folder, config, and optional SolidWorks dependency checks
+
 ## Pick The Right Validation Depth
 
 Use the smallest checklist that still matches the risk of the change.
@@ -244,6 +249,7 @@ Plan validation depth accordingly.
 - `UI/Forms/MainForm.Logic.vb`
 - `UI/Forms/MainForm.Export.vb`
 - `UI/Forms/MainForm.CAD.vb`
+- `docs/maintainers/workflows/changing-the-selection-engine.md`
 
 ## Secondary Related Files
 
@@ -253,3 +259,5 @@ Plan validation depth accordingly.
 - `Core/Data/ComponentRepository.vb`
 - `Core/Services/PipelineOrchestrator.vb`
 - `Resources/AppData/components.json`
+- `docs/reference/component-database-and-schema.md`
+- `docs/reference/configuration-and-runtime-dependencies.md`
