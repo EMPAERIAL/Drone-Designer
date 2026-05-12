@@ -358,7 +358,44 @@
       "resistance_mOhm": 82.0,
       "noLoadCurrentA": 0.42,
       "recommendedUseCase": "Survey/mapping quad, 800 mm frame",
-      "notes": "Guaranteed-passing pair with prop_008 (10x4.7). Shaft 6.1 mm fits bore 6.35 mm (fit = 0.25 mm). Design point: 4S, 1500 gf/motor, sea level. kvRequired (fixed code) = 4000*1.4/14.8 = 378; KV 430 is 13.6% away, within 15% band. Also passes on 4S up to ~2500 m altitude."
+      "notes": "Legacy low-KV survey/endurance option for 9-11 inch props. Retained for broad database coverage, but no longer used as the calibrated guaranteed-passing pair for prop_008 under the current ComputePropellerAero formula."
+    },
+    {
+      "id": "mot_011",
+      "category": "Motor",
+      "name": "U10 Lite KV830 Survey",
+      "manufacturer": "T-Motor",
+      "productUrl": "https://store.tmotor.com",
+      "targetClass": "MotorSpecs",
+      "massGrams": 128.0,
+      "dimensions": {
+        "outerDiameterMm": 50.0,
+        "heightMm": 30.0,
+        "shaftDiameterMm": 6.0,
+        "mountingPatternMm": 25.0
+      },
+      "operatingTempMinC": -20,
+      "operatingTempMaxC": 80,
+      "priceUSD": 95.00,
+      "motorKv": 830,
+      "statorDiameterMm": 40.0,
+      "statorHeightMm": 12.0,
+      "designatedPropSizeInMin": 10.0,
+      "designatedPropSizeInMax": 12.0,
+      "voltageMinV": 14.8,
+      "voltageMaxV": 22.2,
+      "maxContinuousCurrentA": 60.0,
+      "maxBurstCurrentA": 75.0,
+      "maxThrustG": 3200,
+      "maxPowerW": 900,
+      "efficiency": 1.25,
+      "resistance_mOhm": 38.0,
+      "noLoadCurrentA": 0.80,
+      "recommendedMinCells": 4,
+      "recommendedMaxCells": 6,
+      "maxThrustTestPropeller": "10x4.7",
+      "recommendedUseCase": "10-inch survey / inspection quad on 4S-6S",
+      "notes": "Calibrated guaranteed-passing pair with prop_008 under the current ComputePropellerAero formula. At 1500 gf/motor on 4S at sea level, prop_008 requires about 8770 RPM and kvRequired about 830 after headroom. Shaft 6.0 mm fits the 6.35 mm bore with 0.35 mm clearance."
     }
   ],
 
@@ -861,16 +898,16 @@
       "priceUSD": 18.00,
       "material": "Carbon fiber",
       "maxRPM": 12000,
-      "maxStaticThrustG": 6000,
-      "staticThrustTestRPM": 8000,
+      "maxStaticThrustG": 2800,
+      "staticThrustTestRPM": 12000,
       "ctStatic": 0.135,
       "cpStatic": 0.058,
       "isFolding": false,
-      "recommendedKvRange": [ 380, 500 ],
+      "recommendedKvRange": [ 780, 900 ],
       "recommendedVoltageRange": "4S",
       "pitchVelocityMs": null,
       "recommendedUseCase": "Survey/mapping quad, 800 mm frame",
-      "notes": "Ct/Cp estimated from APC 10x4.7 SF reference data (similar geometry, CF vs glass-filled nylon). NOTE: the staticThrustTestRPM/maxStaticThrustG design point (8000 RPM at 6000 gf) was calibrated to the legacy EstimatePropellerHoverRpm formula and implies Ct~0.65, which is physically unreasonable. Hover RPM with the current ComputePropellerAero formula and Ct=0.135 at 1500 gf sea level is ~8800 RPM, requiring KV~830 — incompatible with mot_010 (KV 430). A new guaranteed-passing pair calibrated to the current engine is needed."
+      "notes": "Ct/Cp estimated from APC 10x4.7 SF reference data (similar geometry, CF vs glass-filled nylon). Design-point metadata recalibrated for the current ComputePropellerAero formula: Ct=0.135 implies about 8770 RPM at 1500 gf sea level, and about 2800 gf at the 12000 RPM prop limit. Guaranteed-passing current-formula pair: prop_008 with mot_011 on 4S."
     }
   ],
 
