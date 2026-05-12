@@ -35,8 +35,8 @@ __pycache__/
 !.env.example
 
 # Nested repositories and their local metadata
-Resources/Web-Scrapper/.git/
-Resources/Web-Scrapper/.claude/
-Resources/FAST-UAV/.git/
-Resources/FAST-UAV/.claude/
-Resources/FAST-UAV/.vscode/
+Resources/Submodules/Web-Scrapper/.git/
+Resources/Submodules/Web-Scrapper/.claude/
+Resources/Submodules/FAST-UAV/.git/
+Resources/Submodules/FAST-UAV/.claude/
+Resources/Submodules/FAST-UAV/.vscode/

@@ -1,3 +1,7 @@
+[submodule "Resources/FAST-UAV"]
+	path = Resources/Submodules/FAST-UAV
+	url = https://github.com/SizingLab/FAST-UAV.git
+
 [submodule "Resources/Web-Scrapper"]
-	path = Resources/Web-Scrapper
+	path = Resources/Submodules/Web-Scrapper
 	url = https://github.com/armesis/Web-Scrapper.git

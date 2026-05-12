@@ -79,7 +79,7 @@ If CpStatic <= 0 Then CpStatic = 0.044
 
 In `components.json`, add `"ctStatic"` and `"cpStatic"` to each propeller object.
 Values for APC propellers can be copied directly from FAST-UAV's catalogue at:
-`Resources/FAST-UAV/src/fastuav/data/catalogues/Propeller/APC_propellers_MR.csv`
+`Resources/Submodules/FAST-UAV/src/fastuav/data/catalogues/Propeller/APC_propellers_MR.csv`
 (columns `Ct_static` and `Cp_static`).
 For propellers not in APC, leave the fields absent and the fallback applies.
 
