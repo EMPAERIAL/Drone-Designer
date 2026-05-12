@@ -365,6 +365,5 @@ The goal here is to preserve the stable contract maintainers actually need.
 
 - `Core/Services/ComponentSelectionEngine.vb`
 - `Core/Models/ComponentDisplayRow.vb`
-- `docs/SCHEMA.md`
 - `docs/reference/configuration-and-runtime-dependencies.md`
 - `docs/reference/testing-and-validation.md`
