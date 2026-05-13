@@ -622,8 +622,12 @@ Namespace Core.Models
         <OnDeserialized>
         Private Sub OnDeserialized(context As StreamingContext)
             If Dimensions IsNot Nothing Then
-                ShaftDiameterMm = Dimensions.ShaftDiameterMm
-                MountingBoltCircleMm = Dimensions.MountingPatternMm
+                If Dimensions.ShaftDiameterMm > 0 Then
+                    ShaftDiameterMm = Dimensions.ShaftDiameterMm
+                End If
+                If Dimensions.MountingPatternMm > 0 Then
+                    MountingBoltCircleMm = Dimensions.MountingPatternMm
+                End If
             End If
             If Efficiency = 0 AndAlso MaxPowerWatts > 0 Then
                 Efficiency = MaxThrustGrams / MaxPowerWatts
@@ -810,10 +814,16 @@ Namespace Core.Models
         <OnDeserialized>
         Private Sub OnDeserialized(context As StreamingContext)
             If Dimensions IsNot Nothing Then
-                DiameterInches = Dimensions.DiameterInches
-                PitchInches = Dimensions.PitchInches
+                If Dimensions.DiameterInches > 0 Then
+                    DiameterInches = Dimensions.DiameterInches
+                End If
+                If Dimensions.PitchInches > 0 Then
+                    PitchInches = Dimensions.PitchInches
+                End If
                 BladeCount = If(Dimensions.BladesCount > 0, Dimensions.BladesCount, BladeCount)
-                BoreDiameterMm = Dimensions.BoreMm
+                If Dimensions.BoreMm > 0 Then
+                    BoreDiameterMm = Dimensions.BoreMm
+                End If
             End If
             If Efficiency = 0 AndAlso MassGrams > 0 Then
                 Efficiency = StaticThrustGrams / MassGrams
