@@ -101,6 +101,12 @@ Supporting assets:
 - generated logs: `Test/Logs/`
 - maintained CSV scenarios: `Test/Scenarios/`
 
+Track policy:
+
+- `Test/Scenarios/multirotor_regression.csv` is the blocking regression track.
+- `Test/Scenarios/fixedwing_exploratory.csv` is exploratory and non-blocking until a dedicated fixed-wing selection path is implemented.
+- Harness output labels scenarios as `blocking` or `exploratory` and reports per-track pass/fail counts.
+
 What to check:
 
 - the harness starts
