@@ -73,6 +73,7 @@ After steps 1 to 3:
 - Re-run maintained multirotor suite.
 - If `Calibrated Survey Quad (Pass)` still fails primarily due to torque near-misses:
   - lower default `KMotorTorque` from `2.0` to `1.5`.
+- Calibration outcome (2026-05): default `KMotorTorque` baseline was set to `1.5`; harsh preset remains `3.0`.
 - Keep harsh preset high (`3.0`).
 - Keep racing preset at `1.5`.
 
