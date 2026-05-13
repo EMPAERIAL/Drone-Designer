@@ -65,11 +65,20 @@ Namespace Utilities
         Public Shared Sub Load()
             If Not File.Exists(ConfigFilePath) Then
                 _settings = AppSettings.CreateDefaults()
+                _settings.NormalizeLegacyRelativePaths()
                 Save() ' Persist defaults so the user can edit the file
             Else
                 Try
                     Dim json As String = File.ReadAllText(ConfigFilePath, Encoding.UTF8)
                     _settings = DeserializeJson(json)
+                    If _settings Is Nothing Then
+                        _settings = AppSettings.CreateDefaults()
+                    End If
+
+                    Dim didNormalize As Boolean = _settings.NormalizeLegacyRelativePaths()
+                    If didNormalize Then
+                        Save()
+                    End If
                 Catch ex As Exception
                     Throw New ConfigurationException(
                         $"Failed to load config file '{ConfigFilePath}': {ex.Message}", ex)
@@ -290,6 +299,41 @@ Namespace Utilities
             End If
             Return Path.GetFullPath(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, rawPath))
+        End Function
+
+        ''' <summary>
+        ''' Upgrades legacy relative resource paths from older config files to the
+        ''' current packaged layout.
+        ''' </summary>
+        Friend Function NormalizeLegacyRelativePaths() As Boolean
+            Dim changed As Boolean = False
+
+            If IsLegacyRelativePath(ComponentsDatabasePath, "Resources\components.json") Then
+                ComponentsDatabasePath = "Resources\AppData\components.json"
+                changed = True
+            End If
+
+            If IsLegacyRelativePath(TemplatePartsDirectory, "Resources\Templates") Then
+                TemplatePartsDirectory = "Resources\SolidWorks\Templates"
+                changed = True
+            End If
+
+            Return changed
+        End Function
+
+        Private Shared Function IsLegacyRelativePath(rawPath As String, legacyRelativePath As String) As Boolean
+            If String.IsNullOrWhiteSpace(rawPath) Then
+                Return False
+            End If
+
+            If Path.IsPathRooted(rawPath) Then
+                Return False
+            End If
+
+            Return String.Equals(
+                rawPath.Replace("/"c, "\"c).Trim(),
+                legacyRelativePath,
+                StringComparison.OrdinalIgnoreCase)
         End Function
 
     End Class
