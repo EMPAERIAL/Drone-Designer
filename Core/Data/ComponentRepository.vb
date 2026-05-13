@@ -75,6 +75,8 @@ Public Class ComponentRepository
                 _componentsByCategory(cat) = New List(Of ComponentSpecs)()
             End If
             _componentsByCategory(cat).Add(comp)
+
+            EmitGeometryWarningIfNeeded(comp)
         Next
     End Sub
 
@@ -246,6 +248,31 @@ Public Class ComponentRepository
                                          temperatureCelsius <= c.MaxOperatingTempC
                               End Function).ToList().AsReadOnly()
     End Function
+
+#End Region
+
+#Region "Validation Warnings"
+
+    ''' <summary>
+    ''' Emits non-fatal diagnostics for suspicious geometry values that can
+    ''' trigger false compatibility failures in propulsion selection.
+    ''' </summary>
+    Private Shared Sub EmitGeometryWarningIfNeeded(comp As ComponentSpecs)
+        Dim motor = TryCast(comp, MotorSpec)
+        If motor IsNot Nothing Then
+            If motor.ShaftDiameterMm <= 0 Then
+                Debug.WriteLine($"[ComponentRepository] WARNING: Motor '{motor.Id}' has non-positive shaft diameter ({motor.ShaftDiameterMm}).")
+            End If
+            Return
+        End If
+
+        Dim prop = TryCast(comp, PropellerSpec)
+        If prop IsNot Nothing Then
+            If prop.BoreDiameterMm <= 0 Then
+                Debug.WriteLine($"[ComponentRepository] WARNING: Propeller '{prop.Id}' has non-positive bore diameter ({prop.BoreDiameterMm}).")
+            End If
+        End If
+    End Sub
 
 #End Region
 
