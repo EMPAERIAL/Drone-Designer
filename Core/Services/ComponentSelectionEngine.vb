@@ -828,6 +828,12 @@ Namespace Core.Services
                     Continue For
                 End If
 
+                ' Guard against invalid aerodynamic inputs before Ct/Cp equations.
+                If rho <= 0.0 OrElse prop.DiameterInches <= 0.0 OrElse prop.CtStatic <= 0.0 OrElse prop.CpStatic <= 0.0 Then
+                    rejections.Add($"Prop {prop.Id}: Invalid aero inputs (rho={rho:F3}, D={prop.DiameterInches:F3}in, Ct={prop.CtStatic:F5}, Cp={prop.CpStatic:F5}).")
+                    Continue For
+                End If
+
                 Dim aero = ComputePropellerAero(prop, requiredThrustN, rho)
                 Dim requiredRpmAtAltitude = aero.HoverRpm
 
