@@ -1,0 +1,5 @@
+﻿# Fixed-wing exploratory scenarios (non-blocking)
+# Load with Ctrl+Shift+L in the app.
+Name,EnduranceHr,RangeKm,CruiseSpeedKmh,MaxAltitudeM,MaxWindSpeedKmh,MtowGrams,PayloadGrams,FrameSizeMm,OperatingEnvIdx,IPRatingIdx,TempMinC,TempMaxC,MissionProfileIdx,FrameTypeIdx,MotorCountIdx,AutonomyIdx,PayloadTypeIdx,Track
+BVLOS Mapping FW,3.0,80,80,500,40,9000,500,1500,2,0,-15,50,7,1,5,4,2,exploratory
+Long Endurance FW,5.0,150,90,1000,45,12000,800,2000,2,0,-20,50,0,1,5,4,2,exploratory

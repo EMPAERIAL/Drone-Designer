@@ -63,6 +63,12 @@ When updating the harness:
 2. keep the scenario values realistic enough to expose regressions
 3. prefer additive scenario changes over rewriting old cases without reason
 
+Interpretation policy:
+
+- keep multirotor regression scenarios in a dedicated blocking track (`Test/Scenarios/multirotor_regression.csv`)
+- keep fixed-wing scenarios in a dedicated exploratory track (`Test/Scenarios/fixedwing_exploratory.csv`)
+- treat blocking failures as regressions; treat exploratory failures as non-blocking until dedicated fixed-wing support exists
+
 ## When Manual Validation Is Still The Right Tool
 
 Do not force everything into the harness.
