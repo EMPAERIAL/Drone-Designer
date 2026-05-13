@@ -769,7 +769,7 @@ Partial Public Class MainForm
             ' Row 1 ── Motor torque k | Battery voltage k | Preset
             lblKMotor = MakeLabel("Motor torque margin (k):", LBL_X, ROW1)
             nudKMotor = MakeNUD(CTL_X, ROW1, 1.0D, 4.0D, 1, 80)
-            nudKMotor.Value = 2.0D
+            nudKMotor.Value = 1.5D
             nudKMotor.Increment = 0.1D
             SetTip(nudKMotor, "Motor must sustain at least (k × hover torque). Higher = more gust/climb headroom.")
 
@@ -860,7 +860,7 @@ Partial Public Class MainForm
                     nudKBatCapacity.Value = 1.4D
                     nudKEsc.Value = 1.5D
                 Case Else  ' General Purpose
-                    nudKMotor.Value = 2.0D
+                    nudKMotor.Value = 1.5D
                     nudKBatVoltage.Value = 1.3D
                     nudKBatCapacity.Value = 1.2D
                     nudKEsc.Value = 1.25D
